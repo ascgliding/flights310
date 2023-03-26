@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}System Administration{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="pagemenurow">
+{% if current_user.administrator %}
+  <div class="pagemenucol">
+    <h4>Master Files</h4>
+    <p><a href="{{ url_for('mastmaint.pilotlist') }}">Pilot Maintenance</a></p>
+    <p><a href="{{ url_for('mastmaint.aircraftlist') }}">Aircraft Maintenance</a></p>
+  </div>
+  <div class="pagemenucol">
+    <h4>General</h4>
+    <p><a href="{{ url_for('auth.userlist') }}">User Maintenance</a></p>
+    <a href="{{ url_for('mastmaint.slotlist') }}">Slot Maintenance</a>
+  </div>
+  {% endif %}
+</div>
+<div class="pagemenurow">
+  <div class="pagemenucol">
+    <h4>Miscellaneous</h4>
+    <p class="notphone"><a href="{{ url_for('export.exportflt') }}">Excel Flight Export</a></p>
+    <p class="notphone"><a href="{{ url_for('export.exportacsummary') }}">Excel AC Summary Export</a></p>
+    <p class="notphone"><a href="{{ url_for('export.exportaccts') }}">Accounting System Export</a></p>
+    <p class="notphone"><a href="{{ url_for('mastmaint.userverify') }}">Verify Users, Pilots and Members</a></p>
+  </div>
+</div>
+<a href="{{ url_for('flights.daysummary') }}">Flight Maintenance</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Flight Tracking and Account System{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+<div align=center font-size=9>
+Welcome to the Auckland Aviation Sports Club<br/>
+
+</br>
+You will need to login and have your registration approved before you can use the system.
+
+    If you have a login <a href="{{ url_for('auth.login') }}">click here</a> to access the system,
+    Otherwise <a href="{{ url_for('auth.register') }}"> click here</a> to register.  You registration
+    will need to be approved by the sysadmin before access is granted.
+</div>
+
+{% endblock %}

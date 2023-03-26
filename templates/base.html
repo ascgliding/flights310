@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<title>{% block title %}{% endblock %} - ASC System</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+<script type="text/javascript" charset="utf-8">
+
+function goBack() {
+  window.history.back();
+};
+
+function checkcookie () {  if (navigator.cookieEnabled){
+    document.getElementById("cookiemessage").hidden = true;
+    console.log("cookies enabled")
+    }
+  else{
+    document.getElementById("cookiemessage").hidden = false;
+    console.log("cookies disabled")
+    }
+};
+
+function checkTime(i) {
+        return (i < 10) ? "0" + i : i;
+    };
+
+function resettime(which) {
+    dt = document.getElementById(which);
+    thisform = dt.form.id;
+    // console.log(thisform);
+    var now = new Date();
+    h = checkTime(now.getHours());
+    m = checkTime(now.getMinutes());
+    dt.value = h + ":" + m;
+    document.forms[thisform].submit();
+};
+
+function pad(num, size) {
+    var s = num+"";
+    while (s.length < size) s = "0" + s;
+    return s;
+};
+
+function datetime_format(pdate) {
+    if (pdate.getMinutes() >= 53) {
+        pdate.setHours(pdate.getHours() + 1 )};
+    return pdate.getFullYear()
+        + '-' + pad(pdate.getMonth() + 1,2)
+        + '-' + pad(pdate.getDate(),2)
+        + 'T' + pad(pdate.getHours(),2)
+        + ':' + pad(nearest_qtr(pdate.getMinutes()),2)
+        + ':00.000' ;
+        };
+
+function ConfirmDelete()
+  {
+    return confirm("You have Chosen to Delete this record.  Are you sure?");
+   }
+
+function myUpper(cObj)
+  {
+  cObj.value=cObj.value.toUpperCase();
+  }
+
+function myLower(cObj)
+  {
+  cObj.value=cObj.value.toLowerCase();
+  }
+
+
+
+
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+
+ //$( document ).ready(function() {
+ //       console.log( "document loaded" );
+ ////  The form needs to have the id set to "trapchange".
+ //       $('#trapchange input').on( 'input', function() {
+ //           //This would be called if any of the input element has got a change inside the form
+ //       console.log('data changed');
+ //      });
+ //   });
+
+
+</script>
+
+
+{% macro render_field(field) %}
+
+{# field.label #}
+<label for="{{ field.name }}" class="{{ field.render_kw['class'] }}">{{ field.label.text }}</label>
+<abbr title="{{ field.description }}">
+  {{ field(**kwargs)|safe }}
+  {% if field.errors %}
+  <ul class=errors>
+    {% for error in field.errors %}
+    <li style="margin-left:5%; color:red; font-size:60%;">{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endmacro %}
+
+  {% macro render_checkbox(field) %}
+  {{ field.label }} :
+  {{ field(**kwargs)|safe }}
+  {% if field.errors %}
+  <ul class=errors>
+    {% for error in field.errors %}
+    <li style="margin-left:5%; color:red; font-size:60%;">{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endmacro %}
+
+  <nav>
+      <h1 class="notphone">Auckland Aviation Sports Club</h1>
+      <h1 class="phone">AASC</h1>
+      {% if current_user is defined %}
+      <span class="notphone">{{ current_user.fullname or current_user.name or 'Anonymous' }}</span>
+      {% else %}
+      <span class="notphone">No Active Login</span>
+      {% endif %}
+    <div class="dropdown">
+      <span><button id="menubtn" ></button></span>
+      <div class="dropdown-content">
+        {% if current_user is defined and current_user.is_authenticated %}
+        <p><a href="{{ url_for('flights.daysummary') }}">Flights</a></p>
+        <p><a href="{{ url_for('logbook.logbook') }}">Logbook</a></p>
+        <p><a href="{{ url_for('auth.profile') }}">Profile</a></p>
+        <p><a href="{{ url_for('auth.logout') }}">Log Out</a></p>
+        <div class="nophxone">
+          <p><a href="{{ url_for('mastmaint.index') }}">Maintenance</a></p>
+          {% if current_user.administrator %}
+          <p><a href="{{ url_for('auth.userlist') }}">User Admin</a></p>
+          {% endif %}
+        </div>
+        {% else %}
+        <p><a href="{{ url_for('auth.register') }}">Register</a></p>
+        <p><a href="{{ url_for('auth.login') }}">Log In</a></p>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+  <section class="content">
+    <header>
+      <!-- This is absolutely critical if you want the site to work on a mobile device -->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      {% block header %}{% endblock %}
+    </header>
+    <noscript align="center" style="font-size:300%;color:red;"></br>>This site will not work without Javascript. Please
+      enable.
+    </noscript>
+    <div id="cookiemessage" hidden align="center" style="font-size:300%;color:red;"></br>You must enable
+      cookies</br></br></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+    <body onload="checkcookie()">
+    {% block content %}{% endblock %}
+    </body>
+  </section>
+

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Register{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  <fieldset>
+    <legend>Register</legend>
+    <ul>
+      <li>
+        <label for="username">Username</label>
+        <input name="username" id="username" required autocapitalize="none">
+      </li>
+      <li>
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required>
+      </li>
+      <li>
+        <label for="fullname">Full Name</label>
+        <input name="fullname" id="fullname" required>
+      </li>
+      Note that your registration needs to be approved prior to getting access to the system.
+      If you cannot be identified from your username or full name it is unlikely to be approved.
+    </ul>
+  </fieldset>
+  <button type="submit" class="textbtn" name="registerbtn" id="registerbtn" title="Enter Details then press here to register" value="">Register</button>
+</form>
+{% endblock %}
+

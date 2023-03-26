@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+Slot Maintenance
+{% endblock %}
+{% block content %}
+<form method="Post">
+  {{ form.csrf_token }}
+  {{ form.name }}
+  <ul>
+    <li>{{ render_field(form.userid) }}</li>
+    <li>{{ render_field(form.slot_type) }}</li>
+    <li>{{ render_field(form.slot_key) }}</li>
+    <li>{{ render_field(form.slot_desc) }}</li>
+    <li>{{ render_field(form.slot_data) }}</li>
+  </ul>
+  {{ form.btnsubmit() }}
+  {{ form.cancel() }}
+  {{ form.delete() }}
+
+</form>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}
+Pilot Maintenance
+{% endblock %}
+{% block content %}
+<form method="Post">
+  {{ form.csrf_token }}
+  {{ form.name }}
+  <ul>
+    <li>{{ render_field(form.code) }}</li>
+    <li>{{ render_field(form.fullname) }}</li>
+    <li>{{ render_field(form.email) }}</li>
+    <li>{{ render_field(form.instructor) }}</li>
+    <li>{{ render_field(form.towpilot) }}</li>
+    <li>{{ render_field(form.yg_member) }}</li>
+    <li>{{ render_field(form.bscheme) }}</li>
+    <li>{{ render_field(form.username) }}</li>
+    <li>{{ render_field(form.gnz_no) }}</li>
+    <li>{{ render_field(form.accts_cust_code) }}</li>
+  </ul>
+    <datalist id="usernames">
+      {% for a in usernames %}
+          <option value="{{ a }}">
+      {% endfor %}
+    </datalist>
+  {{ form.btnsubmit() }}
+  {{ form.cancel() }}
+  {{ form.delete() }}
+
+</form>
+{% endblock %}

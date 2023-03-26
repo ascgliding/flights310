@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+<div style="display: table; width:100%">
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}{{ title }}{% endblock %}</h1>
+    </div>
+    <div style="display:table-cell; text-align:right; ">
+      <a class="action" href="{{ url_for('flights.changeflight', id=0) }}">
+        <button id="addbtn"></button>
+      </a>
+      <a class="action" href="{{ url_for('flights.linenote', id=0) }}"
+        title = "Add Note">
+
+        <button class="materialbtn">description</button>
+      </a>
+      <a class="action" href="{{ url_for('flights.changeview') }}" ,
+         title="Select Views">
+        <button class="textbtn">View</button>
+      </a>
+      {% if towcount == 1 %}
+        <a class="action"  href="{{ url_for('flights.tuglanded', id=towedid) }}" ,
+           title="Record Tug Down for this Aircraft">
+          <!-- defining the foreground colour stops it from going white on hover -->
+          <button class="textbtn" style="color:blue;background-color:yellow;"   >{{ towedregn }}</button>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+ <div class="table">
+    <div class="row">
+      <div class="heading">ID</div>
+      <div class="heading" >PIC</div>
+      <div class="heading" >P2</div>
+      <div class="heading" >Glider</div>
+      <div class="heading mobile_port_supress mobile_land_supress ">Towie</div>
+      <div class="heading mobile_port_supress mobile_land_supress ">Tug</div>
+      <div class="heading mobile_port_supress  " align="right">Takeoff</div>
+      <div class="heading mobile_port_supress  " align="right">Tug Land</div>
+      <div class="heading mobile_port_supress  " align="right">Landed</div>
+      <div class="heading mobile_port_supress  " align="right">Height</div>
+      <div class="heading mobile_port_supress mobile_land_supress " align="right">Launch Time</div>
+      <div class="heading mobile_port_supress mobile_land_supress " align="right">Launch Cost</div>
+      <div class="heading mobile_port_supress " align="right">Glider Time</div>
+      <div class="heading mobile_port_supress mobile_land_supress " align="right">Glider Cost</div>
+      <div class="heading mobile_port_supress mobile_land_supress " align="right">Total Cost</div>
+      <div class="heading mobile_port_supress mobile_land_supress " align="left">Payment</div>
+    </div>
+  {% for f in flights %}
+    {% if f.linetype == 'FL' %}
+    <div class="row">
+      <div class="cell"><a href="{{ url_for('flights.changeflight', id=f.id) }}">{{ f.id | displayfornone }}</a></div>
+      <div class="cell" align="left">{{ f.pic }}</div>
+      <div class="cell" align="left">{{ f.p2 }}</div>
+      <div class="cell" align="left">{{ f.ac_regn }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.tow_pilot | nameinitials }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.tug_regn | displayfornone}}</div>
+      <div class="cell mobile_port_supress  " align="right">{{ f.takeoff.strftime('%H:%M') if f.takeoff != None else '--:--' }}</div>
+      <div class="cell mobile_port_supress  " align="right">{{ f.tug_down.strftime('%H:%M') if f.tug_down != None else '--:--'  }}</div>
+      <div class="cell mobile_port_supress  " align="right">{{ f.landed.strftime('%H:%M') if f.landed != None else '--:--'  }}</div>
+      <div class="cell mobile_port_supress  " align="right">{{ f.release_height | displayfornone}}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.tow_mins() | displayfornone }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.tow_charge | displayfornone}}</div>
+      <div class="cell mobile_port_supress " align="right">{{ f.glider_mins() | hrsmins }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.glider_charge | displayfornone }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.total_charge() | displayfornone }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.payment_note | displayfornone}}</div>
+    </div>
+   {% else %}
+    <div class="row">
+      <div class="cell" style="width:10%;padding-bottom:15px;"><a href="{{ url_for('flights.linenote', id=f.id) }}">{{ f.id | displayfornone }}</a></div>
+<!--      <span style="display-inline-block;white-space: nowrap; overflow:hidden; text-overflow: ellipsis max-width: 50ch;">-->
+<!--&lt;!&ndash;      <div class="cell mobile_port_supress" style="position:absolute;width:90%;font-style:italic; text-overflow:ellipsis;max-width:100ch;" align="left">{{ f.general_note }}</div>&ndash;&gt;-->
+<!--      <div class="cell mobile_port_supress" style="width:90%; font-style:italic; " align="left">{{ f.general_note }}</div>-->
+<!--        </span>-->
+      <div class="cell mobile_port_supress" style="position:absolute;width:90%;font-style:italic; text-overflow:ellipsis;max-width:70ch;white-space: nowrap" align="left">{{ f.general_note }}</div>
+      <div class="cell not_portrait_supress" style="position:absolute;width:90%;font-style:italic" align="left">Note</div>
+    </div>
+   {% endif %}
+  {% endfor %}
+  </div>
+
+{% endblock %}

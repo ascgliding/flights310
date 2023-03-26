@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Log In{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="POST">
+  <fieldset>
+    <legend>Login</legend>
+    <ul>
+      <li>
+        <label for="username">Username</label>
+        <input name="username" id="username" required title="Enter your user id here." autocapitalize="none">
+      </li>
+      <li>
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required>
+      </li>
+    </ul>
+  </fieldset>
+  <button type="submit" class="textbtn" name="loginbtn" id="loginbtn" title="Press to Login" value="">Login</button>
+</form>
+{% endblock %}

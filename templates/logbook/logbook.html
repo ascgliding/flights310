@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Logbook{% endblock %}</h1>
+    </div>
+    <div  style="display:table-cell; text-align: right;" >
+      <a class="action" href="{{ url_for('logbook.daterange') }}" ,
+         title="Select Date Range">
+        <button class="textbtn" id="dates" name="dates">Dates</button>
+      </a>
+      <a class="action" href="{{ url_for('logbook.export') }}" ,
+         title="Download a Spreadsheet">
+        <button class="textbtn" id="excel" name="excel">Excel</button>
+      </a>
+     </div>
+  </div>
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h4>For {{ startdate.strftime("%d/%m/%Y") }} to {{ enddate.strftime("%d/%m/%Y") }}</h4>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading">id</div>
+      <div class="heading" >Date</div>
+      <div class="heading heading mobile_port_supress mobile_land_supress" >Type</div>
+      <div class="heading heading " >Regn</div>
+      <div class="heading heading mobile_port_supress" >PIC</div>
+      <div class="heading heading mobile_port_supress" >P2</div>
+      <div class="heading heading mobile_port_supress mobile_land_supress" >Takeoff</div>
+      <div class="heading heading mobile_port_supress mobile_land_supress" >Landed</div>
+      <div class="heading heading mobile_port_supress" >Crew Cap</div>
+      <div class="heading heading " >Mins</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell" align="right">{{ l.id }}</div>
+      <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+      <div class="cell" align="left">{{ l.regn }}</div>
+      <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
+      <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+      <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+      <div class="cell mobile_port_supress " align="left">{{ l.crew_capacity }}</div>
+      <div class="cell  " align="right">{{ l.totalmins|hrsmins }}</div>
+
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

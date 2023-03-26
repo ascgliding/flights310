@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Slot Maintenance{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  <fieldset>
+    <legend>Slot Maintenance</legend>
+    <ul>
+      <li>
+        <label for="id" class="prompt">Id</label>
+        <input name="id" id="id"
+               value="{{ request.form['id'] or thisslot['id'] }}" readonly>
+      </li>
+      <li>
+        <label for="slot_type">Slot Type</label>
+        <input name="slot_type" id="slot_type"
+               onkeyup="this.value = this.value.toUpperCase();" style="text-transform:uppercase"
+               value="{{ request.form['slot_type'] or thisslot['slot_type'] }}" readonly>
+      </li>
+      <li>
+        <label for="slot_key">Key</label>
+        <input name="slot_key" id="slot_key"
+               onkeyup="this.value = this.value.toUpperCase();" style="text-transform:uppercase"
+               value="{{ request.form['slot_key'] or thisslot['slot_key'] }}" required>
+      </li>
+      <li>
+        <label for="slot_desc">Descrition</label>
+        <input name="slot_desc" id="slot_desc"
+               value="{{ request.form['slot_desc'] or thisslot['slot_desc'] }}" required>
+      </li>
+      <li>
+        <label for="slot_data">Data</label>
+        <textarea name="slot_data" id="slot_data" rows="5">
+                           {{ request.form['slot_data'] or thisslot['slot_data'] }}</textarea>
+      </li>
+    </ul>
+  </fieldset>
+  <button type="submit" name="donebtn" id="donebtn" title="Save these changes - a tool tip" value="">
+  <button type="submit" id="cancelbtn" name="cancelbtn" title="Cancel this change" value=""></button>
+  <button type="submit" name="deletebtn" id="deletebtn" title="Delete This record" value="">
+</form>
+{% endblock %}

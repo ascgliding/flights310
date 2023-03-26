@@ -1,0 +1,501 @@
+:root {
+    --main-bg-colour: #fCfcfc;
+    --main-fg-colour: #377ba8;
+    }
+
+/* ---
+        Cascade Sequence
+            !important wins out over anything else.
+            Inline stlyes (i.e. style= attribute used in HMTL)
+            ID selector (# prefix)
+            Class Selector (. prefix)
+            html Selector (no prefix - such as h1 or label or div)
+
+            Note that the sequence in the CSS also matters if all of the above apply then selectors
+            defined later in the CSS override those defined earlier.
+
+            Note also that some properties are inherited from their parent (such as color and font)
+
+--- */
+
+
+html { font-family: sans-serif; background: #eee; padding: 1rem; }
+body { max-width: 960px;
+    margin: 0 auto;
+    background:var(--main-bg-colour); }
+h1 { font-family: serif; color: var(--main-fg-colour); margin: 1rem 0; }
+a { color: var(--main-fg-colour); }
+hr { border: none; border-top: 1px solid lightgray; }
+nav { background: lightgray; display: flex; align-items: center; padding: 0 0.5rem; }
+nav h1 { flex: auto; margin: 0; }
+nav h1 a { text-decoration: none; padding: 0.25rem 0.5rem; }
+nav ul  { display: flex; list-style: none; margin: 0; padding: 0; }
+/* nav ul li a, nav ul li span, header .action { display: block; padding: 0.5rem; }  */
+/* nav ul li a, nav ul li span, header .action { display: block;} */
+table           {border-collapse: separate;}
+td              {border:1px solid #00ff00; border-style: none none none none;border-spacing:50px 0;}
+td.notes          { font-style:italic; }
+th              {border:1px solid #ff0000; border-style: none none solid none;border-spacing:50px 0; font-weight:bold; text-transform:capitalize; }
+ul              { padding:0; display:inline }
+li             {list-style-type:none; margin:10px 0;}
+
+/* div tables */
+.table_container { overflow-x: auto; }
+
+.action {display:inline-block;}
+
+div .tabledef {
+            display:table;
+            width:100%;
+           }
+
+div .title
+    {
+        display: table-caption;
+        text-align: center;
+        font-weight: bold;
+        font-size: larger;
+    }
+
+/*----
+    col1, col2, col3 represent three levels of columns
+    to be displayed in tables in mobile devices.
+    .heading (or .cell) will appear everyhere.
+    .col1 will appear in landscape mobile devices
+    .col2 and .col3 are planned for future use (possibly for tablets?)
+----- */
+
+.heading
+    {
+        display: table-cell;
+        font-weight: bold;
+        text-align: center;
+        border:1px solid #ff0000;
+        border-style: none none solid none;
+        margin: 0; padding: 5px; border-spacing:8px
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+
+.row
+    {
+        display: table-row;
+        overflow: hidden;
+    }
+.cell
+    {
+        display: table-cell;
+        border: none;
+        margin: 0; padding: 5px; border-spacing:8px
+        padding-left: 5px;
+        padding-right: 5px;
+        overflow: hidden;
+    }
+
+
+/*----
+don't define this at all because sometimes I want a table-cell (i.e in a table)
+and sometimes I want just whatever it is (e.g. a label or input)
+.mobile_land_supress { display: table-cell; }
+.mobile_port_supress { display: table-cell; }
+---*/
+
+/* --- It is important that media queries are defined from the lowest to the highest
+       The sequence in which they occur matters.  ---- */
+
+/* -----  apply only to phone devices  Portrait -----*/
+
+@media only screen and (max-width: 30em) {
+
+.mobile_port_supress
+    { display: none;}
+
+
+label             { text-align:left;
+                    display:block;
+                    color: var(--main-fg-colour);
+                    width:100%}
+label.nophone      {
+                    display:none;
+                    }
+div .cell_phone_date
+    {
+        display: table-cell;
+        border: none;
+        margin: 0; padding: 5px; border-spacing:8px
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+div .cell_date
+    {
+        display: none;
+    }
+.notphone
+    { display: none;}
+}
+
+/* -----  apply only to phone devices at most Landscape -----*/
+
+@media only screen and (max-width: 60em) {
+
+label             { text-align:left;
+                    display:block;
+                    color: var(--main-fg-colour);
+                    width:100%}
+label.nophone      {
+                    display:none;
+                    }
+div .cell_phone_date
+    {
+        display: table-cell;
+        border: none;
+        margin: 0; padding: 5px; border-spacing:8px
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+div .cell_date
+    {
+        display: none;
+    }
+
+.notphone
+    { display: none;}
+
+.mobile_land_supress
+    { display: none;}
+
+}
+
+/* -----  apply  to  devices not portrait -----*/
+
+@media only screen and (min-width:31em) {
+
+.not_portrait_supress
+    { display: none;}
+
+}
+
+/* -----  apply only to non-phone devices  -----*/
+@media only screen and (min-width: 60em) {
+
+label             { text-align:right;
+                    display:inline-block;
+                    width:20%
+                    }
+div .cell_date
+    {
+        display: table-cell;
+        border: none;
+        margin: 0; padding: 5px; border-spacing:8px
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+div .cell_phone_date
+    {
+        display: none;
+    }
+
+.phone
+    { display: none;}
+}
+
+
+
+input           {border:1px solid #ff0000;
+                 border-style: none none solid none;
+                 autocomplete:"off";
+                 font-family: sans-serif;
+                 background: var(--main-bg-colour); }
+textarea        {border:1px solid #ff0000;
+                border-style: solid solid solid solid;
+                autocomplete:"off";
+                font-family: sans-serif;
+                vertical-align:middle;
+                box-sizing: border-box;
+                width:95%;
+                background: var(--main-bg-colour);
+                }
+
+input.time          {width:50px;}
+input.longnote      {width:80%;}
+input[type=text]    {border:1px solid #ff0000; border-style: none none solid none;
+                     autocomplete:off;
+                    }
+input[type=number]    {text-align:right }
+input.uppercase      {text-transform: uppercase;}
+
+input.danger { color: #cc2f2e; }
+
+/* input[type=submit] { align-self: start; min-width: 10em; } */
+
+input[type=submit] { align-self: start; }
+
+
+.entries        { list-style: none; margin: 0; padding: 0px; border-spacing:8px }
+.entries li     { margin: 0.8em 1.2em; }
+.entries li h2  { margin-left: -1em; }
+
+/* The following controls the categories to be used with flash */
+.message        { background: #b4edcb; padding: 0.5em;
+                  border: 1px solid #aacbe2; }
+.error          { background: #f0d6d6; padding: 0.5em; }
+.warning        { background: #cee5F5; padding: 0.5em; }
+
+
+
+#menubtn:before {content:"menu"; }
+#menubtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                background-repeat:no-repeat;
+                vertical-align: middle;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent
+                 }
+#menubtn:hover    { background-color: var(--main-fg-colour) ;
+                    color: var(--main-bg-colour);
+                    }
+
+
+#nextbtn:before {content:"chevron_right"; }
+#nextbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                background-repeat:no-repeat;
+                vertical-align: middle;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent
+                 }
+#nextbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#prevbtn:before {content:"chevron_left"; }
+#prevbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent
+                 }
+#prevbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#firstbtn:before {content:"first_page"; }
+#firstbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent
+                 }
+#firstbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#lastbtn:before {content:"last_page"; }
+#lastbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent
+                 }
+#lastbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#donebtn:before {content:"done"; }
+#donebtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent
+                 }
+#donebtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#cancelbtn:before {content:"cancel"; }
+#cancelbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent;
+                 }
+#cancelbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+
+#addbtn:before {content:"add"; }
+#addbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent;
+                text-decoration: None; /* allows a tags to be styled the same as buttons! -just add id="addbtn" */
+                 }
+#addbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#deletebtn:before {content:"delete"; }
+#deletebtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent;
+                float: Right;
+                 }
+#deletebtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+#searchbtn:before {content:"search"; }
+#searchbtn      {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent;
+                 }
+#searchbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+/* user materialbtn to add any material icon.
+   set the button text to the name of icon
+   eg:  to use the "description" icon:
+   <button class="materialbtn">description</button>  */
+
+.materialbtn    {
+                font-family: 'Material Icons';
+                font-weight: bold;
+                font-size: 36px;  /* Preferred icon size is 24 */
+                display:inline-block;
+                vertical-align: middle;
+                background-repeat:no-repeat;
+                border-style: none ;
+                color: var(--main-fg-colour);
+                background-color: Transparent;
+                 }
+.materialbtn:hover    { background-color: var(--main-fg-colour) ;
+                    color:var(--main-bg-colour);
+                    }
+
+/* Use the textbtn class to render any buttons that use text rather than an icon
+   See login.html for an example*/
+.textbtn        {
+                color: var(--main-fg-colour);
+                border: none;
+                background-color: var(--main-bg-colour);
+                padding: 5px 10px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                border-radius: 8px;
+                border: 2px solid var(--main-fg-colour);
+                margin: 5px 5px;
+                vertical-align: middle;
+/*                float: right;  */
+                }
+.textbtn:hover    { background-color: var(--main-fg-colour);
+                    color: var(--main-bg-colour);
+                    border-radius: 8px;
+                    border: 2px solid var(--main-fg-colour);
+                    }
+
+/* Drop down menu for responsive content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    text-align:right;
+    background-color: var(--main-bg-colour);
+    /*min-width: 160px;*/
+    min-width: 100%;
+    overflow: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    padding: 6px 8px;
+    z-index: 1;
+}
+
+.dropdown-content a{
+    background-color: var(--main-bg-colour);
+    padding: 6px 8px;
+    color: var(--main-fg-colour);
+    display: block;}
+
+.dropdown-content a:hover{
+    background-color: var(--main-fg-colour);
+    padding: 6px 8px;
+    color: #f9f9f9;
+    display: block;}
+
+
+.dropdown:hover .dropdown-content {
+    display: block;
+    right: 0;
+}
+
+
+@media screen and (max-width: 30em) {
+    .pagemenucol { 100%
+    }
+}
+
+.pagemenurow {
+    display: flex;
+    }
+
+.pagemenucol {
+    flex: 50%;
+    }

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%">
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Change Daysheet View{% endblock %}</h1>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+<form method="POST" autocomplete="on">
+  <fieldset>
+    <legend>Daysheet View</legend>
+    <ul>
+      <li>
+        <label for="view">View</label>
+        <select name="view" id="view" required title="Select the View">
+            <option value="ALL">All flights for the day</option>
+            <option value="AIRBORNE">Flights currently airborne</option>
+            <option value="WAITING">Flights not yet launched</option>
+            <option value="LANDED">Completed Flights</option>
+            <option value="UNPAID">Unpaid Flights</option>
+        </select>
+      </li>
+    </ul>
+  </fieldset>
+  <button type="submit" class="donebtn" name="donebtn" id="donebtn" title="Press to accept" value=""></button>
+</form>
+{% endblock %}

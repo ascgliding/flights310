@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Users{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('auth.usermaint', id=0) }}"><button id="addbtn"></button></a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading">ID</div>
+      <div class="heading" align="right">User Name</div>
+      <div class="heading" align="right">Full Name</div>
+      <div class="heading" align="right">Role</div>
+    </div>
+  {% for user in users %}
+    <div class="row">
+      <div class="cell"><a href="{{ url_for('auth.usermaint', id=user['id']) }}">{{ user['id'] }}</a></div>
+      <div class="cell" align="left">{{ user['name'] }}</div>
+      <div class="cell" align="left">{{ user['fullname'] }}</div>
+      <div class="cell" align="left">{{ "Admin" if user['administrator'] == 1 else 'User' }}</div>
+
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

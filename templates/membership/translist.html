@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Trans List for {{ member.firstname }} {{ member.surname }} ({{ member.id }}){% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('membership.transmaint', id=0, member=member.id) }}"><button id="addbtn"></button></a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!--  <div class="table" style="table-layout: fixed; display:table;">  -->
+  <div style="table-layout: fixed; display:table;">
+    <div class="row">
+      <div class="heading" style="width:5%">id</div>
+      <div class="heading" style="width:15%">Date</div>
+      <div class="heading" style="width:25%">Type</div>
+      <div class="heading" style="width:15%">Subtype</div>
+      <div class="heading" style="width:40%">Notes</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell" ><a href="{{ url_for('membership.transmaint', id=l['id'], member=member.id) }}">{{ l['id'] }}</a></div>
+      <div class="cell"  align="left">{{ l['transdate'].strftime('%d/%m/%y') }}</div>
+      <div class="cell"  align="left">{{ l['typedesc'] }}</div>
+      <div class="cell"  align="left">{{ l['subtypedesc'] }}</div>
+      <div class="cell" >{{ l['transnotes'] }}</div>
+    </div>
+    {#
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+    #}
+  {% endfor %}
+  </div>
+{% endblock %}

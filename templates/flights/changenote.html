@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block header %}
+
+{% endblock %}
+{% block content %}
+<form method="Post" autocomplete="off" id="trapchange">
+    {{ form.csrf_token }}
+    <fieldset>
+        <legend>{{ form.name }} Flight Maintenance</legend>
+        {% if line.linetype == 'FL' %}
+            Notes for : ID {{ line.id }} / {{ line.ac_regn }} / {{ line.pic }}
+        {% endif %}
+        <li>{{ render_field(form.flt_date) }}</li>
+        <li>{{ render_field(form.general_note)  }}</li>
+    </fieldset>
+    <div style="display:table-cell; text-align: right;">
+        {{ form.btnsubmit() }}
+        {{ form.cancel(onclick="goBack()") }}
+        {{ form.delete() }}
+    </div>
+</form>
+
+{% endblock %}

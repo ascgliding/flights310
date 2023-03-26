@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+
+{% block header %}
+<script>
+  $(document).ready(function(){
+    // At form load caputure the contents of the form to a variable via the serialize function
+    // Note that the form must have the id=trapchange
+    var trapchange_data = $("#trapchange").serialize();
+
+    // when the button with id "matpaymentbtn" is pressed, check to see if the current form
+    // content matches the content when the form was loaded.  If not prevent the button action
+    // by returning false.
+    //
+    // decided this was not necessary - it is updated anyway 21 Jan 23.  Just needed ot fix flights.py
+    // which was re-directing before the db update.
+    //
+    //$("#matpaymentbtn").on("click", function() {
+    //      if ($("#trapchange").serialize() != trapchange_data) {
+    //        alert('Data on the form Changed.  You need to accept or cancel the changes first')
+    //        return false;
+    //      }
+    //  });
+    });
+
+
+</script>
+
+<script type="text/javascript" charset="utf-8">
+
+function setdefaults(ac,flt_date) {
+    // The ajax function is calling the api
+    $.ajax({
+        type: "GET",
+        url: "/getdefaults",  // api name
+        data: 'ac=' + ac.value + '&flt_date=' + flt_date,
+        dataType: "json",
+        success: function(data) {
+            // what happens when it works.  Data is the value of the stuff coming back
+            var thisac;
+            thisac = data;
+            // Disable P2 if not used.
+            console.log('seat count is ' + thisac[0].seat_count);
+            if (thisac[0].seat_count == 1) {
+                document.getElementById('p2').disabled = true;
+              } else {
+                document.getElementById('p2').disabled = false;
+              }
+            // Set the default pilot method if specified.
+            if (thisac[0].default_pilot != null) {
+               console.log('Default Pilot:' + thisac[0].default_pilot);
+               document.getElementById('pic').value = thisac[0].default_pilot;
+              }
+            // set the default tow pilot and regn to the last one used
+            // Removed this on 22 Jan 23.  Default is set in python code.
+            // document.getElementById('tow_pilot').value = thisac[0].towie;
+            // document.getElementById('tug_regn').value = thisac[0].tug;
+            if (thisac[0].default_launch == 'SELF LAUNCH') {
+              document.getElementById('tug_regn').value = thisac[0].default_launch;
+              document.getElementById('tow_pilot').value = '';
+              }
+            },
+        failure: function(data) { alert("Unable to get aircraft"); },
+        complete: function(xhr, textStatus) {
+            console.log("AJAX Request complete -> ", xhr, " -> ", textStatus);
+            }
+    });
+};
+
+function acchange(ac) {
+  flt_date = document.getElementById('flt_date').value;
+  setdefaults(ac,flt_date);
+};
+
+</script>
+
+
+
+{% endblock %}
+
+{% block content %}
+<form method="Post" autocomplete="off" id="trapchange" >
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }} Flight Maintenance</legend>
+    <ul>
+      <li>{{ render_field(form.flt_date)  }}</li>
+      <li>{{ render_field(form.ac_regn,onchange="acchange(this)") }}</li>
+      <li>{{ render_field(form.pic)  }}</li>
+      <li>{{ render_field(form.p2)  }}</li>
+      <li>{{ render_field(form.takeoff)  }}</li>
+      <li>{{ render_field(form.tug_down)  }}</li>
+      <li>{{ render_field(form.release_height) }}</li>
+      <li>{{ render_field(form.landed)  }}</li>
+      <li>{{ render_field(form.tow_pilot)  }}</li>
+      <li>{{ render_field(form.tug_regn)  }}</li>
+    </ul>
+    <datalist id="activepilots">
+          {% for pilot in pilots %}
+        <option value="{{ pilot }}">
+          {% endfor %}
+      </datalist>
+    <datalist id="acregns">
+      {% for a in ac %}
+      <option value="{{ a }}">
+      {% endfor %}
+    </datalist>
+    <datalist id="towies">
+      {% for a in towielist %}
+      <option value="{{ a }}">
+      {% endfor %}
+    </datalist>
+    <datalist id="towregnlist">
+      {% for a in towregnlist %}
+      <option value="{{ a }}">
+      {% endfor %}
+    </datalist>
+  </fieldset>
+  <div style="display:table-cell; text-align: right;">
+    {{ form.btnsubmit() }}
+    {{ form.cancel(onclick="goBack()") }}
+    <button class="materialbtn" type="button", id="takeoffbtn" name="takeoffbtn" title="Set takeoff time to now" value="takeoffbtn" onclick="resettime('takeoff');">flight_takeoff</button>
+    <button class="materialbtn" style="color:yellow;background-color: var(--main-fg-colour);", type="button", id="tug_downbtn" name="tug_downbtn" title="Set Tug Down time to now" value="tug_downbtn" onclick="resettime('tug_down');">flight_land</button>
+    <button class="materialbtn" type="button", id="landingbtn" name="landingbtn" title="Set Landing time to now" value="landingbtn" onclick="resettime('landed');">flight_land</button>
+    {{ form.note() }}
+    {{ form.payment() }}
+    {{ form.delete() }}
+  </div>
+</form>
+
+
+
+{% endblock %}

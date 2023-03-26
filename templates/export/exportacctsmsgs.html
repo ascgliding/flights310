@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Export Messages{% endblock %}</h1>
+    </div>
+        <div  style="display:table-cell; text-align: right;" >
+          <a class="action"  href="{{ url_for('export.exportdownload') }}" ,
+           title="Download file">
+        <button class="materialbtn"  title="Download data that gave rise to these messages">download</button>
+          </a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div> Press the download button above to download the extracted data.</div>
+<div><span style="color:red">Warning</span> - The download button above will download the file that gave rise to these messages.
+  If you change anything on this screen those changes will not be reflected in the downloaded file.
+  You need to return to the previous screen (where the parameters are entered) and refresh this screen
+  of messages.</div>
+<div class="table">
+  <div class="row">
+    <div class="heading">ID</div>
+    <div class="heading" align="Center">Type</div>
+    <div class="heading" align="Left">Message</div>
+    <div class="heading" align="Left">Date</div>
+    <div class="heading" align="Left">Regn</div>
+    <div class="heading" align="Left">PIC</div>
+    <div class="heading" align="Left">P2</div>
+    <div class="heading" align="Left">Payer</div>
+    <div class="heading" align="Right">Tow</div>
+    <div class="heading" align="Right">Glider</div>
+    <div class="heading" align="Left">Note</div>
+  </div>
+
+  {% for m in messages %}
+  <div class="row">
+    <div class="cell"><a href="{{ url_for('flights.changeflight', id=m.flt) }}">{{ m.flt | displayfornone }}</a></div>
+    <div class="cell" align="center">{{ m.type }}</div>
+    <div class="cell">{{ m.msg }}</div>
+    <div class="cell" align="center">{{ m.flt_date.strftime('%d%b') }}</div>
+    <div class="cell">{{ m.ac_regn }}</div>
+    <div class="cell">{{ m.pic }}</div>
+    <div class="cell">{{ m.p2 }}</div>
+    <div class="cell">{{ m.payer }}</div>
+    <div class="cell" align="Right">{{ m.tow_charge }}</div>
+    <div class="cell" align="Right">{{ m.glider_charge }}</div>
+    <div class="cell">{{ m.general_note if m.general_note != None }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

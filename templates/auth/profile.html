@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Maintain User Profile{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="POST">
+  <fieldset>
+    <legend>Login</legend>
+    <ul>
+      <li>
+        <label for="fullname">Name</label>
+        <input name="fullname" id="fullname" required value="{{ current_user.fullname }}">
+      </li>
+      <li>
+        <label for="email">EMail Address</label>
+        <input name="email" id="email" required value="{{ current_user.email }}">
+      </li>
+      {% if current_user.administrator %}
+      <li>
+        <label for="administrator">Administrator</label>
+        <input type="checkbox" name="administrator" id="administrator" {{ 'checked="checked"' if current_user.administrator else "" }} />
+      </li>
+      <li>
+        <label for="approved">Approved</label>
+        <input type="checkbox" name="approved" id="approved" {{ 'checked="checked"' if current_user.approved else "" }} />
+      </li>
+      {% endif %}
+    </ul>
+  </fieldset>
+  <button type="submit" class="textbtn" name="submitbtn" id="submitbtn" title="Press to Submit" value="">Submit</button>
+  <button type="submit" class="textbtn" name="pwdbtn" id="pwdbtn" title="Change Password" value="">Password</button>
+</form>
+{% endblock %}

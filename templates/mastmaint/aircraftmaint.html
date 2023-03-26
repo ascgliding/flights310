@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}
+Aircraft Maintenance
+{% endblock %}
+{% block content %}
+<form method="Post">
+  {{ form.csrf_token }}
+  {{ form.name }}
+  <ul>
+    <li>{{ render_field(form.regn) }}</li>
+    <li>{{ render_field(form.type) }}</li>
+    <li>{{ render_field(form.launch) }}</li>
+    <li>{{ render_field(form.rate_per_hour) }}</li>
+    <li>{{ render_field(form.flat_charge_per_launch) }}</li>
+    <li>{{ render_field(form.rate_per_height) }}</li>
+    <li>{{ render_field(form.per_height_basis) }}</li>
+    <li>{{ render_field(form.rate_per_hour_tug_only) }}</li>
+    <li>{{ render_field(form.bscheme) }}</li>
+    <li>{{ render_field(form.default_launch) }}</li>
+    <li>{{ render_field(form.seat_count) }}</li>
+    <li>{{ render_field(form.default_pilot) }}</li>
+    <li>{{ render_field(form.accts_income_acct) }}</li>
+    <li>{{ render_field(form.accts_income_tow) }}</li>
+
+  </ul>
+  {{ form.btnsubmit() }}
+  {{ form.cancel() }}
+  {{ form.delete() }}
+
+</form>
+{% endblock %}

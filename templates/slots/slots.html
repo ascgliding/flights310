@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Slots{% endblock %}</h1>
+
+{% endblock %}
+
+{% block content %}
+  <table class="entries">
+    <legend>Slots in Use</legend>
+    <tr>
+      <th>Slot Type</th>
+      <th align="right">Record Count</th>
+    </tr>
+  {% for slot in slots %}
+    <tr>
+      <td><a class="action" href="{{ url_for('slots.slotlist', slottype=slot['slot_type']) }}">{{ slot['slot_type'] }}</a>  </td>
+      <td align="right">{{ "%d"|format(slot['count']) }}</td>
+    </tr>
+  {% endfor %}
+  </table>
+{% endblock %}

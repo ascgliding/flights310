@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<!-- This form is used for multiple processes. Pass in a title to help the user know where they are -->
+<h1>{% block title %}{{ title }}{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+
+<form method="Post">
+  {{ form.csrf_token }}
+  <ul>
+    <li>{{ render_field(form.export_dates) }}</li>
+    <li>{{ render_field(form.include_header) }}</li>
+    <li>{{ render_field(form.start_date) }}</li>
+    <li>{{ render_field(form.end_date) }}</li>
+  </ul>
+  {{ form.btnsubmit() }}
+  {{ form.cancel() }}
+</form>
+
+
+{% endblock %}

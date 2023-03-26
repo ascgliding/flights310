@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block header %}
+Transaction Maintenance
+{% endblock %}
+{% block content %}
+<form method="Post" autocomplete="off">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }} Transaction Maintenance</legend>
+    <ul>
+      <li>{{ render_field(form.transdate) }}</li>
+      <li>{{ render_field(form.transtype) }}</li>
+      <li>{{ render_field(form.transsubtype) }}</li>
+      <li>{{ render_field(form.transnotes) }}</li>
+    </ul>
+  </fieldset>
+  <div style="display:table-cell; text-align: right;">
+    {# form.btnsubmit() #}
+    <button id="donebtn" type="submit"></button>
+  </div>
+</form>
+{% endblock %}

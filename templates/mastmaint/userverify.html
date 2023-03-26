@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}User Verification{% endblock %}</h1>
+<!--    </div>-->
+<!--        <div  style="display:table-cell; text-align: right;" >-->
+<!--          <a class="action"  href="{{ url_for('export.exportdownload') }}" ,-->
+<!--           title="Download file">-->
+<!--        <button class="materialbtn"  title="Download data that gave rise to these messages">download</button>-->
+<!--          </a>-->
+<!--      </div>-->
+<!--  </div>-->
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="table">
+  <div class="row">
+    <div class="heading">Key</div>
+    <div class="heading" align="Center">Name</div>
+    <div class="heading" align="Left">Message</div>
+    <div class="heading" align="Left">Priority</div>
+    <div class="heading" align="Left">Type</div>
+<!--    <div class="heading" align="Left">Table</div>-->
+  </div>
+
+  {% for m in messages %}
+  <div class="row">
+<!--    <div class="cell"><a href="{{ url_for('flights.changeflight', id=m.flt) }}">{{ m.flt | displayfornone }}</a></div>-->
+    {% if m.tbl == 'users' %}
+      <div class="cell"><a href="{{ url_for('auth.usermaint', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
+    {% elif m.tbl == 'pilots' %}
+      <div class="cell"><a href="{{ url_for('mastmaint.pilotmaint', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
+    {% elif m.tbl == 'flights' %}
+      <div class="cell"><a href="{{ url_for('flights.changeflight', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
+    {% else %}
+      <div class="cell" align="center">{{ m.key }}</div>
+    {% endif %}
+    <div class="cell">{{ m.name }}</div>
+    <div class="cell">{{ m.msg }}</div>
+    <div class="cell">{{ m.priority }}</div>
+    <div class="cell">{{ m.msgtype }}</div>
+<!--    <div class="cell">{{ m.tbl }}</div>-->
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

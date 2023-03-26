@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Create New Slot Record{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <fieldset>
+      <legend>Add new slot</legend>
+      <ul>
+        <li>
+          <label for="slot_type">Slot Type</label>
+          <input name="slot_type" id="slot_type"
+                 onkeyup="this.value = this.value.toUpperCase();" style="text-transform:uppercase"
+                 value="{{ request.form['slot_type']  or thistype }}" required>
+        </li>
+          <label for="slot_key">Key</label>
+          <input name="slot_key" id="slot_key" style="text-transform:uppercase"
+                 onkeyup="this.value = this.value.toUpperCase();" style="text-transform:uppercase"
+                 value="{{ request.form['slot_key'] }}" required>
+        <li>
+          <label for="slot_desc">Description</label>
+          <input name="slot_desc" id="slot_desc"
+                 value="{{ request.form['slot_desc'] }}" required>
+        </li>
+        <li>
+          <label for="slot_data">Data</label>
+          <input name="slot_data" id="slot_data"
+                 value="{{ request.form['slot_data'] }}" >
+        </li>
+      </ul>
+    </fieldset>
+    <button type="submit" name="donebtn" id="donebtn" title="Save these changes" value="">
+    <button type="submit" id="cancelbtn" name="cancelbtn" title="Cancel this change" value="">
+  </form>
+{% endblock %}

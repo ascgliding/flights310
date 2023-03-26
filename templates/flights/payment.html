@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+
+{% block header %}
+
+{% endblock %}
+{% block content %}
+<form method="Post" autocomplete="off">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }} Payment Maintenance</legend>
+    <ul>
+      <li>{{ glider_time }}</li>
+      <li>{{ render_field(form.payer)  }}</li>
+      <li>{{ render_field(form.tow_charge)  }}</li>
+      <li>{{ render_field(form.glider_charge)  }}</li>
+      <!-- <li>xx render_field(form.other_charge)  xx</li> --!>
+      <li>{{ render_field(form.payment_note) }}</li>
+    </ul>
+    <datalist id="pilots">
+          {% for pilot in pilots %}
+        <option value="{{ pilot }}">
+          {% endfor %}
+    </datalist>
+    <datalist id="paymentmethods">
+        <option value="Ticket">
+        <option value="Internet">
+        <option value="Cash">
+        <option value="Voucher">
+    </datalist>
+  </fieldset>
+  <div style="display:table-cell; text-align: right;">
+    {{ form.btnsubmit() }}
+    {{ form.cancel() }}
+    {{ form.calc() }}
+<!--  Delete function removed 22 Jan 23    xx form.delete() xx-->
+  </div>
+</form>
+{% endblock %}

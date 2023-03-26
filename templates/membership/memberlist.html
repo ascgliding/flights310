@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Member List{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('membership.membermaint', id=0) }}"><button id="addbtn"></button></a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading">id</div>
+      <div class="heading" >GNZ</div>
+      <div class="heading" >Surname</div>
+      <div class="heading" >First Name</div>
+      <div class="heading" >Email</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell"><a href="{{ url_for('membership.membermaint', id=l['id']) }}">{{ l['id'] }}</a></div>
+      <div class="cell" align="right">{{ l['gnz_no'] }}</div>
+      <div class="cell" align="left">{{ l['surname'] }}</div>
+      <div class="cell" align="left">{{ l['firstname'] }}</div>
+      <div class="cell" align="left">{{ l['email_address'] }}</div>
+    </div>
+    {#
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+    #}
+  {% endfor %}
+  </div>
+{% endblock %}

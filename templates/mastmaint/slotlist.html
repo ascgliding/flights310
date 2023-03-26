@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Slot List{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('mastmaint.slotmaint', id=0) }}"><button id="addbtn"></button></a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading">id</div>
+      <div class="heading" >User</div>
+      <div class="heading" >Type</div>
+      <div class="heading" >Key</div>
+      <div class="heading" >Description</div>
+      <div class="heading" >Data</div>
+
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell"><a href="{{ url_for('mastmaint.slotmaint', id=l['id']) }}">{{ l['id'] }}</a></div>
+      <div class="cell" align="right">{{ l['userid'] }}</div>
+      <div class="cell" align="left">{{ l['slot_type'] }}</div>
+      <div class="cell" align="left">{{ l['slot_key'] }}</div>
+      <div class="cell" align="left">{{ l['slot_desc'] }}</div>
+      <div class="cell" align="left">{{ l['slot_data'] }}</div>
+    </div>
+    {#
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+    #}
+  {% endfor %}
+  </div>
+{% endblock %}

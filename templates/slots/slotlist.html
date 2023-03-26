@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Slot list for {{ thistype }} {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table class="entries">
+  <tr>
+    <th>id</th>
+    <th>Key</th>
+    <th>Description</th>
+    <th>Data</th>
+  </tr>
+  {% for slot in slotkeys %}
+  <tr>
+    <td><a class="action" href="{{ url_for('slots.slotupd', id=slot['id']) }}"> {{ slot['id'] }} </a></td>
+    <td>{{ slot['slot_key'] }}</td>
+    <td>{{ slot['slot_desc'] }}</td>
+    <td>{{ slot['slot_data'] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<div style="vertical-align:middle;">
+<a href="{{ url_for('slots.slotnew', slot_type=thistype) }}"><button id="addbtn" title="Add New Record"></button></a>
+<button type="submit" class="textbtn" title="Return to all slots" value="" onclick="window.location.href='../slots'">Return to List</button>
+</div>
+{% endblock %}
