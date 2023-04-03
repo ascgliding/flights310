@@ -136,35 +136,36 @@ CLI (SQLITE3)
 =============
 
 DESCRIPTION
-       To  start a sqlite3 interactive session, invoke the sqlite3 command and optionally provide the name of a database file.
-       If the database file does not exist, it will be created.  If the database file does exist, it will be opened.
 
-       For example, to create a new database file named "mydata.db", create a table named  "memos"  and  insert  a  couple  of
-       records into that table:
+To  start a sqlite3 interactive session, invoke the sqlite3 command and optionally provide the name of a database file.
+If the database file does not exist, it will be created.  If the database file does exist, it will be opened.
 
-       $ sqlite3 mydata.db
-       SQLite version 3.8.8
-       Enter ".help" for instructions
-       sqlite> create table memos(text, priority INTEGER);
-       sqlite> insert into memos values('deliver project description', 10);
-       sqlite> insert into memos values('lunch with Christine', 100);
-       sqlite> select * from memos;
-       deliver project description|10
-       lunch with Christine|100
-       sqlite>
+For example, to create a new database file named "mydata.db", create a table named  "memos"  and  insert  a  couple  of
+records into that table::
 
-	   You can create a file of commands (which may include the .open meta command and redirect it as input
+    $ sqlite3 mydata.db
+    SQLite version 3.8.8
+    Enter ".help" for instructions
+    sqlite> create table memos(text, priority INTEGER);
+    sqlite> insert into memos values('deliver project description', 10);
+    sqlite> insert into memos values('lunch with Christine', 100);
+    sqlite> select * from memos;
+    deliver project description|10
+    lunch with Christine|100
+    sqlite>
 
-	   sqlite3 < myfile.sql
+You can create a file of commands (which may include the .open meta command and redirect it as input::
 
-       If no database name is supplied, the ATTACH sql command can be used to attach to existing or create new database files.
-       ATTACH can also be used to attach to multiple databases within the same interactive session.  This is  useful  for  
-       mmigrating data between databases, possibly changing the schema along the way.
+    sqlite3 < myfile.sql
 
-       Optionally,  a SQL statement or set of SQL statements can be supplied as a single argument.  Multiple statements should
-       be separated by semi-colons.
+If no database name is supplied, the ATTACH sql command can be used to attach to existing or create new database files.
+ATTACH can also be used to attach to multiple databases within the same interactive session.  This is  useful  for
+mmigrating data between databases, possibly changing the schema along the way.
 
-       For example:
+Optionally,  a SQL statement or set of SQL statements can be supplied as a single argument.  Multiple statements should
+be separated by semi-colons.
+
+For example::
 
        $ sqlite3 -line mydata.db 'select * from memos where priority > 20;'
        text = lunch with Christine
@@ -499,7 +500,7 @@ At pythonanywhere
 =================
 
 *   Start a Bash Console.
-*   workon flask31.  You will get an error about no module named site.  You can ignore this.
+*   workon flask310.  You will get an error about no module named site.  You can ignore this.
 *   Ensure the current folder is the parent of the instance folder
     and that should also be the parent of the asc folder.  (i.e. PWD
     should be /home/ascgliding.
@@ -694,11 +695,6 @@ To upload a new version of the system:
 *   Run any upgrade code via the cli
 
 
-
-
-
-
-
 Python Anywhere
 ===============
 
@@ -708,6 +704,47 @@ To use Sqlite3:
 *   cd ~/instance
 *   sqlite3 asc.sqlite
 
+Changing the System Image
+=========================
+
+Make a Backup
+    Ensure we have a backup of the code that is currently running
+
+Capture existing details.
+    * from a Console use "workon <venvname>" to enter the venv.
+    * use "pip freeze > REQUIREMENTS_<date>.txt.
+    * Write down the current python version with python --version
+
+Zip the new version Code and Transfer
+    This is the same as usual.  Zip up the development code and
+    transfer to python anywhere.
+
+Update the system Image
+    From the "account" option on the pythonanywhere menu, Select the
+    system image tab and change the image.
+
+Logout
+    Most important - close all consoles and logout
+
+Create a new Venv
+    * Make sure the PYTHONHOME environment variablle is NOT set
+    * CD to the parent of the asc folder
+    * mkvirtualenv --python=3.10 flask310.  You get the same error about no module named site.  Just ignore it.
+
+Update the code
+    Copy the zip file from the source location and unzip as normal
+
+Update Packages
+    After creating the virtual environment, it should have started
+    automatically (see "(flask310)" on the LHS of the command prompt.
+    Run "pip install -r REQUIREMENTS_xxxxx.txt"
+
+Set the venv in pythonanywhere
+    From the "Web" page change the python version and the virtual env
+    to the new versions.
+
+Restart the site.
+    Just restart in the normal manner.
 
 =================================
 Schema as at 2 Jan 23
