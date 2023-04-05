@@ -22,6 +22,7 @@ from asc.common import *
 
 bp = Blueprint('flights', __name__, url_prefix='/flights')
 app = Flask(__name__)
+# app = current_app
 applog = app.logger
 
 constDAYDATE = 'daydate'

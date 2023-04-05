@@ -92,6 +92,9 @@ Add New Note button to daysummary
 When adding the note for the instructor and so on to the day, and there is nothing for the day
 You have to select the PREVIOUS day, insert a note and override the date.  Butt ugly.
 
+I have created the roster table and verified that it will be created when the application starts.
+Need to create a datagrid with an import button
+
 Tug Only appears twice in Regn drop down
 ----------------------------------------
 

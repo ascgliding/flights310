@@ -1,15 +1,22 @@
+import datetime
+
+import sqlalchemy.sql.expression
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app
 )
 from werkzeug.exceptions import abort
+from werkzeug.utils import secure_filename
+import os
+import csv
 
 from flask_login import login_required, current_user
 from asc import db
-from asc.schema import Pilot, Aircraft,  Slot, User
-from sqlalchemy import text as sqltext
+from asc.schema import Pilot, Aircraft,  Slot, User, Roster
+from sqlalchemy import text as sqltext, delete
 
 # WTforms
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField,FileRequired
 from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField, BooleanField, RadioField, \
     TextAreaField, DecimalField
 from wtforms.fields import EmailField, IntegerField, DateField
@@ -93,6 +100,11 @@ class SlotForm(FlaskForm):
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick" : "ConfirmDelete()" })
+
+class RosterUploadForm(FlaskForm):
+    roster_file = FileField(validators=[FileRequired()])
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
 
 
 bp = Blueprint('mastmaint', __name__, url_prefix='/mastmaint')
@@ -317,3 +329,68 @@ def userverify():
     messages = db.engine.execute(sql).fetchall()
     return render_template('mastmaint/userverify.html', messages=messages)
 
+@bp.route('/rosterlist', methods=['GET', 'POST'])
+@login_required
+def rosterlist():
+    if not current_user.administrator:
+        flash("Sorry, this is an admin only function")
+        return render_template('index.html')
+    if request.method == 'GET':
+        list = Roster.query.order_by(Roster.roster_date.desc())
+        return render_template('mastmaint/rosterlist.html', list=list)
+
+@bp.route('/rosterimport', methods=['GET', 'POST'])
+@login_required
+def rosterimport():
+    if not current_user.administrator:
+        flash("Sorry, this is an admin only function")
+        return render_template('index.html')
+    form = RosterUploadForm()
+    if form.cancel.data:
+        return redirect(url_for('mastmaint.rosterlist'))
+    if form.validate_on_submit():
+        filename = secure_filename(form.roster_file.data.filename)
+        # print("Filename:{}".format(form.roster_file.data.filename))
+        # print("instance path:{}".format(app.instance_path))
+        form.roster_file.data.save(os.path.join("/tmp", filename))
+        # File processing goes here
+        with open(os.path.join("/tmp",filename)) as rosterfile:
+            thisreader = csv.DictReader(rosterfile,delimiter=",")
+            # Establish the earliest and latest dates from this file
+            mindate = datetime.date(2200,12,31)  # just a date long after I will be alive!
+            maxdate = datetime.date(1900,1,1)  # before the advent of flying!
+            for row in thisreader:
+                thisdate = datetime.datetime.strptime(row['Date'],"%d/%m/%Y").date()
+                if thisdate < mindate:
+                    mindate = thisdate
+                if thisdate > maxdate:
+                    maxdate = thisdate
+            # Now remove all of those records
+        db.session.query(Roster).filter(Roster.roster_date >= mindate).filter(Roster.roster_date <= maxdate).delete()
+            # db.session.commit()
+        with open(os.path.join("/tmp", filename)) as rosterfile:
+            thisreader = csv.DictReader(rosterfile, delimiter=",")
+            # Finally add the new ones
+            for row in thisreader:
+                print(row)
+                r = Roster()
+                r.roster_date = datetime.datetime.strptime(row['Date'],"%d/%m/%Y")
+                r.roster_inst = convert_pilot(row['Instructor'])
+                r.roster_tp = convert_pilot(row['Tow_Pilot'])
+                r.roster_dp = convert_pilot(row['Duty_Pilot'])
+                db.session.add(r)
+                db.session.commit()
+        return redirect(url_for('mastmaint.rosterlist'))
+    return render_template('mastmaint/rosterupload.html', form=form)
+
+def convert_pilot(proster_name):
+    # look in pilots table for match:
+    # replace the space with a percent:
+    print(proster_name)
+    likeqry = proster_name.replace(" ","%").strip()
+    thispilot = Pilot.query.filter(Pilot.fullname.ilike(likeqry)).first()
+    if thispilot is None:
+        return proster_name
+    else:
+        print(thispilot.fullname)
+        return thispilot.fullname

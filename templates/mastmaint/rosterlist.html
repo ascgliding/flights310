@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Roster List{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('mastmaint.rosterimport') }}" title="Import from Roster System"><button class="textbtn">Import</button></a>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading">id</div>
+      <div class="heading" >Date</div>
+      <div class="heading " >Instructor</div>
+      <div class="heading  mobile_port_supress mobile_land_supress" >Tow Pilot</div>
+      <div class="heading  mobile_port_supress mobile_land_supress" >Duty Pilot</div>
+
+    </div>
+  {% for l in list %}
+    <div class="row">
+<!--      <div class="cell"><a href="{{ url_for('mastmaint.aircraftmaint', id=l['id']) }}">{{ l['id'] }}</a></div>-->
+      <div class="cell" algin="right">{{ l['id'] }}</div>
+      <div class="cell" align="left">{{ l['roster_date'] }}</div>
+      <div class="cell" align="left">{{ l['roster_inst'] }}</div>
+      <div class="cell  mobile_port_supress mobile_land_supress " align="left">{{ l['roster_tp'] }}</div>
+      <div class="cell  mobile_port_supress mobile_land_supress " align="left">{{ l['roster_dp'] }}</div>
+    </div>
+    {#
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+    #}
+  {% endfor %}
+  </div>
+{% endblock %}

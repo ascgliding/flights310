@@ -16,9 +16,9 @@ from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
 import asc.jingafilters
 
+
 if sys.platform != 'win32':
     import pwd
-
 
 # It is import that the following syntax is used.
 # from asc.import * will not work - it will get hung up with the circular reference to db.
@@ -81,7 +81,11 @@ def create_app(test_config=None):
     # create and configure the app
     # -----------------------------------------------------------------------------------------------------
     # print("create_app being called with Flask {}".format(flask_version))
-    app = Flask(__name__, instance_relative_config=True)
+    if sys.platform == 'win32':
+        app = Flask(__name__, instance_path="/users/rayb/pythonvenv/flask310/instance"  )
+        print('Instance Path Fixed for Windows implementation')
+    else:
+        app = Flask(__name__, instance_relative_config=True)
     # app.config.from_object('asc.config.' + os.environ.get('FLASK_ENV', default='development'))
 
     # if sys.platform == 'win32':
@@ -260,6 +264,7 @@ def establish_database(app):
         app.logger.error("There as a problem initialising flask alchemy: {}".format(e))
     try:
         with app.app_context():
+            # Build any missing tables:
             db.create_all()
             app.logger.info("Flask Alchemy Tables Created")
     except Exception as e:

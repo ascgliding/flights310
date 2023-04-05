@@ -375,3 +375,12 @@ class MemberTrans(db.Model):
         self.memberid = member
         self.transdate = datetime.date.today()
         self.transsubtype = ''
+
+class Roster(db.Model):
+    __tablename__ = "roster"
+
+    id = db.Column(db.Integer, db.Sequence('roster_id_seq'), primary_key=True)
+    roster_date = db.Column(db.Date, comment='The Roster dat', default=datetime.date.today())
+    roster_inst = db.Column(db.String,  comment='Name of Duty Instructor')
+    roster_tp = db.Column(db.String,  comment='Name of Duty Tow Pilot')
+    roster_dp = db.Column(db.String,  comment='Name of Duty Pilot')

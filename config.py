@@ -1,8 +1,14 @@
 import os
-from flask import Flask
+
+import flask
+from flask import Flask, current_app
+
+print("in config")
+# from asc import create_app
 
 app = Flask(__name__, instance_relative_config=True)
-
+# # app = Flask(__name__)
+# app = create_app()
 
 class Config(object):
     SECRET_KEY='dev'

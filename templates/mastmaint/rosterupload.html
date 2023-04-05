@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Roster Upload{% endblock %}</h1>
+        <h2>The roster file needs to be a csv file with four fields:  Date, Instructor, Tow Pilot and Duty Pilot.
+        It should include a header record.</h2>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form  method="post" enctype="multipart/form-data">
+    <div>
+        {{ form.hidden_tag() }}
+        {{ form.roster_file }}
+    </div>
+    <div>
+        {{ form.btnsubmit() }}
+        {{ form.cancel() }}
+    </div>
+
+</form>
+
+{% endblock %}
