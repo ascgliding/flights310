@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%">
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}New Day{% endblock %}</h1>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+<form method="POST" autocomplete="on">
+  <fieldset>
+    <legend>New Day</legend>
+    <ul>
+      <li>{{ render_field(form.newdate)  }}</li>
+      <li>{{ render_field(form.instructor)  }}</li>
+      <li>{{ render_field(form.towpilot)  }}</li>
+      <li>{{ render_field(form.dutypilot)  }}</li>
+    </ul>
+    <datalist id="instructors">
+    {% for pilot in instlist %}
+      <option value="{{ pilot }}">
+    {% endfor %}
+    </datalist>
+    <datalist id="towies">
+    {% for pilot in towielist %}
+      <option value="{{ pilot }}">
+    {% endfor %}
+    </datalist>
+    <datalist id="dutypilots">
+    {% for pilot in dplist %}
+      <option value="{{ pilot }}">
+    {% endfor %}
+    </datalist>
+  </fieldset>
+  <button type="submit" class="donebtn" name="donebtn" id="donebtn" title="Press to accept" value=""></button>
+</form>
+{% endblock %}

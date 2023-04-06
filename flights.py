@@ -33,6 +33,21 @@ constDAYVIEW = 'dayview'
 # TODO: Change name of exports - need to include the user name
 # TODO: ARE you sure for flights where either a start/tug down or landed is already recorded and the user presses that button.
 
+class NewDayForm(FlaskForm):
+    newdate = DateField('Date',
+                     description="Today's Date",
+                     default=datetime.date.today()
+                     # validators=[validators.DataRequired()]
+                    )
+    instructor = StringField('Instructor',
+                             description = "Instructor Name",
+                             render_kw={'list': "instructors"})
+    towpilot = StringField('Tow Pilot',
+                             description = "Tow Pilot Name",
+                             render_kw={'list': "towies"})
+    dutypilot = StringField('Duty Pilot',
+                             description = "Duty Pilot Name",
+                             render_kw={'list': "dutypilots"})
 
 class FlightForm(FlaskForm):
     id = IntegerField('ID',
@@ -180,6 +195,39 @@ def daysummary():
         # return e
         abort(404, e)
 
+@bp.route('/newday', methods=['GET','POST'])
+@login_required
+def newday():
+    """
+    Start a new day.  Get the roster details and so on.
+    """
+    if request.method == 'GET':
+        instlist = [r.fullname for r in db.session.query(Pilot).filter(Pilot.instructor == True).all()]
+        towielist = [r.fullname for r in db.session.query(Pilot).filter(Pilot.towpilot == True).all()]
+        dplist = [r.fullname for r in db.session.query(Pilot).filter(Pilot.towpilot == False).filter(Pilot.instructor == False).all()]
+        newdate = datetime.date.today()
+        thisform = NewDayForm()
+        todayroster = Roster.query.filter(Roster.roster_date >= newdate).first()
+        thisform.newdate.data = todayroster.roster_date
+        thisform.instructor.data = todayroster.roster_inst
+        thisform.towpilot.data = todayroster.roster_tp
+        thisform.dutypilot.data = todayroster.roster_dp
+    if request.method == 'POST' :
+        thisform = NewDayForm(request.form)
+        # Add the note here
+        notetext = "Instructor:{}, Tow Pilot:{}, Duty Pilot:{}".format(thisform.instructor.data,
+                                                                       thisform.towpilot.data,
+                                                                       thisform.dutypilot.data)
+        daynote = Flight(flt_date=thisform.newdate.data,
+                         linetype='NT',
+                         general_note=notetext)
+        db.session.add(daynote)
+        db.session.commit()
+        # print("post note: {} / {}".format(thisform.newdate.data,thisform.instructor.data))
+        return redirect(url_for('flights.daysheet', date=thisform.newdate.data.strftime('%Y-%m-%d')))
+    # if not post....
+    return render_template('flights/newday.html', form=thisform, instlist=instlist, towielist=towielist,
+                           dplist=dplist)
 
 @bp.route('/daysheet/<date>')
 @login_required
@@ -276,7 +324,7 @@ def changeflight(id):
         # on a mobile platform the flight date is always the current date.  On windows or linux it will be prompted.
         # is todays date equal to the flight date?
         applog.info("User Agent:{}".format(request.user_agent.platform))
-        if request.user_agent.platform not in ['windows', 'linux']:
+        if request.user_agent.platform is not None and request.user_agent.platform not in ['windows', 'linux']:
             thisrec.flt_date = datetime.date.today()
     else:
         lastdate = thisrec.flt_date
