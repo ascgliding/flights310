@@ -23,10 +23,14 @@ from asc.common import *
 import os
 import xlsxwriter
 import csv
+from asc import create_app
+
+# app = Flask(__name__)
+# app = create_app()
+app = current_app
+applog = app.logger
 
 bp = Blueprint('export', __name__, url_prefix='/export')
-app = Flask(__name__)
-applog = app.logger
 
 # TODO :  General_note for flight + general_note record.
 
@@ -117,6 +121,9 @@ def exportacsummary():
                 order by ac_regn, flt_date
               """)
         fltsummary = db.engine.execute(sql, startdate=thisform.start_date.data, enddate=thisform.end_date.data).fetchall()
+        if len(fltsummary) <= 0:
+            flash("No Flights in this date range")
+            return render_template('export/exp_daterange.html', form=thisform, title='Export A/C Summary to Excel')
         for w in fltsummary:
             f = datetime.datetime.strptime(w.flt_date,'%Y-%m-%d').date()
         return send_file(createsummsxlsx(fltsummary), as_attachment=True)

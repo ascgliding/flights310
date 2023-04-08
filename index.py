@@ -3,10 +3,12 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 
-
+# app = Flask(__name__)
+# from asc import create_app
+# app = create_app()
+app = current_app
 
 bp = Blueprint('index', __name__)
-app = Flask(__name__)
 applog = app.logger
 
 @app.before_request

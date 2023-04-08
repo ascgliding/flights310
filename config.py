@@ -3,12 +3,16 @@ import os
 import flask
 from flask import Flask, current_app
 
-print("in config")
-# from asc import create_app
 
-app = Flask(__name__, instance_relative_config=True)
-# # app = Flask(__name__)
-# app = create_app()
+# --------------------------------------------------------------------
+# Be careful here... in order to access current_app this module
+# must be loaded within an application context (whatever thay may be).
+# This is done __init__.py.  Look at the create_filters function
+# to see how this is done.
+# --------------------------------------------------------------------
+
+from flask import current_app
+app = current_app
 
 class Config(object):
     SECRET_KEY='dev'
@@ -16,7 +20,7 @@ class Config(object):
     LOGFILE='asc.log'
     LOGCLEAR=True
     LOGLEVEL='INFO'
-    DATABASE = os.path.join(app.instance_path, 'asc.sqlite'),
+    # DATABASE = os.path.join(app.instance_path, 'asc.sqlite'),
 
 
 class development(Config):
@@ -30,9 +34,9 @@ class production(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:////' + os.path.join(app.instance_path, 'asc.sqlite')
     LOGLEVEL='INFO'
 
-class windevel(Config):
-    # Note that this config assumes windows.
-    # SQLALCHEMY_DATABASE_URI = 'sqlite:////' + os.path.join(app.instance_path, 'asc.sqlite')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///c:\\users\\rayb\\pythonvenv\\flask310\\var\\asc-instance\\asc.sqlite'
-    LOGCLEAR = True
-    LOGLEVEL = 'DEBUG'
+# class windevel(Config):
+#     # Note that this config assumes windows.
+#     # SQLALCHEMY_DATABASE_URI = 'sqlite:////' + os.path.join(app.instance_path, 'asc.sqlite')
+#     SQLALCHEMY_DATABASE_URI = 'sqlite:///c:\\users\\rayb\\pythonvenv\\flask310\\var\\asc-instance\\asc.sqlite'
+#     LOGCLEAR = True
+#     LOGLEVEL = 'DEBUG'

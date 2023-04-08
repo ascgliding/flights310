@@ -10,7 +10,7 @@ import os
 import csv
 
 from flask_login import login_required, current_user
-from asc import db
+from asc import db, create_app
 from asc.schema import Pilot, Aircraft,  Slot, User, Roster
 from sqlalchemy import text as sqltext, delete
 
@@ -106,10 +106,12 @@ class RosterUploadForm(FlaskForm):
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
 
+# app = Flask(__name__)
+# app = create_app()
+app = current_app
+applog = app.logger
 
 bp = Blueprint('mastmaint', __name__, url_prefix='/mastmaint')
-app = Flask(__name__)
-applog = app.logger
 
 
 @bp.route('/index')
@@ -350,13 +352,13 @@ def rosterimport():
         return redirect(url_for('mastmaint.rosterlist'))
     if form.validate_on_submit():
         filename = secure_filename(form.roster_file.data.filename)
-        # print("Filename:{}".format(form.roster_file.data.filename))
-        # print("instance path:{}".format(app.instance_path))
-        form.roster_file.data.save(os.path.join("/tmp", filename))
-        # File processing goes here
-        with open(os.path.join("/tmp",filename)) as rosterfile:
+        full_path_to_file = os.path.join(app.instance_path,filename)
+        # Upload file to instance folder:
+        form.roster_file.data.save(full_path_to_file)
+        # File processing goes here:
+        # Establish the earliest and latest dates from this file
+        with open(full_path_to_file) as rosterfile:
             thisreader = csv.DictReader(rosterfile,delimiter=",")
-            # Establish the earliest and latest dates from this file
             mindate = datetime.date(2200,12,31)  # just a date long after I will be alive!
             maxdate = datetime.date(1900,1,1)  # before the advent of flying!
             for row in thisreader:
@@ -365,14 +367,13 @@ def rosterimport():
                     mindate = thisdate
                 if thisdate > maxdate:
                     maxdate = thisdate
-            # Now remove all of those records
+        # Now remove all of those records
         db.session.query(Roster).filter(Roster.roster_date >= mindate).filter(Roster.roster_date <= maxdate).delete()
-            # db.session.commit()
-        with open(os.path.join("/tmp", filename)) as rosterfile:
+        # db.session.commit()
+        # Finally add the new ones
+        with open(full_path_to_file) as rosterfile:
             thisreader = csv.DictReader(rosterfile, delimiter=",")
-            # Finally add the new ones
             for row in thisreader:
-                print(row)
                 r = Roster()
                 r.roster_date = datetime.datetime.strptime(row['Date'],"%d/%m/%Y")
                 r.roster_inst = convert_pilot(row['Instructor'])
@@ -386,11 +387,9 @@ def rosterimport():
 def convert_pilot(proster_name):
     # look in pilots table for match:
     # replace the space with a percent:
-    print(proster_name)
     likeqry = proster_name.replace(" ","%").strip()
     thispilot = Pilot.query.filter(Pilot.fullname.ilike(likeqry)).first()
     if thispilot is None:
         return proster_name
     else:
-        print(thispilot.fullname)
         return thispilot.fullname

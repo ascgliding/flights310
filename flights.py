@@ -20,9 +20,17 @@ from asc.wtforms_ext import MatButtonField, TextButtonField
 from decimal import *
 from asc.common import *
 
+try:
+    # app = Flask(__name__)
+    # from asc import create_app
+    # app = create_app()
+    app = current_app
+except Exception as e:
+    print("Failed to load app in flights.py: {}".format(e))
+
+
+
 bp = Blueprint('flights', __name__, url_prefix='/flights')
-app = Flask(__name__)
-# app = current_app
 applog = app.logger
 
 constDAYDATE = 'daydate'
@@ -208,10 +216,13 @@ def newday():
         newdate = datetime.date.today()
         thisform = NewDayForm()
         todayroster = Roster.query.filter(Roster.roster_date >= newdate).first()
-        thisform.newdate.data = todayroster.roster_date
-        thisform.instructor.data = todayroster.roster_inst
-        thisform.towpilot.data = todayroster.roster_tp
-        thisform.dutypilot.data = todayroster.roster_dp
+        if todayroster is None:
+            thisform.newdate.data = datetime.date.today()
+        else:
+            thisform.newdate.data = todayroster.roster_date
+            thisform.instructor.data = todayroster.roster_inst
+            thisform.towpilot.data = todayroster.roster_tp
+            thisform.dutypilot.data = todayroster.roster_dp
     if request.method == 'POST' :
         thisform = NewDayForm(request.form)
         # Add the note here
@@ -265,7 +276,7 @@ def daysheet(date):
         thisset = db.session.query(Flight).filter(Flight.linetype == 'FL').filter(Flight.flt_date == thisdate).filter(Flight.landed != None).all()
         title = "Landed " +  thisdate.strftime("%a %d %b")
     elif view == 'UNPAID':
-        thisset = db.session.query(Flight).filter(Flight.linetype == 'FL').filter(Flight.landed != None).filter(or_(Flight.payment_note == None, Flight.payment_note =='')).all()
+        thisset = db.session.query(Flight).filter(Flight.linetype == 'FL').filter(Flight.flt_date == thisdate).filter(Flight.landed != None).filter(or_(Flight.payment_note == None, Flight.payment_note =='')).all()
         title = "Unpaid"
     else:
         thisset = db.session.query(Flight).filter(Flight.flt_date == thisdate).all()
@@ -371,7 +382,9 @@ def changeflight(id):
     else:
         activeacdate = datetime.date.today()
     acregnlist = [r[0] for r in db.engine.execute(sql, date=activeacdate).fetchall()]
-    acregnlist.append(constREGN_FOR_TUG_ONLY)
+    # Add the Tug only if it not already there..(i.e. used in last 90 days) ...
+    if constREGN_FOR_TUG_ONLY not in acregnlist:
+        acregnlist.append(constREGN_FOR_TUG_ONLY)
     # Towie list
     towielist = [r.fullname for r in db.session.query(Pilot).filter(Pilot.towpilot == True).all()]
     sql = sqltext("""

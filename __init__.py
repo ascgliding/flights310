@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import logging
 import getpass
 import sys
@@ -14,7 +15,7 @@ from flask import Flask
 from flask_wtf import __version__ as flaskwtf_version
 from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
-import asc.jingafilters
+# import asc.jingafilters
 
 
 if sys.platform != 'win32':
@@ -55,20 +56,7 @@ login_manager = LoginManager()
 # login_manager.needs_refresh_message = u'You must re-fresh your login to access this page'
 
 
-def create_filters(app):
-    app.logger.info('Adding Filters')
-    app.jinja_env.filters['tsdate'] = jingafilters.tsdateformat
-    app.jinja_env.filters['hrsmins'] = jingafilters.hrsmins
-    app.jinja_env.filters['hrsminsfromtime'] = jingafilters.hrsminsfromtime
-    app.jinja_env.filters['hrsdec'] = jingafilters.hrsdec
-    app.jinja_env.filters['tsdateinput'] = jingafilters.datetimehtml
-    app.jinja_env.filters['stddate'] = jingafilters.reformatstddate
-    app.jinja_env.filters['datetimehtml'] = jingafilters.datetimehtml
-    app.jinja_env.filters['objvariable'] = jingafilters.objvariable
-    app.jinja_env.filters['hhmmss'] = jingafilters.hhmmss
-    app.jinja_env.filters['currency'] = jingafilters.currency
-    app.jinja_env.filters['displayfornone'] = jingafilters.displayfornone
-    app.jinja_env.filters['nameinitials'] = jingafilters.nameinitials
+
 
 def create_app(test_config=None):
     '''
@@ -81,51 +69,28 @@ def create_app(test_config=None):
     # create and configure the app
     # -----------------------------------------------------------------------------------------------------
     # print("create_app being called with Flask {}".format(flask_version))
+
     if sys.platform == 'win32':
-        app = Flask(__name__, instance_path="/users/rayb/pythonvenv/flask310/instance"  )
-        print('Instance Path Fixed for Windows implementation')
+        inst_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
+        inst_path = os.path.join(inst_path, 'instance')
+        app = Flask(__name__, instance_path=inst_path)
+        # Need a "print" because logging is not yet established.
+        # print("Create App with Windows instance path: {}".format(app.instance_path))
     else:
         app = Flask(__name__, instance_relative_config=True)
-    # app.config.from_object('asc.config.' + os.environ.get('FLASK_ENV', default='development'))
 
-    # if sys.platform == 'win32':
-    #     app.config.from_object('asc.config.windevel')
-    # else:
-    #     app.config.from_object('asc.config.' + os.environ.get('FLASK_ENV', default='development'))
-
-    app.config.from_object('asc.config.' + os.environ.get('CONFIG', default='development'))
-
-    # if sys.platform == 'win32':
-    #
-    #     # Note that to connect to sqlite from a windows platform you need 3 "/" characters in the
-    #     # SQLALCHEMY_DATABASE_URI but on unix platforms you need 4 (!!!)
-    #     app.config.from_mapping(
-    #         SECRET_KEY='dev',
-    #         DATABASE=os.path.join(app.instance_path, 'asc.sqlite'),
-    #         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(app.instance_path, 'asc.sqlite'),
-    #         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    #         LOGFILE='asc.log',
-    #         LOGCLEAR=True,
-    #         LOGLEVEL='DEBUG'
-    #     )
-    # else:
-    #     app.config.from_mapping(
-    #         SECRET_KEY='dev',
-    #         DATABASE=os.path.join(app.instance_path, 'asc.sqlite'),
-    #         SQLALCHEMY_DATABASE_URI = 'sqlite:////' + os.path.join(app.instance_path, 'asc.sqlite'),
-    #         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    #         LOGFILE='asc.log',
-    #         LOGCLEAR=True,
-    #         LOGLEVEL='DEBUG'
-    #     )
     # -----------------------------------------------------------------------------------------------------
     # Load Configuration
     # -----------------------------------------------------------------------------------------------------
-    if test_config is None:
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
+    # if test_config is None:
+    #     app.config.from_pyfile('config.py', silent=True)
+    # else:
+    #     # load the test config if passed in
+    #     app.config.from_mapping(test_config)
+
+    with app.app_context():
+        app.config.from_object('asc.config.' + os.environ.get('CONFIG', default='development'))
+
     # -----------------------------------------------------------------------------------------------------
     # ensure the instance folder exists
     # -----------------------------------------------------------------------------------------------------
@@ -133,6 +98,14 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    # -----------------------------------------------------------------------------------------------------
+    # Make sure we have a downloads folder in the instance path
+    # -----------------------------------------------------------------------------------------------------
+
+    if not os.path.exists(os.path.join(app.instance_path,"downloads")):
+        os.makedirs(os.path.join(app.instance_path,"downloads"))
+
     # -----------------------------------------------------------------------------------------------------
     # Load the filters
     # -----------------------------------------------------------------------------------------------------
@@ -141,9 +114,7 @@ def create_app(test_config=None):
     # Load the logger
     # -----------------------------------------------------------------------------------------------------
     establish_logging(app)
-    # for x in dir(app.logger):
-    #     print(x, getattr(app.logger,x))
-    # print("----------------------------------------------------")
+
     app.logger.info("ASC Application Started")
     app.logger.info("Create_app called with Flask {}".format(flask_version))
     app.logger.info("Python Version {}".format(sys.version))
@@ -172,6 +143,24 @@ def create_app(test_config=None):
 # Helper Functions
 # -----------------------------------------------------------------------------------------------------
 
+def create_filters(app):
+    with app.app_context():
+        import asc.jingafilters
+
+    app.logger.info('Adding Filters')
+    app.jinja_env.filters['tsdate'] = jingafilters.tsdateformat
+    app.jinja_env.filters['hrsmins'] = jingafilters.hrsmins
+    app.jinja_env.filters['hrsminsfromtime'] = jingafilters.hrsminsfromtime
+    app.jinja_env.filters['hrsdec'] = jingafilters.hrsdec
+    app.jinja_env.filters['tsdateinput'] = jingafilters.datetimehtml
+    app.jinja_env.filters['stddate'] = jingafilters.reformatstddate
+    app.jinja_env.filters['datetimehtml'] = jingafilters.datetimehtml
+    app.jinja_env.filters['objvariable'] = jingafilters.objvariable
+    app.jinja_env.filters['hhmmss'] = jingafilters.hhmmss
+    app.jinja_env.filters['currency'] = jingafilters.currency
+    app.jinja_env.filters['displayfornone'] = jingafilters.displayfornone
+    app.jinja_env.filters['nameinitials'] = jingafilters.nameinitials
+
 
 def establish_logging(app):
     # -----------------------------------------------------------------------------------------------------
@@ -179,6 +168,13 @@ def establish_logging(app):
     # -----------------------------------------------------------------------------------------------------
     try:
         loghandler = RotatingFileHandler(os.path.join(app.instance_path,app.config['LOGFILE']), maxBytes=1000000, backupCount=3)
+
+        # Rotate:
+        try:
+            if app.config['LOGCLEAR']:
+                loghandler.doRollover()
+        except Exception as e:
+            app.logger.error("Note: Unable to roll log at Startup ({})".format(e))
 
         if app.config['LOGLEVEL'] == 'CRITICAL':
             app.logger.setLevel(logging.CRITICAL)
@@ -201,12 +197,6 @@ def establish_logging(app):
 
         # Assign this loghandler to the apps logger object
         app.logger.addHandler(loghandler)
-
-        try:
-            if app.config['LOGCLEAR']:
-                loghandler.doRollover()
-        except Exception as e:
-            app.logger.error("Note: Unable to roll log at Startup ({})".format(e))
 
         app.logger.info("Logging Established")
     except Exception as e:
@@ -250,6 +240,7 @@ def establish_database(app):
     # Load and initialise the db
     # ----------------------------------------------------------------------------------------------------
     app.logger.info("app Instance Path {}".format(app.instance_path))
+    app.logger.info("DB URI:{}".format(app.config['SQLALCHEMY_DATABASE_URI']))
     try:
         from asc.schema import db
         app.logger.info("Flask SQLAlchemy version {}".format(fsqa_version))
@@ -293,46 +284,46 @@ def resgister_blueprints(app):
     # -----------------------------------------------------------------------------------------------------
 
     try:
-
-        # register authentication blueprint
-        app_for_log = 'auth'
-        from . import auth
-        app.register_blueprint(auth.bp)
-        #
-        app_for_log = 'index'
-        from . import index
-        app.register_blueprint(index.bp)
-        app.add_url_rule('/', endpoint='index')
-        #
-        # # Register the flights blueprint
-        app_for_log = 'flights'
-        from . import flights
-        app.register_blueprint(flights.bp)
-        app.add_url_rule('/flights', endpoint='daysummary')
-        #
-        app_for_log = 'mastmaint'
-        from . import mastmaint
-        app.register_blueprint(mastmaint.bp)
-        app.add_url_rule('/mastmaint', endpoint='index')
-        # # Register the membership blueprint
-        app_for_log = 'membership'
-        from . import membership
-        app.register_blueprint(membership.bp)
-        app.add_url_rule('/membership', endpoint='memberlist')
-        #  Register the logbook blueprint
-        app_for_log = 'logbook'
-        from . import logbook
-        app.register_blueprint(logbook.bp)
-        app.add_url_rule('/logbook', endpoint='logbook')
-        # Register the RESTAPI
-        app_for_log = 'restapi'
-        from . import restapi
-        app.register_blueprint(restapi.bp)
-        # Register the Excel Export
-        from . import export
-        app.register_blueprint(export.bp)
-        #
-        app.logger.info("All blueprints successfully registered")
+        with app.app_context():
+            # register authentication blueprint
+            app_for_log = 'auth'
+            from . import auth
+            app.register_blueprint(auth.bp)
+            #
+            app_for_log = 'index'
+            from . import index
+            app.register_blueprint(index.bp)
+            app.add_url_rule('/', endpoint='index')
+            #
+            # # Register the flights blueprint
+            app_for_log = 'flights'
+            from . import flights
+            app.register_blueprint(flights.bp)
+            app.add_url_rule('/flights', endpoint='daysummary')
+            #
+            app_for_log = 'mastmaint'
+            from . import mastmaint
+            app.register_blueprint(mastmaint.bp)
+            app.add_url_rule('/mastmaint', endpoint='index')
+            # # Register the membership blueprint
+            app_for_log = 'membership'
+            from . import membership
+            app.register_blueprint(membership.bp)
+            app.add_url_rule('/membership', endpoint='memberlist')
+            #  Register the logbook blueprint
+            app_for_log = 'logbook'
+            from . import logbook
+            app.register_blueprint(logbook.bp)
+            app.add_url_rule('/logbook', endpoint='logbook')
+            # Register the RESTAPI
+            app_for_log = 'restapi'
+            from . import restapi
+            app.register_blueprint(restapi.bp)
+            # Register the Excel Export
+            from . import export
+            app.register_blueprint(export.bp)
+            #
+            app.logger.info("All blueprints successfully registered")
     except Exception as e:
         app.logger.error("There was a problem registering a blueprint : {} ({})".format(str(e), app_for_log))
 

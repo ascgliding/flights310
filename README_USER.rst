@@ -72,17 +72,24 @@ Flights
 The day summary screen shows all the dates on which we have had flights (in descending order).
 Click on a day to see the flights on that day.
 
-If this is the first flight of the day click on the "+" symbol to the right of the words "Day Syummary".
+If this is the first flight of the day click on the "+" symbol to the right of the words "Day Summary".
 
-This will create a new flight.  Note that you cannot change the date on a small screen
-(e.g. a phone) yyou will need a PC or tablet.  Recording a new flight will be for
-today's date.
+You will be prompted for a date, the duty instructor, tow pilot and duty pilot.  The system knows the roster
+so it will automatically default to the next scheduled flying day with whoever is on the roster at the time
+the roster was published.  It does not know about swaps so double check what is on the screen with who
+is actually on the field.  
+
+When this screen is accepted (by pressing the tick in the lower LHS) the system will add a note for the
+nominated date containing the names of these people.
 
 Recording flights
 =================
 
 The concept is that as soon as an a/c is gridded you can put it into the system.  It does not matter that it has not
 yet left the ground.  Make a record that the flight is about to takeoff.
+
+If you are using a phone then the date is not displayed and the system uses the greatest date in the system (of
+either flights or notes).
 
 You should enter the a/c REGN first.  You can enter anything you like in the REGN field, but if you select from one
 of the predefined regns then the system will default a bunch of stuff making your life easier.
@@ -100,9 +107,7 @@ Recording times
 ===============
 
 At takeoff, select the flight and press the first of the three a/c icons on the bottom.  This will record the current
-time as the takeoff time.  If you want to change the time then click on the time and you can change it.  Do not forget
-to press the "TICK".  Pressing the a/c icons does NOT update the database.  It merely sets the time.  You must press the
-tick to record the time.
+time as the takeoff time.  If you want to change the time then click on the time and you can change it.  
 
 Similarly, when the tug lands, press the yellow landing a/c icon.  This will record tug down for that flight.
 Once a takeoff has occurred the main screen listing the flights for the day will show the current a/c under tow
@@ -111,8 +116,7 @@ as a button on the top RHS of the screen.  Pressing this button immediately reco
 When the glider lands press the blue landing a/c icon.
 
 Enter the release height as soon as you can.  You can either ask the pilot before or after they land or ask the tow
-pilot.  It doesn't matter much when you put it in, but if you do it before recording the payment then the payment
-screen will calculate the amount correctly.
+pilot.  It doesn't matter much when you put it in, except that it must be done before recording the payment details.
 
 About Views
 ===========
@@ -129,7 +133,7 @@ All Flights       All flights recorded for the day.
 Airborne          Flights that have a takeoff time but no landed time.
 Gridded           Flights that have no takeoff time
 Landed            Flights that have a landed time
-Unpaid            Flightts for which no amount or payment record has been made
+Unpaid            Flights for which no amount or payment record has been made
 =============     ===========================================================================================
 
 ***********

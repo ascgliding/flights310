@@ -1,14 +1,18 @@
 from flask import (
-    Blueprint, render_template, jsonify, request, Flask
+    Blueprint, render_template, jsonify, request, Flask, current_app
 )
 from asc.schema import Aircraft, Flight, Slot
 from decimal import Decimal
 import datetime
 from asc.common import *
 
-bp = Blueprint('restapi', __name__)
-app = Flask(__name__)
+# app = Flask(__name__)
+# from asc import create_app
+# app = create_app()
+app = current_app
 applog = app.logger
+
+bp = Blueprint('restapi', __name__)
 
 # ------------------------------------------------------------------------------------------------------
 # Supporting functions

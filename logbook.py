@@ -3,7 +3,7 @@ from flask import (
 )
 
 from asc.schema import Flight, User, Pilot
-from asc import db
+from asc import db,create_app
 from flask_login import login_required, current_user
 from sqlalchemy import text as sqltext, or_, bindparam
 # WTForms
@@ -14,9 +14,13 @@ from asc.common import *
 import os
 import xlsxwriter
 
-bp = Blueprint('logbook', __name__, url_prefix='/logbook')
-app = Flask(__name__)
+
+# app = Flask(__name__)
+# app = create_app()
+app = current_app
 applog = app.logger
+
+bp = Blueprint('logbook', __name__, url_prefix='/logbook')
 
 class PromptForm(FlaskForm):
     start_date = DateField('Start Date',

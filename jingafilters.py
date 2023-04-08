@@ -1,12 +1,18 @@
-from flask import Flask,session, g
+from flask import Flask,session, g, current_app
 import logging
 import datetime
 import dateutil
 import re
 import decimal
 
+# --------------------------------------------------------------------
+# Be careful here... in order to access current_app this module
+# must be loaded within an application context (whatever thay may be).
+# This is done __init__.py.  Look at the create_filters function
+# to see how this is done.
+# --------------------------------------------------------------------
 
-app = Flask(__name__)
+app = current_app
 applog = logging.getLogger('applog')
 
 # This is how to define a jinja filter that can be used in a template
@@ -250,12 +256,6 @@ def hrsdec(pmins):
         raise Exception("Parameter to hrsdec is not an integer")
     if pmins:
         return decimal.Decimal(pmins)/ decimal.Decimal(60)
-
-        # mins = pmins - (hrs * 60)
-        # if hrs > 0:
-        #     return str(hrs) + ':' + "%02d" % mins
-        # else:
-        #     return str(mins)
     else:
         return ""
 

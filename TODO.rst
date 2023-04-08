@@ -121,6 +121,8 @@ Flights.py::
     acregnlist = [r[0] for r in db.engine.execute(sql, date=activeacdate).fetchall()]
     acregnlist.append(constREGN_FOR_TUG_ONLY)
 
+    Done 8 April 23
+
 Payments
 --------
 

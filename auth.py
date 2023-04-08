@@ -6,16 +6,17 @@ from flask import (
 )
 from flask_sqlalchemy import SQLAlchemy
 from asc.schema import *
-from asc import db # but isnt't this already imported by the previous line ?
+from asc import db,create_app # but isnt't this already imported by the previous line ?
 # from flask_login import current_user, login_user, LoginManager, logout_user, login_required, UserMixin
 from flask_login import current_user, login_user, login_required, logout_user, fresh_login_required, login_manager
+
+app = Flask(__name__)
+# app = create_app()
+applog = app.logger
 
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-app = Flask(__name__)
-
-applog = app.logger
 
 @app.before_request
 def before_request():

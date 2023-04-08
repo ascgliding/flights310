@@ -4,7 +4,7 @@ from flask import (
 from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
-from asc import db
+from asc import db,create_app
 from asc.schema import Pilot, Member, Slot, MemberTrans
 from sqlalchemy import text as sqltext
 from sqlalchemy import or_, and_
@@ -24,9 +24,12 @@ import email_validator
 import email_validator
 ##from wtforms.ext.sqlalchemy.orm import model_form
 
-bp = Blueprint('membership', __name__, url_prefix='/membership')
-app = Flask(__name__)
+# app = Flask(__name__)
+# app = create_app()
+app = current_app
 applog = app.logger
+
+bp = Blueprint('membership', __name__, url_prefix='/membership')
 
 
 class MemberForm(FlaskForm):
