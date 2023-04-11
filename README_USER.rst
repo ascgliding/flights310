@@ -35,17 +35,6 @@ phone, where the operating system tends to always force the first character of t
 
 Once you have logged on with an approved user account you will be shown a list of days with the date underlined.
 
-.. Note::
-
-    Flight recording (as described below) has the ability to record a known pilot (usually club members)
-    with a specific flight as either PIC or P2.  However the user can enter any text they like for the
-    pilot names.  This is required to support visitors, cadets and the like.
-
-    Once your userid has been approved, the sysadmin will link it to a pilot record.  This will make it easier
-    to select during flight recording.  If you wish to use the Logbook feature of the application it is important
-    that the PIC or P2 name is NOT changed from the system default.  The logbook feature is driven from the
-    pilot **Name**
-
 General
 =======
 
@@ -63,11 +52,17 @@ It is most important that you press the tick to accept your changes.  If you do 
 The last button on the bottom line of the screen is a rubbish tin.  Use this to completely delete the record from
 the database.
 
-Try to avoid the web browser's back button.  This is usually causes problems.
+Try to avoid the web browser's back button.  This is often causes problems.
 
-*******
-Flights
-*******
+******************
+Daily Transactions
+******************
+
+There are two types of entries:
+
+* Flights : As you would expect, the details of a given flight movement.
+* Notes : Any free format text.  Use this for recording things like the purchase of tow tickets, log books.  Any kind of text note.
+
 
 The day summary screen shows all the dates on which we have had flights (in descending order).
 Click on a day to see the flights on that day.
@@ -76,7 +71,7 @@ If this is the first flight of the day click on the "+" symbol to the right of t
 
 You will be prompted for a date, the duty instructor, tow pilot and duty pilot.  The system knows the roster
 so it will automatically default to the next scheduled flying day with whoever is on the roster at the time
-the roster was published.  It does not know about swaps so double check what is on the screen with who
+the roster was published.  It does not know about swaps, so double check what is on the screen with who
 is actually on the field.  
 
 When this screen is accepted (by pressing the tick in the lower LHS) the system will add a note for the
@@ -98,16 +93,27 @@ will be launched (i.e. SELF LAUNCH or TUG) and it also has a record of the defau
 Any time you change the regn, the pilots and launch methods are liable to change.  So put this in first.
 
 Enter the pilots next.  As with the regn, you can enter whatever you like but the system knows about club members
-and selecting from the drop down list makes data entry quicker and assist with payment options.  DO NOT type over the
+and selecting from the drop down list makes data entry quicker and assists with payment options.  DO NOT type over the
 name if you have selected it from the drop-down.  This is quite important.  Especially for club members.
 If it is the first flight for the day change the tow pilot (and tug regn if required).  These are remembered and
 default for each subsequent flight.
+
+.. Note::
+
+    Flight recording (as described below) has the ability to record a known pilot (usually club members)
+    with a specific flight as either PIC or P2.  However the user can enter any text they like for the
+    pilot names.  This is required to support visitors, cadets and the like.
+
+    Once your userid has been approved, the sysadmin will link it to a pilot record.  This will make it easier
+    to select during flight recording.  If you wish to use the Logbook feature of the application it is important
+    that the PIC or P2 name is NOT changed from the system default.  The logbook feature is driven from the
+    pilot **Name**
 
 Recording times
 ===============
 
 At takeoff, select the flight and press the first of the three a/c icons on the bottom.  This will record the current
-time as the takeoff time.  If you want to change the time then click on the time and you can change it.  
+time as the takeoff time.  If you want to change the time then click on the time and you can change it to anything you want.
 
 Similarly, when the tug lands, press the yellow landing a/c icon.  This will record tug down for that flight.
 Once a takeoff has occurred the main screen listing the flights for the day will show the current a/c under tow
@@ -117,6 +123,12 @@ When the glider lands press the blue landing a/c icon.
 
 Enter the release height as soon as you can.  You can either ask the pilot before or after they land or ask the tow
 pilot.  It doesn't matter much when you put it in, except that it must be done before recording the payment details.
+
+Flight Notes
+============
+
+At the bottom of the flight display is note icon next to the glider landed icon.  Use this to record any useful
+information pertinent to that FLIGHT.  "First Solo" or "Club paying for Flight" are examples.
 
 About Views
 ===========
@@ -176,7 +188,7 @@ Recording flights in a motor glider
 A self launching glider should be recorded as normal except that the Tug regn must be set to 'SELF LAUNCH'.
 This can be found in the drop down list.  A takeoff time and a landed time is required but no tug down
 time is required.
-Motor gliders that are in the master aircraft should have their default launch method set to 'SELF LAUNCH'
+Motor gliders that are in the master aircraft table should have their default launch method set to 'SELF LAUNCH'
 and this will cause the tow details to be set automatically.
 
 Recording non-towing flights in RDW
@@ -190,4 +202,4 @@ Recording ATC Flying in an ASC Aircraft
 =======================================
 
 Each sqn is setup ass a customer in the pilots table.  Select the appropriate sqn from the drop down.
-Usually the amount is $65.  Put this in the aerotow field.
+Usually the amount is $65.  Put this in the aerotow field on the payments screen.
