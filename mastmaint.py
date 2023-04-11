@@ -283,7 +283,7 @@ def userverify():
         UNION
         SELECT id, fullname, 'No GNZ Code',8,'Warning','pilots'
         FROM pilots
-        WHERE gnz_no IS NULL OR gnz_no = 0
+        WHERE (gnz_no IS NULL OR gnz_no = 0) and fullname not like 'ATC%' and fullname not like 'Trial%'
     -- missing gnz no in users
         union
         SELECT id, fullname, 'User missing GNZ Code',8,'Warning','users'
@@ -294,7 +294,7 @@ def userverify():
         SELECT id, fullname, 'User GNZ Code not in pilots table',8,'Warning','users'
         FROM users
         WHERE gnz_no NOT IN (SELECT gnz_no FROM pilots)
-    -- flights in last 90 days where the pilot appears more than once but is not in the pilots table
+    -- flights in last 30 days where the pilot appears more than once but is not in the pilots table
         union
         SELECT 
         max(id),name,'Pilot has more than one flight in the last 90 days but not in pilots table',max(2),'ERROR','flights'
@@ -312,13 +312,14 @@ def userverify():
         ) AS t0
         WHERE name NOT IN (SELECT fullname FROM pilots)
         AND name NOT LIKE '%trial%'
+        and name not like '%pax%'
         GROUP BY 2 HAVING count(*) > 1
-    -- pilot has chargeable flight in last 90 days but not in pilots table
+    -- pilot has chargeable flight in last 30 days but not in pilots table
         UNION
-        SELECT id,payer,'Payer has chargeable flight in last 90 days but not in pilots table',2,'ERROR','flights'
+        SELECT id,payer,'Payer has chargeable flight in last 30 days but not in pilots table',2,'ERROR','flights'
         FROM flights
         WHERE payer NOT IN (SELECT fullname FROM pilots)
-        AND julianday('now') - julianday(flt_date) < 90
+        AND julianday('now') - julianday(flt_date) < 30
     -- sort
         ORDER BY priority
             """)
