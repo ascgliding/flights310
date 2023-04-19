@@ -10,6 +10,8 @@ from asc import db,create_app # but isnt't this already imported by the previous
 # from flask_login import current_user, login_user, LoginManager, logout_user, login_required, UserMixin
 from flask_login import current_user, login_user, login_required, logout_user, fresh_login_required, login_manager
 
+from asc.mailer import ascmailer
+
 app = Flask(__name__)
 # app = create_app()
 applog = app.logger
@@ -69,6 +71,15 @@ def register():
             if usernamechanged:
                 flash("Note that your entered username has been changed to lowercase","warning")
                 flash("You have been registered.  The sysadmin needs to approve your registration before you can access the system.")
+            # email appropriate person
+            emaillist =  db.session.query(Slot).filter(Slot.slot_type == 'APPROVEUSERMAIL').all()
+            if len(emaillist) > 0:
+                for email in emaillist:
+                    thisemail = email.slot_data
+                    mail = ascmailer(thisuser.name + ' has registered and needs approving')
+                    mail.add_body('User with fullname ' + thisuser.fullname + ' has newly registered and needs approving')
+                    mail.add_recipient(thisemail)
+                    mail.send()
             login_user(User(username), remember=True, duration=datetime.timedelta(days=5))
             app.logger.info('User : {} Logged in'.format(username))
             return redirect(url_for('index'))

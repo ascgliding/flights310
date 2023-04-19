@@ -1,5 +1,4 @@
-
-
+import sendgrid
 from flask_sqlalchemy import __version__
 from flask import Flask
 import logging
@@ -9,11 +8,16 @@ import unittest
 import sys
 from decimal import Decimal
 from asc import db, create_app
+from asc.mailer import ascmailer
 #from csv import DictWriter,DictReader
 import csv
 # In order to trap errors from the engine
 import sqlalchemy.exc
 from sqlalchemy import text as sqltext, func
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
+import base64
 
 app = create_app()
 log = app.logger
@@ -117,7 +121,7 @@ class FSqlalchemyTst(unittest.TestCase):
                 log.info(e)
             if isinstance(e, sqlalchemy.exc.SQLAlchemyError):
                 log.info(type(e))
-                log.info(e.statement)
+                # log.info(e.statement)
                 log.info(e.params)
                 log.info(e.orig)
             else:
@@ -144,7 +148,7 @@ class FSqlalchemyTst(unittest.TestCase):
         """Can I access a flight"""
         try:
             flights = Flight.query.limit(10).all()
-            self.assertEquals(len(flights), 10, "Ten records were not returned.")
+            self.assertEqual(len(flights), 10, "Ten records were not returned.")
         except Exception as e:
             self.logerror(e)
             self.fail("Error raised :{}".format(e))
@@ -159,7 +163,7 @@ class FSqlalchemyTst(unittest.TestCase):
             # print(recs)
             # for f in recs:
             #     print(f['pic'])
-            self.assertEquals(len(recs), 10, "Ten records were not returned")
+            self.assertEqual(len(recs), 10, "Ten records were not returned")
         except Exception as e:
             self.logerror(e)
             self.fail("Error raised :{}".format(e))
@@ -281,7 +285,7 @@ class FSqlalchemyTst(unittest.TestCase):
             # what is the id of the record?
             log.info("The id of the inserted record is {}".format(flt.id))
             log.info("The new regn is {}".format(flt.ac_regn))
-            self.assertEquals(flt.ac_regn, 'GMW', 'The case did not change')
+            self.assertEqual(flt.ac_regn, 'GMW', 'The case did not change')
         except sqlalchemy.exc.IntegrityError as e:
             self.printout(e.statement)
             self.printout(e.params)
@@ -368,9 +372,9 @@ class FSqlalchemyTst(unittest.TestCase):
             f.tug_regn = 'rdw'
             f.tow_pilot = "rc"
             f.linetype = 'XX'
-            f.takeoff = datetime.datetime(2019, 3, 19, 10, 0)
-            f.tug_down = datetime.datetime(2019, 3, 19, 10, 7)
-            f.landed = datetime.datetime(2019, 3, 19, 11, 5)
+            f.takeoff = datetime.datetime(2019, 3, 19, 10, 0).time()
+            f.tug_down = datetime.datetime(2019, 3, 19, 10, 7).time()
+            f.landed = datetime.datetime(2019, 3, 19, 11, 5).time()
             db.session.add(f)
             db.session.commit()
             self.fail("No Error Raised")
@@ -482,10 +486,10 @@ class FSqlalchemyTst(unittest.TestCase):
             print(recs)
             for f in recs:
                 print('{}\t{}\t{}'.format(f['transdate'], f['typedesc'], f['subtypedesc']))
-            self.assertEquals(len(recs), 36, "36 records were not returned")
+            self.assertEqual(len(recs), 36, "36 records were not returned")
         except Exception as e:
             self.logerror(e)
-            self.fail("Error raised :{}".format(e))
+            self.fail("Error raised :{}".format(str(e)))
 
 
     def test019(self):
@@ -728,11 +732,202 @@ class CSVTst(unittest.TestCase):
             self.logerror(e)
             self.fail("Error raised :{}".format(e))
 
+class sendgridtest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        log.info("Class Setup complete")
+        log.info("test cases for sendgridmail {}".format(sendgrid.version.__version__))
+        cls.summary = []
+
+    def setUp(self):
+        log.info("Test ID:{}".format(self.id()))
+        log.info("Test Description:{}".format(self.shortDescription()))
+
+    def tearDown(self):
+        statusmsg = 'Test Successul'
+        log.info('Test Completed:{}'.format(self.id()))
+        if hasattr(self, '_outcome'):
+            result = self.defaultTestResult()
+            self._feedErrorsToResult(result, self._outcome.errors)
+            if len(result.errors) > 0:
+                log.error("There were errors in this test routine")
+                self.logresults(result.errors)
+                statusmsg = 'Test had a python error'
+            if len(result.failures) > 0:
+                log.error("This test failed")
+                self.logresults(result.failures)
+                statusmsg = 'Test Failed'
+        self.summary.append({'id': self.id(), 'status': statusmsg})
+
+    @classmethod
+    def tearDownClass(cls):
+        for s in cls.summary:
+            cls.printout("Test: {} \t\t\tResult: {}".format(s['id'], s['status']))
+
+    def logresults(self, txt):
+        """
+        txt is a list and the list can contain tuples and the tuble could be a long string delimtied by \n
+        :param txt: a long string with line feeds delimiting the string
+        :return: None
+        """
+        if len(txt) > 0:
+            for listitem in txt:
+                if isinstance(listitem, tuple):
+                    for tupleitem in listitem:
+                        if isinstance(tupleitem, str):
+                            tuplelist = tupleitem.split('\n')
+                            pass
+                            for t in tuplelist:
+                                log.info(t)
+
+    @staticmethod
+    def printout(message):
+        if isinstance(message, str):
+            sys.stderr.write('\n' + message + '\n')
+        else:
+            sys.stderr.write('\n' + str(message) + '\n')
+
+    def logerror(self, e=None):
+        """
+        Where a an error is exepected to be raised, then this function should be called
+        to add the error to the log file
+        :param e: The error
+        :return: None
+        """
+        caller = inspect.getouterframes(inspect.currentframe(), 2)[1][3]
+        if e is None:
+            log.info("test {} successful".format(caller))
+        else:
+            log.info("Test {} error raised".format(caller))
+            if isinstance(e, str):
+                log.info(e)
+            if isinstance(e, sqlalchemy.exc.SQLAlchemyError):
+                log.info(type(e))
+                log.info(e.statement)
+                log.info(e.params)
+                log.info(e.orig)
+            else:
+                self.printout(str(e))
+                log.info(str(e))
+
+
+    # def test001(self):
+    #     """
+    #     Send basic mail message
+    #     :return:
+    #     """
+    #     try:
+    #         print("api key is {}".format(app.config['SENDGRIDAPIKEY']))
+    #         sg = sendgrid.SendGridAPIClient(api_key=app.config['SENDGRIDAPIKEY'])
+    #         message = Mail(
+    #             from_email = 'ascgliding@gmail.com',
+    #             to_emails  = 'ray@rayburns.nz',
+    #             subject  = 'Test Sendgrid email',
+    #             html_content = '<B> Here </B> is my text'
+    #             )
+    #         response = sg.send(message)
+    #         print(response.status_code, response.body, response.headers)
+    #     except Exception as e:
+    #         self.fail('Send grid failed with {}'.format(str(e)))
+    #
+    # def test002(self):
+    #     """
+    #     Send mail with attachment.
+    #     :return:
+    #     """
+    #     try:
+    #         print("api key is {}".format(app.config['SENDGRIDAPIKEY']))
+    #         sg = sendgrid.SendGridAPIClient(api_key=app.config['SENDGRIDAPIKEY'])
+    #         message = Mail(
+    #             from_email = 'ascgliding@gmail.com',
+    #             to_emails  = 'ray@rayburns.nz',
+    #             subject  = 'Test Sendgrid attachment email',
+    #             html_content = 'Please find attached the readme rst file.'
+    #             )
+    #
+    #         with open('c:/users/rayb/pythonvenv/flask310/asc/README_USER.rst', 'rb') as f:
+    #             data = f.read()
+    #             f.close()
+    #         encoded_data = base64.b64encode(data).decode()
+    #
+    #         attachedfile = Attachment(
+    #             FileContent(encoded_data),
+    #             FileName('README_USER.rst'),
+    #             FileType('application/text'),
+    #             Disposition('attachment')
+    #         )
+    #         message.attachment = attachedfile
+    #
+    #         response = sg.send(message)
+    #         print(response.status_code, response.body, response.headers)
+    #     except Exception as e:
+    #         self.fail('Send grid failed with {}'.format(str(e)))
+
+    def test003(self):
+        """
+        Test application class
+        :return:
+        """
+        try:
+            msg = ascmailer('Test Mailer Subject')
+            # thisbody = "<table><tr><th>col1</th><th>col2</th></tr>"
+            # thisbody = thisbody + "<tr><td>1</td><td>One</td></tr>"
+            # thisbody = thisbody + "<tr><td>2</td><td>Two</td></tr>"
+            # thisbody = thisbody + "<tr><td>3</td><td>Three</td></tr>"
+            # thisbody = thisbody + "</table>"
+            # msg.body = thisbody
+            # msg.body = "Heree is the content"
+            msg.add_body("See table below<br>")
+            sql = sqltext("""
+                   select id,pic,landed
+                   from flights
+                   limit 5
+                   """)
+            sql = sql.columns(Flight.id,
+                              Flight.pic,
+                              Flight.landed
+                              )
+            thisset = db.engine.execute(sql).fetchall()
+            dictlist = [x._asdict() for x in thisset]
+            print(dictlist)
+            print(list(dictlist))
+            print(type(dictlist[0]))
+            dictlist.insert(0,['ID','PIC','Landed'])
+            msg.add_body_list(dictlist)
+            msg.add_recipient('ray@rayburns.nz')
+            msg.send()
+            print(msg.response)
+        except Exception as e:
+            self.fail("Error raised :{}".format(e))
+
+    # def test004(self):
+    #     """Can I run direct sql, specifying parameters"""
+    #     sql = sqltext("""
+    #            select id,pic,landed
+    #            from flights
+    #            limit 5
+    #            """)
+    #     sql = sql.columns(Flight.id,
+    #                       Flight.pic,
+    #                       Flight.landed
+    #                       )
+    #     thisset = db.engine.execute(sql).fetchall()
+    #     # turn into a dictionary
+    #     dictlist = [[x._asdict() for x in thisset]]
+    #     # This returns a list of tuples
+    #     print(dictlist)
+    #     self.assertIsInstance(dictlist, list, 'Query did not return  a list')
+    #     f = dictlist[0]
+    #     print(type(f))
+    #     self.assertIsInstance(f, tuple, 'Query did not return  a tuple')
+
 if __name__ == '__main__':
     case1 = unittest.TestLoader().loadTestsFromTestCase(FSqlalchemyTst)
     case2 = unittest.TestLoader().loadTestsFromTestCase(CSVTst)
+    case3 = unittest.TestLoader().loadTestsFromTestCase(sendgridtest)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case2])
+    thissuite = unittest.TestSuite([case3])
 
     # The next line is critical tomae the rest work.....
     with app.app_context():
