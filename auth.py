@@ -72,7 +72,8 @@ def register():
                 flash("Note that your entered username has been changed to lowercase","warning")
                 flash("You have been registered.  The sysadmin needs to approve your registration before you can access the system.")
             # email appropriate person
-            emaillist =  db.session.query(Slot).filter(Slot.slot_type == 'APPROVEUSERMAIL').all()
+            # emaillist =  db.session.query(Slot).filter(Slot.slot_type == 'APPROVEUSERMAIL').all()
+            emaillist = Slot.query.filter_by(slot_type='SYSTEM').filter_by(slot_key='APPROVEUSERMAIL').all()
             if len(emaillist) > 0:
                 for email in emaillist:
                     thisemail = email.slot_data

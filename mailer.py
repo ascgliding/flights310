@@ -18,7 +18,7 @@ class ascmailer:
             if not isinstance(subject,str):
                 raise AttributeError("Subject line must be a string")
             self.__subject = subject
-        self.__apikey = Slot.query.filter_by(slot_type='SENDGRIDAPIKEY').first()
+        self.__apikey = Slot.query.filter_by(slot_type='SYSTEM').filter_by(slot_key='SENDGRIDAPIKEY').first()
         if self.__apikey is None:
             raise ValueError("API Key for Sendgrid not defined in datbase.")
         # self.__sg = SendGridAPIClient(api_key=app.config['SENDGRIDAPIKEY'])
