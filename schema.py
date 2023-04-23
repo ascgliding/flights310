@@ -161,6 +161,7 @@ class Flight(db.Model):
     payment_note = db.Column(db.String, comment="Payment Note")
     general_note = db.Column(db.String, comment="General Note")
     accts_export_date = db.Column(db.Date, comment='The date this flight was exported')
+    paid = db.Column(db.Boolean, comment='True indicates flight has been paid', default=False)
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)

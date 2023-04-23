@@ -565,6 +565,7 @@ Sending Email
 
 Sending email is done via sendgrid.
 
+The API Key is stored in the database in the slots table.
 
 
 ===========
