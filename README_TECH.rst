@@ -711,6 +711,9 @@ To upload a new version of the system:
 *   Close the console.
 *   From the Web function reload the app
 *   Run any upgrade code via the cli
+*   IF new packages are required then use "workon flask310" from the home folder followed by
+    pip install -r REQUIREMENTS.txt to load the new package.
+*   Running an sql script can be done by running sqlite3 -init <sqlscript> to apply any changes.
 
 
 Python Anywhere
