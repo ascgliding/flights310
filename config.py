@@ -20,8 +20,7 @@ class Config(object):
     LOGFILE='asc.log'
     LOGCLEAR=True
     LOGLEVEL='INFO'
-    SENDGRIDAPINAME='ascglidingflask'
-    SENDGRIDAPIKEY='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'
+    #TODO : remove and place in environment variable
     # DATABASE = os.path.join(app.instance_path, 'asc.sqlite'),
 
 

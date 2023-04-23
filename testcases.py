@@ -897,7 +897,8 @@ class sendgridtest(unittest.TestCase):
             msg.add_body_list(dictlist)
             msg.add_recipient('ray@rayburns.nz')
             msg.send()
-            print(msg.response)
+            print("Send grid status {}".format(msg.response.status_code))
+            print(msg.response.headers)
         except Exception as e:
             self.fail("Error raised :{}".format(e))
 

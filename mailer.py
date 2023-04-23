@@ -2,6 +2,7 @@ from sendgrid import SendGridAPIClient,Mail
 from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition,Content,To
 import os
 from flask import current_app
+from asc.schema import  Slot
 
 app = current_app
 
@@ -17,7 +18,11 @@ class ascmailer:
             if not isinstance(subject,str):
                 raise AttributeError("Subject line must be a string")
             self.__subject = subject
-        self.__sg = SendGridAPIClient(api_key=app.config['SENDGRIDAPIKEY'])
+        self.__apikey = Slot.query.filter_by(slot_type='SENDGRIDAPIKEY').first()
+        if self.__apikey is None:
+            raise ValueError("API Key for Sendgrid not defined in datbase.")
+        # self.__sg = SendGridAPIClient(api_key=app.config['SENDGRIDAPIKEY'])
+        self.__sg = SendGridAPIClient(api_key=self.__apikey.slot_data)
         self.__message = Mail(from_email='ascgliding@gmail.com')
         self.__attachements = [] # list of filenames
         self.__bodyhtml = ''
@@ -175,7 +180,8 @@ class ascmailer:
         try:
             self.__response = self.__sg.send(self.__message)
             app.logger.info('Mail Recipients : {}'.format(",".join(self.__recipients)))
-            app.logger.info('Mail sent successfully')
+            app.logger.info('Mail sent successfully with status {}'.format(self.__response.status_code))
+            # it may also be usefult to know self.__response.headers and self.__response.body
         except Exception as e:
             app.logger.error('Error sending mail {}'.format(str(e)))
             raise self.mailerError(str(e))
