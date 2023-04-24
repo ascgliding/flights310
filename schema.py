@@ -308,6 +308,7 @@ class Aircraft(db.Model):
     seat_count = db.Column(db.Integer, comment="Seat Count")
     accts_income_acct = db.Column(db.String, comment="GL income account")
     accts_income_tow = db.Column(db.String, comment="GL income account - aerotow")
+    owner = db.Column(db.String,comment = "Aircraft Owner")
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)

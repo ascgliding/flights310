@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 # from asc.schema import Flight, SchemaError, Aircraft, Pilot, Slot
 # from sqlalchemy import func, or_, and_
 import datetime
+import sqlalchemy.exc
 from sqlalchemy import text as sqltext
 # from sqlalchemy.sql import func, select
 # WTForms
@@ -24,6 +25,7 @@ import os
 import xlsxwriter
 import csv
 from asc import create_app
+from asc.schema import SqliteDecimal
 
 # app = Flask(__name__)
 # app = create_app()
@@ -275,6 +277,59 @@ def exportdownload():
         return 'Big Failure - the filename in the session cookie is missing {} - tell ray'.format(filename)
     else:
         return send_file(session['EXPORTFILE'], as_attachment=True)
+
+@bp.route('/exportutil', methods=['GET', 'POST'])
+@login_required
+def exportutil():
+    thisform = ExcelPromptForm(name='Export Utilisation to Excel')
+    if thisform.cancel.data:
+        return render_template('mastmaint/index.html')
+    if request.method == 'GET':
+        # Most likely we will want the previous Saturday.
+        prevsat = datetime.date.today()
+        while prevsat.weekday() != 5:
+            prevsat = prevsat - datetime.timedelta(days=1)
+        thisform.start_date.data = prevsat
+        thisform.end_date.data = datetime.date.today()
+        return render_template('export/exp_daterange.html', form=thisform, title='Export Flights')
+    if request.method == 'POST':
+        # sql = sqltext("""
+        #              SELECT t0.flt_date, t0.pic, t0.p2,
+        #                 t0.release_height, t0.ac_regn,
+        #                 round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,2) duration,
+        #                 t1.owner
+        #                 FROM flights t0
+        #                 LEFT OUTER JOIN aircraft t1 ON t1.regn = t0.ac_regn
+        #              where flt_date >= :startdate
+        #              and flt_date <= :enddate
+        #              and linetype = 'FL'
+        #            """)
+        # rflights = db.engine.execute(sql, startdate=thisform.start_date.data,
+        #                                enddate=thisform.end_date.data).fetchall()
+        sql = """
+                     SELECT t0.flt_date, t0.pic, t0.p2,
+                        t0.release_height, t0.ac_regn,
+                        t0.tow_charge + t0.glider_charge + t0.other_charge income,
+                        round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,2) duration,
+                        t1.owner
+                        FROM flights t0
+                        LEFT OUTER JOIN aircraft t1 ON t1.regn = t0.ac_regn 
+                     where flt_date >= :startdate
+                     and flt_date <= :enddate 
+                     and linetype = 'FL'
+                     order by t0.id
+                   """
+        sql_to_execute = sqlalchemy.sql.text(sql)
+        sql_to_execute = sql_to_execute.columns(flt_date=db.Date,duration=db.Integer,release_height=db.Integer,
+                                                income=SqliteDecimal(10,2))
+        rflights = db.engine.execute(sql_to_execute,startdate=thisform.start_date.data,
+                                        enddate=thisform.end_date.data).fetchall()
+        print(rflights[0])
+        if len(rflights) <= 0:
+            flash("No Flights in this date range")
+            return render_template('export/exp_daterange.html', form=thisform, title='Export Flights')
+        return send_file(createutilxlsx(rflights), as_attachment=True)
+        return render_template('mastmaint/index.html')
 
 def createfltsxlsx(flights):
     """
@@ -541,5 +596,63 @@ def getacctsexport(fltlist,pexport_date,pheader):
             applog.info("{} Flights exported without export date option".format(len(fltlist)))
         return rtndict
 
+def createutilxlsx(flights):
+    """
+    Creates a spreadsheet ready for download for flights between two dates.
+    :param self:
+    :param flights:  List of flights to write
+    :return: Name of excel file.
+    """
+    row = 0
+    if len(flights) == 0:
+        raise ValueError("No Flights in this range")
+    try:
+        filename = os.path.join(app.instance_path,
+                                "downloads/UTIL_" + flights[0].flt_date.strftime("%Y-%m-%d") + ".xlsx")
+        workbook = xlsxwriter.Workbook(filename)
+        ws = workbook.add_worksheet()
+        borderdict = {'border': 1}
+        datedict = {'num_format': 'dd-mmm-yy'}
+        timedict = {'num_format': 'h:mm'}
+        dollardict = {'num_format': '$#, ##0.00'}
+        border_fmt = workbook.add_format({'border': 1})
+        merge_format = workbook.add_format({'align': 'center', 'border': 1})
+        date_format = workbook.add_format(dict(datedict, **borderdict))
+        dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
+        time_fmt = workbook.add_format(dict(timedict, **borderdict))
+        ws.write("A3", "Date", border_fmt)
+        ws.write("B3", "PIC", border_fmt)
+        ws.write("C3", "P2", border_fmt)
+        ws.write("D3", "Tow Alt", border_fmt)
+        ws.write("E3", "Reg", border_fmt)
+        ws.write("F3", "Mins", border_fmt)
+        ws.write("G3", "Income", border_fmt)
+        ws.write("H3", "Club/Pvte", border_fmt)
+        row = 3
+        for f in flights:
+            ws.write(row, 0, f.flt_date.strftime("%d/%m/%Y"))
+            ws.write(row, 1, f.pic)
+            ws.write(row, 2, f.p2 )
+            ws.write(row,3, f.release_height )
+            ws.write(row, 4, f.ac_regn )
+            ws.write(row, 5, f.duration )
+            ws.write(row, 6, f.income )
+            if f.owner == 'ASC':
+                ws.write(row, 7, 'Club')
+            else:
+                ws.write(row, 7, 'Private')
+            row += 1
+        # ws.write(row + 1, 1, "Totals:", border_fmt)
+        # ws.write_formula(row + 1, 11, "sum(F4:F" + str(row) + ")", border_fmt)
+        # ws.write_formula(row + 1, 12, "sum(G4:G" + str(row) + ")", dollar_fmt)
+        # col widths
+        for i,v in enumerate([12,20,20,10,10,10,10,12]):
+            ws.set_column(i,i,v)
+    except Exception as e:
+        applog.error("An error ocurred during spreadsheet create:{}".format(str(e)))
+        applog.debug("Row was:{}".format(row))
+        raise
+    workbook.close()
+    return filename
 
 

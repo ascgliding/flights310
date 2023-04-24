@@ -77,6 +77,7 @@ class AircraftForm(FlaskForm):
     bscheme = BooleanField('Affected by B Scheme')
     default_launch = StringField('Default Launch', description="Leave blank to use the system wide default")
     seat_count = IntegerField('Seat Count', description="Number of available seats on the a/c")
+    owner = StringField('Owner', description="Aircraft Owner")
     default_pilot = StringField('Default Pilot', description='Default pilot for pic')
     accts_income_acct = StringField('Income Account', description='GL Income account',
         render_kw = {'class': 'mobile_port_supress mobile_land_supress longnote'})
