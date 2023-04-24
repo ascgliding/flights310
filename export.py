@@ -239,35 +239,7 @@ def exportacctsmsgs(pstart,pend,pheader,pexport_dates):
 
         return render_template('export/exportacctsmsgs.html', title="Export to Accts System", messages=rtndict['msgs'],
                                filename=rtndict['filename'])
-    # if request.method == 'POST':
-    #     print('in post')
-    #     print(request.form['matdownload'])
-    #     if export_dates:
-    #         sql = sqltext("""
-    #                 SELECT id,flt_date
-    #                 FROM flights
-    #                 where flt_date >= :startdate
-    #                 and flt_date <= :enddate
-    #                 and linetype = 'FL'
-    #                 and accts_export_date is null
-    #               """)
-    #     else:
-    #         sql = sqltext("""
-    #                 SELECT id,flt_date
-    #                 FROM flights
-    #                 where flt_date >= :startdate
-    #                 and flt_date <= :enddate
-    #                 and linetype = 'FL'
-    #               """)
-    #     flights = db.engine.execute(sql, startdate=start, enddate=end).fetchall()
-    #     if len(flights) == 0:
-    #         flash("There are no flights to export in this range","warning")
-    #         return render_template('export/exportacctsmsgs.html',  title="Export to Accts System")
-    #     else:
-    #         flash("There are {} flights to export in this range".format(len(flights)), "warning")
-    #     # Now get the file.
-    #     rtndict = getacctsexport(flights, export_dates, header)
-    #     request.send(getacctsexport(flights, export_dates, header),as_attachment=True)
+
 
 @bp.route('/exportdownload', methods=['GET','POST'])
 @login_required
@@ -293,19 +265,7 @@ def exportutil():
         thisform.end_date.data = datetime.date.today()
         return render_template('export/exp_daterange.html', form=thisform, title='Export Flights')
     if request.method == 'POST':
-        # sql = sqltext("""
-        #              SELECT t0.flt_date, t0.pic, t0.p2,
-        #                 t0.release_height, t0.ac_regn,
-        #                 round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,2) duration,
-        #                 t1.owner
-        #                 FROM flights t0
-        #                 LEFT OUTER JOIN aircraft t1 ON t1.regn = t0.ac_regn
-        #              where flt_date >= :startdate
-        #              and flt_date <= :enddate
-        #              and linetype = 'FL'
-        #            """)
-        # rflights = db.engine.execute(sql, startdate=thisform.start_date.data,
-        #                                enddate=thisform.end_date.data).fetchall()
+
         sql = """
                      SELECT t0.flt_date, t0.pic, t0.p2,
                         t0.release_height, t0.ac_regn,
