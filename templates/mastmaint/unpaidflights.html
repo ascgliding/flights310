@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Unpaid Flights{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('mastmaint.paidupload') }}" text="Import payments from GNUCASH flat file"><button class="textbtn">Import</button></a>
+        <a class="action" href="{{ url_for('mastmaint.unpaidemail') }}" text="Email follow-ups"><button class="textbtn">Email</button></a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading">id</div>
+      <div class="heading" >Date</div>
+      <div class="heading" >Payer</div>
+      <div class="heading" align="right">Amount</div>
+      <div class="heading" >Email</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell">{{ l['id'] }}</div>
+      <div class="cell" align="right">{{ l['flt_date'].strftime('%d-%m-%Y')}}</div>
+      <div class="cell" align="left">{{ l['payer'] }}</div>
+      <div class="cell" align="right">{{ l['amount']|currency }}</div>
+      <div class="cell" align="left">{{ l['email'] }}</div>
+    </div>
+    {#
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+    #}
+  {% endfor %}
+  </div>
+{% endblock %}

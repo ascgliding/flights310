@@ -4,9 +4,9 @@
 <div style="display: table; width:100%" >
   <div style="display:table-row">
     <div style="display:table-cell">
-      <h1>{% block title %}Roster Upload{% endblock %}</h1>
-        <h4>The roster file needs to be a csv file with four fields:  Date, Instructor, Tow Pilot and Duty Pilot.
-        It should include a header record.  The column headings must be:  "Date", "Instructor", "Tow_Pilot" & "Duty_Pilot"</h4>
+      <h1>{% block title %}Paid Upload{% endblock %}</h1>
+        <h4>The payments file needs to be a csv file with four fields:  Invoice No (eg. FL-000001), Persons Name, Invocie Value, Outstanding Value.
+        It should include a header record.  The column headings must be "id", "name". "inv_amt", "outstanding_amt"</h4>
     </div>
   </div>
 </div>
@@ -16,7 +16,7 @@
 
 <form  method="post" enctype="multipart/form-data">
     <div>
-        {{ form.roster_file }}
+        {{ form.payments_file }}
         {{ form.hidden_tag() }}
     </div>
     <div>

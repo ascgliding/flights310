@@ -29,6 +29,7 @@ class ascmailer:
         self.__description = 'Mail message'
         self.__recipients = [] # list of email addresses to send to
         self.__response = None
+        self.__cc = ''
         app.logger.info('Mail item created ' + subject)
 
 
@@ -74,6 +75,20 @@ class ascmailer:
     @property
     def response(self):
         return self.__response
+
+    @property
+    def cc(self):
+        return self.__cc
+
+    @cc.setter
+    def cc(self,value):
+        if value is None:
+            raise AttributeError("CC cannot be none")
+        if not isinstance(value,str):
+            raise AttributeError("CC must be a string")
+        self.__cc = value
+
+
 
     # -----------------------------------------------------------------------------------------
     # Public Methods
@@ -173,6 +188,8 @@ class ascmailer:
         for addr in self.__recipients:
             tolist.append(To(addr))
         self.__message.to = tolist
+        if self.cc != '':
+            self.__message.cc = self.__cc
         # Deal with attachements
         for attachment in self.__attachements:
             pass

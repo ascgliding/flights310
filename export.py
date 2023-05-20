@@ -284,7 +284,6 @@ def exportutil():
                                                 income=SqliteDecimal(10,2))
         rflights = db.engine.execute(sql_to_execute,startdate=thisform.start_date.data,
                                         enddate=thisform.end_date.data).fetchall()
-        print(rflights[0])
         if len(rflights) <= 0:
             flash("No Flights in this date range")
             return render_template('export/exp_daterange.html', form=thisform, title='Export Flights')

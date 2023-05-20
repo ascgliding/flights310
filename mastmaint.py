@@ -11,16 +11,19 @@ import csv
 
 from flask_login import login_required, current_user
 from asc import db, create_app
-from asc.schema import Pilot, Aircraft,  Slot, User, Roster
+from asc.schema import Flight, Pilot, Aircraft, Slot, User, Roster, SqliteDecimal
 from sqlalchemy import text as sqltext, delete
 
 # WTforms
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField,FileRequired
+from flask_wtf.file import FileField, FileRequired
 from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField, BooleanField, RadioField, \
     TextAreaField, DecimalField
 from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
+
+from asc.mailer import ascmailer
+import decimal
 
 
 ##########################################################################
@@ -29,8 +32,8 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 
 class PilotForm(FlaskForm):
     code = StringField('Code', [Length(min=1, message="The Code must be at least 1 characters long."),
-                                      validators.DataRequired(message='You cannot have a blank code'),
-                                      ],
+                                validators.DataRequired(message='You cannot have a blank code'),
+                                ],
                        description='GNZ ID')
     fullname = StringField('Full Name', [validators.DataRequired(message='You cannot have a blank code')],
                            description="Enter the full name - shown on reports and screens")
@@ -41,18 +44,18 @@ class PilotForm(FlaskForm):
     instructor = BooleanField('Instructor', description='Tick if Instructor')
     towpilot = BooleanField('Tow Pilot', description='Tick if Tow Pilot')
     username = StringField("User Name"
-                           ,description="User id of this web site"
-                           ,render_kw={'list': "usernames"})
-    #datejoined = DateField('Date Joined', description='Date Pilot Joined the club')
+                           , description="User id of this web site"
+                           , render_kw={'list': "usernames"})
+    # datejoined = DateField('Date Joined', description='Date Pilot Joined the club')
     bscheme = BooleanField('B Scheme Participant', description='Tick if included in B Scheme')
     yg_member = BooleanField('Youth Glide Member', description='Tick if pilot is a member of Youth Glide')
     gnz_no = IntegerField('GNZ No', description="Enter the GNZ No")
     accts_cust_code = StringField('Customer Code', description='The Customer code in the accounts system',
-        render_kw = {'class': 'mobile_port_supress mobile_land_supress'})
+                                  render_kw={'class': 'mobile_port_supress mobile_land_supress'})
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick" : "ConfirmDelete()" })
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
     def validate_email(self, email):
         """Email validation."""
@@ -70,42 +73,53 @@ class AircraftForm(FlaskForm):
                        description='Use the type that should be in the pilots logbook')
     rate_per_hour = DecimalField('Rate per hour')
     launch = BooleanField('Valid Launch method', description="Tick if this a/c can be used as a launch method")
-    flat_charge_per_launch = DecimalField('Flat Charge per Launch', description="Enter an amount that is added to each launch (primarily for winch launches)")
-    rate_per_height = DecimalField('Rate per Height', description="The rate per height basis - using release height from launch")
+    flat_charge_per_launch = DecimalField('Flat Charge per Launch',
+                                          description="Enter an amount that is added to each launch (primarily for winch launches)")
+    rate_per_height = DecimalField('Rate per Height',
+                                   description="The rate per height basis - using release height from launch")
     per_height_basis = DecimalField('Height in Feet', description="Denominator for height based rates")
-    rate_per_hour_tug_only = DecimalField('Non Launch Rate per hour', description="Std rate for non-launch flying the tug")
+    rate_per_hour_tug_only = DecimalField('Non Launch Rate per hour',
+                                          description="Std rate for non-launch flying the tug")
     bscheme = BooleanField('Affected by B Scheme')
     default_launch = StringField('Default Launch', description="Leave blank to use the system wide default")
     seat_count = IntegerField('Seat Count', description="Number of available seats on the a/c")
     owner = StringField('Owner', description="Aircraft Owner")
     default_pilot = StringField('Default Pilot', description='Default pilot for pic')
     accts_income_acct = StringField('Income Account', description='GL Income account',
-        render_kw = {'class': 'mobile_port_supress mobile_land_supress longnote'})
+                                    render_kw={'class': 'mobile_port_supress mobile_land_supress longnote'})
 
     accts_income_tow = StringField('Income Account - Tow Fees', description='GL Income account - Tow Fees',
-        render_kw = {'class': 'mobile_port_supress mobile_land_supress longnote'})
+                                   render_kw={'class': 'mobile_port_supress mobile_land_supress longnote'})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick" : "ConfirmDelete()" })
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
 
 class SlotForm(FlaskForm):
     userid = StringField('User Id', description='Only applies to user based slots')
     slot_type = StringField('Type', description='Code looks for these.  They man something to the underlying Code.')
     slot_key = StringField('Key Value',
-                            [validators.DataRequired(message='You cannot leave this blank')],
-                            description='The code that will be stored in the database'
-                            )
+                           [validators.DataRequired(message='You cannot leave this blank')],
+                           description='The code that will be stored in the database'
+                           )
     slot_desc = StringField('Description', description='A description - displayed if field choice')
     slot_data = StringField('Data Field', description='Usually maintained in code somewhere')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick" : "ConfirmDelete()" })
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+
 
 class RosterUploadForm(FlaskForm):
-    roster_file = FileField('Roster', validators=[FileRequired()],render_kw={"class":"longnote"})
+    roster_file = FileField('Roster', validators=[FileRequired()], render_kw={"class": "longnote"})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
+
+
+class PaidUploadForm(FlaskForm):
+    payments_file = FileField('Payments', validators=[FileRequired()], render_kw={"class": "longnote"})
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+
 
 # app = Flask(__name__)
 # app = create_app()
@@ -163,19 +177,19 @@ def pilotmaint(id):
         thisform.populate_obj(thispilot)
         # Check what is in the username field.
         try:
-            if thisform.username.data is None or len(thisform.username.data) ==0:
+            if thisform.username.data is None or len(thisform.username.data) == 0:
                 thispilot.userid = None
             else:
                 thisuser = db.session.query(User).filter(User.name == thisform.username.data).first()
                 thispilot.userid = thisuser.id
         except Exception as e:
-            flash("Invalid User id","error")
+            flash("Invalid User id", "error")
             return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
         if thispilot.id is None:
             db.session.add(thispilot)
         db.session.commit()
         return redirect(url_for('mastmaint.pilotlist'))
-    return render_template('mastmaint/pilotmaint.html', form=thisform,usernames=usernames)
+    return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
 
 
 @bp.route('/aircraftlist', methods=['GET', 'POST'])
@@ -218,6 +232,7 @@ def aircraftmaint(id):
         return redirect(url_for('mastmaint.aircraftlist'))
     return render_template('mastmaint/aircraftmaint.html', form=thisform)
 
+
 @bp.route('/slotlist', methods=['GET', 'POST'])
 @login_required
 def slotlist():
@@ -252,6 +267,7 @@ def slotmaint(id):
         db.session.commit()
         return redirect(url_for('mastmaint.slotlist'))
     return render_template('mastmaint/slotmaint.html', form=thisform)
+
 
 @bp.route('/userverify', methods=['Get'])
 @login_required
@@ -324,14 +340,42 @@ def userverify():
     -- sort
         ORDER BY priority
             """)
-    sql = sql.columns(id = db.Integer,
-                      name = db.String,
-                      msg = db.String,
-                      priority = db.Integer,
-                      msgtype = db.String,
-                      tbl = db.String)
+    sql = sql.columns(id=db.Integer,
+                      name=db.String,
+                      msg=db.String,
+                      priority=db.Integer,
+                      msgtype=db.String,
+                      tbl=db.String)
     messages = db.engine.execute(sql).fetchall()
     return render_template('mastmaint/userverify.html', messages=messages)
+
+
+@bp.route('/unpaidflights', methods=['GET', 'POST'])
+@login_required
+def unpaidflights():
+    if not current_user.administrator:
+        flash("Sorry, this is an admin only function")
+        return render_template('index.html')
+    if request.method == 'GET':
+        sql = """
+                      SELECT t0.id, t0.flt_date, t0.payer,
+                        t1.email, 
+                         t0.tow_charge + t0.glider_charge + t0.other_charge amount
+                         FROM flights t0
+                         join pilots t1 on t0.payer = t1.fullname
+                      where paid = False
+                      and payer != 'Trial Flight'
+                      and linetype = 'FL'
+                      order by t0.payer,t0.id
+                    """
+        sql_to_execute = sqlalchemy.sql.text(sql)
+        sql_to_execute = sql_to_execute.columns(flt_date=db.Date, duration=db.Integer, release_height=db.Integer,
+                                                amount=SqliteDecimal(10, 2))
+        # list = db.engine.execute(sql_to_execute, startdate=thisform.start_date.data,
+        #                              enddate=thisform.end_date.data).fetchall()
+        list = db.engine.execute(sql_to_execute).fetchall()
+        return render_template('mastmaint/unpaidflights.html', list=list)
+
 
 @bp.route('/rosterlist', methods=['GET', 'POST'])
 @login_required
@@ -342,6 +386,7 @@ def rosterlist():
     if request.method == 'GET':
         list = Roster.query.order_by(Roster.roster_date.desc())
         return render_template('mastmaint/rosterlist.html', list=list)
+
 
 @bp.route('/rosterimport', methods=['GET', 'POST'])
 @login_required
@@ -354,17 +399,17 @@ def rosterimport():
         return redirect(url_for('mastmaint.rosterlist'))
     if form.validate_on_submit():
         filename = secure_filename(form.roster_file.data.filename)
-        full_path_to_file = os.path.join(app.instance_path,filename)
+        full_path_to_file = os.path.join(app.instance_path, filename)
         # Upload file to instance folder:
         form.roster_file.data.save(full_path_to_file)
         # File processing goes here:
         # Establish the earliest and latest dates from this file
         with open(full_path_to_file) as rosterfile:
-            thisreader = csv.DictReader(rosterfile,delimiter=",")
-            mindate = datetime.date(2200,12,31)  # just a date long after I will be alive!
-            maxdate = datetime.date(1900,1,1)  # before the advent of flying!
+            thisreader = csv.DictReader(rosterfile, delimiter=",")
+            mindate = datetime.date(2200, 12, 31)  # just a date long after I will be alive!
+            maxdate = datetime.date(1900, 1, 1)  # before the advent of flying!
             for row in thisreader:
-                thisdate = datetime.datetime.strptime(row['Date'],"%d/%m/%Y").date()
+                thisdate = datetime.datetime.strptime(row['Date'], "%d/%m/%Y").date()
                 if thisdate < mindate:
                     mindate = thisdate
                 if thisdate > maxdate:
@@ -377,7 +422,7 @@ def rosterimport():
             thisreader = csv.DictReader(rosterfile, delimiter=",")
             for row in thisreader:
                 r = Roster()
-                r.roster_date = datetime.datetime.strptime(row['Date'],"%d/%m/%Y")
+                r.roster_date = datetime.datetime.strptime(row['Date'], "%d/%m/%Y")
                 r.roster_inst = convert_pilot(row['Instructor'])
                 r.roster_tp = convert_pilot(row['Tow_Pilot'])
                 r.roster_dp = convert_pilot(row['Duty_Pilot'])
@@ -386,10 +431,148 @@ def rosterimport():
         return redirect(url_for('mastmaint.rosterlist'))
     return render_template('mastmaint/rosterupload.html', form=form)
 
+
+@bp.route('/paidupload', methods=['GET', 'POST'])
+@login_required
+def paidupload():
+    if not current_user.administrator:
+        flash("Sorry, this is an admin only function")
+        return render_template('index.html')
+    form = PaidUploadForm()
+    if form.cancel.data:
+        return redirect(url_for('mastmaint.unpaidflights'))
+    if form.validate_on_submit():
+        filename = secure_filename(form.payments_file.data.filename)
+        full_path_to_file = os.path.join(app.instance_path, filename)
+        # Upload file to instance folder:
+        form.payments_file.data.save(full_path_to_file)
+        # File processing goes here:
+        # Establish the earliest and latest dates from this file
+        with open(full_path_to_file) as paymentsfile:
+            thisreader = csv.DictReader(paymentsfile, delimiter=",")
+            for row in thisreader:
+                # extract flight number
+                print(row)
+                if float(row['outstanding_amt']) == 0:
+                    fid = int(row['id'][4:])
+                    try:
+                        flight = db.session.query(Flight).get(fid)
+                        flight.paid = True
+                        db.session.commit()
+                    except Exception as e:
+                        print("Failed to find flights {}:{}".format(fid, str(e)))
+                        pass
+        # now remember the date
+        thisday = datetime.date.today()
+        db.session.merge(
+            Slot(slot_type='SYSTEM', slot_key='LASTPAIDUPDATE', slot_desc='Date last time invoice data was uploaded',
+                 slot_data=thisday.strftime('%d-%b-%Y')))
+        db.session.commit()
+        return redirect(url_for('mastmaint.unpaidflights'))
+    return render_template('mastmaint/paidupload.html', form=form)
+
+
+@bp.route('/unpaidemail', methods=['GET', 'POST'])
+@login_required
+def unpaidemail():
+    if not current_user.administrator:
+        flash("Sorry, this is an admin only function")
+        return render_template('index.html')
+    sql = """
+                   SELECT t0.id, t0.flt_date, t0.payer,
+                     t1.email, 
+                      t0.tow_charge + t0.glider_charge + t0.other_charge amount
+                      FROM flights t0
+                      join pilots t1 on t0.payer = t1.fullname
+                   where paid = False
+                   and payer != 'Trial Flight'
+                   and linetype = 'FL'
+                   order by t0.payer,t0.id
+                 """
+    sql_to_execute = sqlalchemy.sql.text(sql)
+    sql_to_execute = sql_to_execute.columns(flt_date=db.Date, duration=db.Integer, release_height=db.Integer,
+                                            amount=SqliteDecimal(10, 2))
+    list = db.engine.execute(sql_to_execute).fetchall()
+    lastemail = ''
+    tbl = None  # this is an important control (None or not) on how the loop works.
+    total = 0
+    counter = 0
+    for index,l in enumerate(list):
+        # If the mail changes or we reach the last item.....
+        if l['email'] != lastemail:
+            if tbl != '' and lastemail != '':
+                send_debtor_email(tbl,lastemail,total)
+                tbl = None
+                total = 0
+                counter += 1
+            print('new email {}'.format(l['email']))
+        if tbl is None:
+            tbl = '<table border="1" style="border-collapse:collapse; border:1px solid blue" ><tr><th>id</th><th>Date</th><th align=right>Amount</th></tr>'
+        tbl += '<tr><td>' + str(l['id']) + '</td><td>' + \
+               l['flt_date'].strftime('%d-%b-%Y') + '</td><td align=right>' + \
+               '${:,.2f}'.format(l['amount']) + '</td></tr>'
+        total += l['amount']
+        lastemail = l['email']
+    # now deal with sending the lastt item at the end of the loop.
+    send_debtor_email(tbl, lastemail, total)
+    return redirect(url_for('mastmaint.index'))
+
+def send_debtor_email(ptbl,pemail,ptotal):
+    if ptbl is None:
+        return # Nothing to do
+    if not isinstance(ptbl,str):
+        raise AttributeError("Table parameter is not a string")
+    if pemail is None:
+        raise AttributeError("Email address is none")
+    if ptotal is None:
+        raise AttributeError("Total value is none")
+    if not isinstance(pemail,str):
+        raise AttributeError("email parameter is not a string")
+    print(type(ptotal))
+    if not isinstance(ptotal,decimal.Decimal) and not isinstance(ptotal,int) and not isinstance(ptotal,float):
+        raise AttributeError("total parameter is not a number")
+    # Finish the table
+    ptbl += "<tr><td>Total</td><td></td><td>" + '${:,.2f}'.format(ptotal) + '</td></tr>'
+    ptbl += "</table>"
+    # Creatte the mail
+    dunningcc = db.session.query(Slot).filter_by(slot_type='SYSTEM', slot_key='DUNNINGCC').first()
+    msg = ascmailer('Outstanding flights requiring payment.')
+    msg.add_body('Our records currently show the following flights as outstanding.<br>')
+    msg.add_body('For further information on individual flights, log into the club flight system.<br>')
+    msg.add_body('If you believe payment has already been made please contact the club treasurer.<br>')
+    msg.add_body(ptbl)
+    msg.add_body('<br><br>')
+    # check if we have a last date
+    lastdate = db.session.query(Slot).filter_by(slot_type='SYSTEM').filter_by(slot_key='LASTPAIDUPDATE').first()
+    if lastdate is not None:
+        msg.add_body('<br>Paymemts received after {} have not yet been processed'.format(lastdate.slot_data))
+        msg.add_body('<br>')
+    # If we are not in debug mode
+    if db.session.query(Slot).filter_by(slot_type='SYSTEM', slot_key='MAILDEBUG').first() is None:
+        # Todo : Test this branch of code by updating the database and seeing all the email and cc addresses
+        # to myself.
+        if dunningcc is not None:
+            if len(dunningcc.slot_data) > 0:
+                msg.cc = dunningcc.slot_data
+        msg.add_recipient(pemail)
+        msg.send()
+        applog.info('Dunning email sent to {}'.format(pemail))
+    # ELSE i.e. we are in DEBUG mode.....
+    else:
+        msg.add_body('<br> would have gone to: {}'.format(pemail))
+        msg.add_body('<br> cc would have been {}'.format(dunningcc.slot_data))
+        msg.add_recipient("ray@rayburns.nz")
+        if dunningcc is not None:
+            if len(dunningcc.slot_data) > 0:
+                msg.cc = dunningcc.slot_data
+        msg.send()
+
+
+
 def convert_pilot(proster_name):
     # look in pilots table for match:
     # replace the space with a percent:
-    likeqry = proster_name.replace(" ","%").strip()
+    likeqry = proster_name.replace(" ", "%").strip()
     thispilot = Pilot.query.filter(Pilot.fullname.ilike(likeqry)).first()
     if thispilot is None:
         return proster_name

@@ -89,7 +89,7 @@ Slots
 Slot types
 
 ============================ =====================================================
-Key                          Descripttion
+Type/Key                     Descripttion
 ============================ =====================================================
 RANK                         Air force ranks and "CIV" and "JUNIOR"
 ---------------------------- -----------------------------------------------------
@@ -99,12 +99,36 @@ TRANSTYPE                    Member transactions such as BFR, ICR.
 ---------------------------- -----------------------------------------------------
 RATING                       BCAT, FRTO etc                                      
 ---------------------------- -----------------------------------------------------
-APPROVEUSERMAIL              Email Address for those who are to be mailed        
+SYSTEM/SENDGRIDAPIKEY        The value of the API key for the sendgrid account
+---------------------------- -----------------------------------------------------
+SYSTEM/APPROVEUSERMAIL       Email Address for those who are to be mailed
                              When a new user registers.  This person will        
                              recieve an email telling tthem there is a user to   
                              approve.                                            
                                                                                
                              Email address goes into slot_data                                                     
+---------------------------- -----------------------------------------------------
+DEFAULT/TUG                  The default Tug (not sure this is used)
+---------------------------- -----------------------------------------------------
+DEFAULT/LASTTOWIE            Used when a new record is added to flights
+---------------------------- -----------------------------------------------------
+DEFAULT/LASTTUG              Used when a new record is added to flights
+---------------------------- -----------------------------------------------------
+DEFAULT/OTHERCLUBMBR         Not Used
+---------------------------- -----------------------------------------------------
+DEFAULT/OTHERCUSTOMER        slot_data contains a GNUCASH customer number that
+                             is used when no payer can be found in the pilots
+                             table
+---------------------------- -----------------------------------------------------
+SYSTEM/LASTPAIDUPDATE        contains date the last time the payments file was
+                             uploaded.  This  is then used in the email sent
+                             to remind people to pay up.
+---------------------------- -----------------------------------------------------
+SYSTEM/DUNNINGCC             email address to be used in CC list when hurry up
+                             emails are sent.
+---------------------------- -----------------------------------------------------
+SYSTEM/MAILDEBUG             IF this record exists then the dunning emails are
+                             sent to Lionel and Ray but not actually sent.
 ============================ =====================================================
 
                                                                                
