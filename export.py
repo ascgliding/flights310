@@ -151,8 +151,8 @@ def exporttugmovements():
             tug_down,takeoff,
             round((julianday(tug_down) - julianday(takeoff)) * 1440,2) duration,
             COALESCE(release_height,0) release_height,
-            CASE WHEN ac_regn = 'TUG ONLY' THEN pic ELSE tow_pilot END pilot,
-            CASE WHEN ac_regn = 'TUG ONLY' THEN 'Private' ELSE 'Tow' END type,
+            CASE WHEN trim(ac_regn) = 'TUG ONLY' THEN upper(trim(pic)) ELSE upper(trim(tow_pilot)) END pilot,
+            CASE WHEN trim(ac_regn) = 'TUG ONLY' THEN 'Private' ELSE 'Tow' END type,
 --            cast(tow_charge AS REAL) / 100  income
             tow_charge income
             FROM flights
