@@ -131,6 +131,46 @@ def exportacsummary():
         return send_file(createsummsxlsx(fltsummary), as_attachment=True)
         return render_template('mastmaint/index.html')
 
+@bp.route('/exporttugmovments', methods=['GET', 'POST'])
+@login_required
+def exporttugmovements():
+    thisform = ExcelPromptForm(name='Export Tug Movements')
+    if thisform.cancel.data:
+        return render_template('mastmaint/index.html')
+    if request.method == 'GET':
+        # Most likely we will want the previous Saturday.
+        prevsat = datetime.date.today()
+        while prevsat.weekday() != 5:
+            prevsat = prevsat - datetime.timedelta(days=1)
+        thisform.start_date.data = prevsat - datetime.timedelta(days=90)
+        thisform.end_date.data = datetime.date.today()
+        return render_template('export/exp_daterange.html', form=thisform, title="Export Tug Movements")
+    if request.method == 'POST':
+        sql = """
+            SELECT id,flt_date,tug_regn,ac_regn,
+            tug_down,takeoff,
+            round((julianday(tug_down) - julianday(takeoff)) * 1440,2) duration,
+            COALESCE(release_height,0) release_height,
+            CASE WHEN ac_regn = 'TUG ONLY' THEN pic ELSE tow_pilot END pilot,
+            CASE WHEN ac_regn = 'TUG ONLY' THEN 'Private' ELSE 'Tow' END type,
+--            cast(tow_charge AS REAL) / 100  income
+            tow_charge income
+            FROM flights
+            WHERE linetype = 'FL' AND tug_regn != 'SELF LAUNCH'
+            and flt_date >= :startdate
+            and flt_date <= :enddate 
+              """
+        sql_to_execute = sqlalchemy.sql.text(sql)
+        sql_to_execute = sql_to_execute.columns(flt_date=db.Date,duration=db.Integer,release_height=db.Integer,
+                                                income=SqliteDecimal(10,2))
+        flights = db.engine.execute(sql_to_execute, startdate=thisform.start_date.data, enddate=thisform.end_date.data).fetchall()
+        if len(flights) <= 0:
+            flash("No movements in this date range")
+            return render_template('export/exp_daterange.html', form=thisform, title='Export A/C Summary to Excel')
+        return send_file(createttugmxlsx(flights), as_attachment=True)
+        return render_template('mastmaint/index.html')
+
+
 @bp.route('/exportaccts', methods=['GET', 'POST'])
 @login_required
 def exportaccts():
@@ -614,4 +654,59 @@ def createutilxlsx(flights):
     workbook.close()
     return filename
 
+def createttugmxlsx(flights):
+    """
+    Creates a spreadsheet ready for download for flights between two dates.
+    :param self:
+    :param flights:  List of flights to write
+    :return: Name of excel file.
+    """
+    row = 0
+    if len(flights) == 0:
+        raise ValueError("No Flights in this range")
+    try:
+        filename = os.path.join(app.instance_path,
+                                "downloads/TUGFLTS_" + flights[0].flt_date.strftime("%Y-%m-%d") + ".xlsx")
+        workbook = xlsxwriter.Workbook(filename)
+        ws = workbook.add_worksheet()
+        borderdict = {'border': 1}
+        datedict = {'num_format': 'dd-mmm-yy'}
+        timedict = {'num_format': 'h:mm'}
+        dollardict = {'num_format': '$#, ##0.00'}
+        border_fmt = workbook.add_format({'border': 1})
+        merge_format = workbook.add_format({'align': 'center', 'border': 1})
+        date_format = workbook.add_format(dict(datedict, **borderdict))
+        dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
+        time_fmt = workbook.add_format(dict(timedict, **borderdict))
+        ws.write("A3", "Id", border_fmt)
+        ws.write("B3", "Date", border_fmt)
+        ws.write("C3", "Tug Regn", border_fmt)
+        ws.write("D3", "Duration", border_fmt)
+        ws.write("E3", "Glider Regn", border_fmt)
+        ws.write("F3", "Income", border_fmt)
+        ws.write("G3", "Release Height", border_fmt)
+        ws.write("H3", "Pilot", border_fmt)
+        ws.write("I3", "Type", border_fmt)
+        row = 3
+        for f in flights:
+            ws.write(row, 0, f.id)
+#            ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"), border_fmt)
+            ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"))
+            ws.write(row, 2, f.tug_regn)
+            ws.write(row, 3, f.duration )
+            ws.write(row, 4, f.ac_regn )
+            ws.write(row, 5, f.income )
+            ws.write(row, 6, f.release_height )
+            ws.write(row, 7, f.pilot )
+            ws.write(row, 8, f.type )
+            row += 1
+        # col widths
+        for i,v in enumerate([3,12,10,10,10,10,15,25,10]):
+            ws.set_column(i,i,v)
+    except Exception as e:
+        applog.error("An error ocurred during spreadsheet create:{}".format(str(e)))
+        applog.debug("Row was:{}".format(row))
+        raise
+    workbook.close()
+    return filename
 
