@@ -191,13 +191,8 @@ def establish_logging(app):
         loghandler.addFilter(UserIDFilter)
         formatter = logging.Formatter(fmt, fmt_date)
         loghandler.setFormatter(formatter)
-        # TODO: Fix pycharm logging:
-        #  There appears to be a problem with Pycharm on windows.  The following code causes an error - it appears
-        #  to need exclusive access to the file.  So not sure how this is supppwed to work.
-
         # Assign this loghandler to the apps logger object
         app.logger.addHandler(loghandler)
-
         app.logger.info("Logging Established")
     except Exception as e:
         print("Failed to establish Logging: {}".format(e))

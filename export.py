@@ -34,7 +34,7 @@ applog = app.logger
 
 bp = Blueprint('export', __name__, url_prefix='/export')
 
-# TODO :  General_note for flight + general_note record.
+# TODO: Change name of exports - need to include the user name
 
 class ExcelPromptForm(FlaskForm):
     start_date = DateField('Start Date',

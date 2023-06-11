@@ -38,7 +38,6 @@ constDAYVIEW = 'dayview'
 
 # TODO: Dayend to roll log if empty
 # TODO: purge downloads folder
-# TODO: Change name of exports - need to include the user name
 # TODO: ARE you sure for flights where either a start/tug down or landed is already recorded and the user presses that button.
 
 class NewDayForm(FlaskForm):
