@@ -277,7 +277,7 @@ def userverify():
         return render_template('index.html')
     # see also logbook.py for an example of this code that uses parameters
     sql = sqltext("""
-    -- Anapproved user
+    -- Unapproved user
         SELECT
         id key, fullname name, 'Unapproved user' msg,
         1 priority,
@@ -337,6 +337,18 @@ def userverify():
         FROM flights
         WHERE payer NOT IN (SELECT fullname FROM pilots)
         AND julianday('now') - julianday(flt_date) < 30
+    -- GNZ no different between users and pilots
+        union
+        SELECT t0.id, t0.fullname, 'User gnz_no does not match pilots table',8,'ERROR','users'
+        FROM users t0
+        JOIN pilots t1 ON t1.fullname = t0.fullname
+        WHERE t0.gnz_no != t1.gnz_no
+    -- email different between users and pilots
+        union
+        SELECT t0.id, t0.fullname, 'User email does not match pilots table',8,'ERROR','users'
+        FROM users t0
+        JOIN pilots t1 ON t1.fullname = t0.fullname
+        WHERE t0.email != t1.email
     -- sort
         ORDER BY priority
             """)
@@ -549,8 +561,6 @@ def send_debtor_email(ptbl,pemail,ptotal):
         msg.add_body('<br>')
     # If we are not in debug mode
     if db.session.query(Slot).filter_by(slot_type='SYSTEM', slot_key='MAILDEBUG').first() is None:
-        # Todo : Test this branch of code by updating the database and seeing all the email and cc addresses
-        # to myself.
         if dunningcc is not None:
             if len(dunningcc.slot_data) > 0:
                 msg.cc = dunningcc.slot_data
