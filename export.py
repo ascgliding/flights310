@@ -111,7 +111,7 @@ def exportacsummary():
         thisform.end_date.data = datetime.date.today()
         return render_template('export/exp_daterange.html', form=thisform, title="Export A/C Summary to Excel")
     if request.method == 'POST':
-        sql = sqltext("""
+        sql = """
                 SELECT flt_date, ac_regn,  
                 count(*) fltcount, 
                 sum(round((julianday(landed) - julianday(takeoff)) * 1440,2)) totalmins
@@ -119,15 +119,21 @@ def exportacsummary():
                 where flt_date >= :startdate
                 and flt_date <= :enddate 
                 and linetype = 'FL'
+                and ac_regn <> :tugonly
                 GROUP BY flt_date,ac_regn
                 order by ac_regn, flt_date
-              """)
-        fltsummary = db.engine.execute(sql, startdate=thisform.start_date.data, enddate=thisform.end_date.data).fetchall()
+              """
+        sql_to_execute = sqlalchemy.sql.text(sql)
+        sql_to_execute  = sql_to_execute.columns(flt_date=db.Date, fltcount=db.Integer, totalmins= db.Integer)
+        # fltsummary = db.engine.execute(sql, startdate=thisform.start_date.data, enddate=thisform.end_date.data).fetchall()
+        fltsummary = db.engine.execute(sql_to_execute, startdate=thisform.start_date.data,
+                                       enddate=thisform.end_date.data,
+                                       tugonly=constREGN_FOR_TUG_ONLY).fetchall()
         if len(fltsummary) <= 0:
             flash("No Flights in this date range")
             return render_template('export/exp_daterange.html', form=thisform, title='Export A/C Summary to Excel')
-        for w in fltsummary:
-            f = datetime.datetime.strptime(w.flt_date,'%Y-%m-%d').date()
+        # for w in fltsummary:
+        #     f = datetime.datetime.strptime(w.flt_date,'%Y-%m-%d').date()
         return send_file(createsummsxlsx(fltsummary), as_attachment=True)
         return render_template('mastmaint/index.html')
 
@@ -304,6 +310,7 @@ def exportutil():
         thisform.start_date.data = prevsat
         thisform.end_date.data = datetime.date.today()
         return render_template('export/exp_daterange.html', form=thisform, title='Export Flights')
+    # TODO:  review all exports :  the date must be a python date in the sql and the xlsxwriter must use the date_format - see utilisation
     if request.method == 'POST':
 
         sql = """
@@ -317,13 +324,15 @@ def exportutil():
                      where flt_date >= :startdate
                      and flt_date <= :enddate 
                      and linetype = 'FL'
+                     and t0.ac_regn != :tugonly
                      order by t0.id
                    """
         sql_to_execute = sqlalchemy.sql.text(sql)
         sql_to_execute = sql_to_execute.columns(flt_date=db.Date,duration=db.Integer,release_height=db.Integer,
                                                 income=SqliteDecimal(10,2))
         rflights = db.engine.execute(sql_to_execute,startdate=thisform.start_date.data,
-                                        enddate=thisform.end_date.data).fetchall()
+                                        enddate=thisform.end_date.data,
+                                        tugonly=constREGN_FOR_TUG_ONLY).fetchall()
         if len(rflights) <= 0:
             flash("No Flights in this date range")
             return render_template('export/exp_daterange.html', form=thisform, title='Export Flights')
@@ -379,7 +388,8 @@ def createfltsxlsx(flights):
         for f in flights:
             ws.write(row, 0, f.id, border_fmt)
             if f.linetype == 'FL':
-                ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"), border_fmt)
+                # ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"), border_fmt)
+                ws.write(row, 1, f.flt_date, date_format)
                 ws.write(row, 2, f.pic, border_fmt)
                 ws.write(row, 3, f.p2, border_fmt )
                 ws.write(row, 4, f.ac_regn, border_fmt )
@@ -401,7 +411,7 @@ def createfltsxlsx(flights):
                 if f.accts_export_date is not None:
                     ws.write(row, 20, f.accts_export_date.strftime("%d/%m/%Y"), border_fmt )
             else:
-                ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"), border_fmt)
+                ws.write(row, 1, f.flt_date, date_format)
                 ws.write(row, 2, f.general_note)
             row += 1
         ws.write(row + 1, 1, "Totals:", border_fmt)
@@ -431,28 +441,31 @@ def createsummsxlsx(summary):
     row = 0
     try:
         filename = os.path.join(app.instance_path,
-                                "downloads/Summ_" + summary[0].flt_date + ".xlsx")
+                                "downloads/Summ_" + summary[0].flt_date.strftime("%Y-%m-%d") + ".xlsx")
         workbook = xlsxwriter.Workbook(filename)
         ws = workbook.add_worksheet()
         borderdict = {'border': 1}
+        noborderdict = {'border': 0}
         datedict = {'num_format': 'dd-mmm-yy'}
         timedict = {'num_format': 'h:mm'}
         dollardict = {'num_format': '$#, ##0.00'}
         border_fmt = workbook.add_format({'border': 1})
+        noborder_fmt = workbook.add_format({'border': 0})
         merge_format = workbook.add_format({'align': 'center', 'border': 1})
-        date_format = workbook.add_format(dict(datedict, **borderdict))
-        dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
-        time_fmt = workbook.add_format(dict(timedict, **borderdict))
+        date_format = workbook.add_format(dict(datedict, **noborderdict))
+        dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
+        time_fmt = workbook.add_format(dict(timedict, **noborderdict))
         ws.write("A3", "Date", border_fmt)
         ws.write("B3", "Glider Reg", border_fmt)
         ws.write("C3", "Flight Count", border_fmt)
         ws.write("D3", "Total Mins", border_fmt)
         row = 3
         for s in summary:
-            ws.write(row, 0, datetime.datetime.strptime(s.flt_date,"%Y-%m-%d").date().strftime("%d/%m/%Y"), border_fmt)
-            ws.write(row, 1, s.ac_regn, border_fmt )
-            ws.write(row, 2, s.fltcount, border_fmt )
-            ws.write(row, 3, s.totalmins, border_fmt )
+            # ws.write(row, 0, datetime.datetime.strptime(s.flt_date,"%Y-%m-%d").date().strftime("%d/%m/%Y"), border_fmt)
+            ws.write(row, 0, s.flt_date, date_format)
+            ws.write(row, 1, s.ac_regn, noborder_fmt )
+            ws.write(row, 2, s.fltcount, noborder_fmt )
+            ws.write(row, 3, s.totalmins, noborder_fmt )
             row += 1
         # col widths
         for i,v in enumerate([12,9,9,9]):
@@ -608,15 +621,17 @@ def createutilxlsx(flights):
     try:
         filename = os.path.join(app.instance_path,
                                 "downloads/UTIL_" + flights[0].flt_date.strftime("%Y-%m-%d") + ".xlsx")
-        workbook = xlsxwriter.Workbook(filename)
+        workbook = xlsxwriter.Workbook(filename) #, engine='xlsxwriter',date_format='yy/mm/dd')
         ws = workbook.add_worksheet()
         borderdict = {'border': 1}
-        datedict = {'num_format': 'dd-mmm-yy'}
+        noborderdict = {'border': 0}
+        datedict = {'num_format': 'dd-mm-yy'}
         timedict = {'num_format': 'h:mm'}
         dollardict = {'num_format': '$#, ##0.00'}
         border_fmt = workbook.add_format({'border': 1})
         merge_format = workbook.add_format({'align': 'center', 'border': 1})
         date_format = workbook.add_format(dict(datedict, **borderdict))
+        date_format_nb = workbook.add_format(dict(datedict, **noborderdict))
         dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
         time_fmt = workbook.add_format(dict(timedict, **borderdict))
         ws.write("A3", "Date", border_fmt)
@@ -629,7 +644,8 @@ def createutilxlsx(flights):
         ws.write("H3", "Club/Pvte", border_fmt)
         row = 3
         for f in flights:
-            ws.write(row, 0, f.flt_date.strftime("%d/%m/%Y"))
+            # ws.write(row, 0, f.flt_date.strftime("%d/%m/%Y"))
+            ws.write(row, 0, f.flt_date, date_format_nb )
             ws.write(row, 1, f.pic)
             ws.write(row, 2, f.p2 )
             ws.write(row,3, f.release_height )
@@ -670,14 +686,15 @@ def createttugmxlsx(flights):
         workbook = xlsxwriter.Workbook(filename)
         ws = workbook.add_worksheet()
         borderdict = {'border': 1}
+        noborderdict = {'border': 0}
         datedict = {'num_format': 'dd-mmm-yy'}
         timedict = {'num_format': 'h:mm'}
         dollardict = {'num_format': '$#, ##0.00'}
         border_fmt = workbook.add_format({'border': 1})
         merge_format = workbook.add_format({'align': 'center', 'border': 1})
-        date_format = workbook.add_format(dict(datedict, **borderdict))
-        dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
-        time_fmt = workbook.add_format(dict(timedict, **borderdict))
+        date_format = workbook.add_format(dict(datedict, **noborderdict))
+        dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
+        time_fmt = workbook.add_format(dict(timedict, **noborderdict))
         ws.write("A3", "Id", border_fmt)
         ws.write("B3", "Date", border_fmt)
         ws.write("C3", "Tug Regn", border_fmt)
@@ -691,7 +708,7 @@ def createttugmxlsx(flights):
         for f in flights:
             ws.write(row, 0, f.id)
 #            ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"), border_fmt)
-            ws.write(row, 1, f.flt_date.strftime("%d/%m/%Y"))
+            ws.write(row, 1, f.flt_date, date_format)
             ws.write(row, 2, f.tug_regn)
             ws.write(row, 3, f.duration )
             ws.write(row, 4, f.ac_regn )
