@@ -16,7 +16,10 @@
       <li>{{ render_field(form.glider_charge)  }}</li>
       <!-- <li>xx render_field(form.other_charge)  xx</li> --!>
       <li>{{ render_field(form.payment_note) }}</li>
-    </ul>
+      {% if current_user.administrator %}
+        <li>{{ render_field(form.paid)  }}</li>
+      {% endif %}
+   </ul>
     <datalist id="pilots">
           {% for pilot in pilots %}
         <option value="{{ pilot }}">

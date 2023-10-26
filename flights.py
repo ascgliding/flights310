@@ -129,6 +129,8 @@ class PaymentForm(FlaskForm):
     payment_note = StringField('Payment',
                                description = "Payment Method",
                                render_kw={'list': "paymentmethods"})
+    paid = BooleanField('Paid',
+                        description="Checked indicates this flight has been paid")
     btnsubmit = MatButtonField('done',
                             id='matdonebtn',
                             icon='done',
