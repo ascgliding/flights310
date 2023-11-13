@@ -223,7 +223,10 @@ class Flight(db.Model):
 
     @db.validates('ac_regn', 'tug_regn', "tow_pilot")
     def convert_upper(self, key, value):
-        return value.upper()
+        if key == 'ac_regn':
+            if value.strip().upper()[0] != 'G' and value.strip().upper() != 'TUG ONLY':
+                raise SchemaError('The Glider Regn must start with a "G". Do you mean TUG ONLY?')
+        return value.strip().upper()
 
     @db.validates('linetype')
     def validate_type(self, key, value):
@@ -288,7 +291,7 @@ class Aircraft(db.Model):
 
     id = db.Column(db.Integer, db.Sequence('aircraft_id_seq'), primary_key=True)
     regn = db.Column(db.String, comment="Aircraft Regsiration")
-    type = db.Column(db.String, comment="Type")
+    type = db.Column(db.String, comment="Type/Model e.g. Ka6CR")
 
 
     launch = db.Column(db.Boolean, comment='Set if Regn is a launch method', default=False)
