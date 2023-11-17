@@ -1,58 +1,179 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<div style="display: table; width:100%" >
-  <div style="display:table-row">
-    <div style="display:table-cell">
-      <h1>{% block title %}Logbook{% endblock %}</h1>
+<div style="display: table; width:100%">
+    <div style="display:table-row">
+        <div style="display:table-cell">
+            <h1>{% block title %}Logbook{% endblock %}</h1>
+        </div>
+        <div style="display:table-cell; text-align: right;">
+            <a class="action" href="{{ url_for('logbook.daterange') }}" ,
+               title="Select Date Range">
+                <button class="textbtn" id="dates" name="dates">Dates</button>
+            </a>
+            <a class="action" href="{{ url_for('logbook.export') }}" ,
+               title="Download a Spreadsheet">
+                <button class="textbtn" id="excel" name="excel">Excel</button>
+            </a>
+        </div>
     </div>
-    <div  style="display:table-cell; text-align: right;" >
-      <a class="action" href="{{ url_for('logbook.daterange') }}" ,
-         title="Select Date Range">
-        <button class="textbtn" id="dates" name="dates">Dates</button>
-      </a>
-      <a class="action" href="{{ url_for('logbook.export') }}" ,
-         title="Download a Spreadsheet">
-        <button class="textbtn" id="excel" name="excel">Excel</button>
-      </a>
-     </div>
-  </div>
-  <div style="display:table-row">
-    <div style="display:table-cell">
-      <h4>For {{ startdate.strftime("%d/%m/%Y") }} to {{ enddate.strftime("%d/%m/%Y") }}</h4>
+    <div style="display:table-row">
+        <div style="display:table-cell">
+            <h4>For {{ startdate.strftime("%d/%m/%Y") }} to {{ enddate.strftime("%d/%m/%Y") }} (and any unpaid)</h4>
+            <h4>Payments for red lines are outstanding. </h4>
+            <h4>Payments received after {{ lastupdate }} have not yet been processed.</h4>
+        </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block content %}
+{% if list|length > 0 %}
+  <h4>Glider Flying</h4>
   <div class="table">
     <div class="row">
-      <div class="heading">id</div>
-      <div class="heading" >Date</div>
-      <div class="heading heading mobile_port_supress mobile_land_supress" >Type</div>
-      <div class="heading heading " >Regn</div>
-      <div class="heading heading mobile_port_supress" >PIC</div>
-      <div class="heading heading mobile_port_supress" >P2</div>
-      <div class="heading heading mobile_port_supress mobile_land_supress" >Takeoff</div>
-      <div class="heading heading mobile_port_supress mobile_land_supress" >Landed</div>
-      <div class="heading heading mobile_port_supress" >Crew Cap</div>
-      <div class="heading heading " >Mins</div>
+        <div class="heading">id</div>
+        <div class="heading">Date</div>
+        <div class="heading heading mobile_port_supress mobile_land_supress">Type</div>
+        <div class="heading heading ">Regn</div>
+        <div class="heading heading mobile_port_supress">PIC</div>
+        <div class="heading heading mobile_port_supress">P2</div>
+        <div class="heading heading mobile_port_supress mobile_land_supress">Takeoff</div>
+        <div class="heading heading mobile_port_supress mobile_land_supress">Landed</div>
+        <div class="heading heading mobile_port_supress">Crew Cap</div>
+        <div class="heading heading ">Mins</div>
+        <div class="heading heading ">Amount</div>
     </div>
-  {% for l in list %}
+    {% for l in list %}
     <div class="row">
-      <div class="cell" align="right">{{ l.id }}</div>
-      <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
-      <div class="cell" align="left">{{ l.regn }}</div>
-      <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
-      <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
-      <div class="cell mobile_port_supress " align="left">{{ l.crew_capacity }}</div>
-      <div class="cell  " align="right">{{ l.totalmins|hrsmins }}</div>
+        {% if l.paid or l.due == 0 %}
+        <div class="cell" align="right">{{ l.id }}</div>
+        <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+        <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+        <div class="cell" align="left">{{ l.regn }}</div>
+        <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
+        <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
+        <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+        <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+        <div class="cell mobile_port_supress " align="left">{{ l.crew_capacity }}</div>
+        <div class="cell  " align="right">{{ l.totalmins|hrsmins }}</div>
+        <div class="cell  " align="right">{{ "$%.2f"|format(l.due) }}</div>
+        {% else %}
+        <div class="cell" style="color:red" align="right">{{ l.id }}</div>
+        <div class="cell" style="color:red" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+        <div class="cell mobile_port_supress mobile_land_supress " style="color:red" align="left">{{ l.actype }}</div>
+        <div class="cell" style="color:red" align="left">{{ l.regn }}</div>
+        <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.pic }}</div>
+        <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.p2 }}</div>
+        <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+            l.takeoff|hrsminsfromtime }}
+        </div>
+        <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+            l.landed|hrsminsfromtime }}
+        </div>
+        <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.crew_capacity }}</div>
+        <div class="cell  " style="color:red" align="right">{{ l.totalmins|hrsmins }}</div>
+        <div class="cell  " style="color:red" align="right">{{ "$%.2f"|format(l.due) }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+    <!-- Private flying in the tug -->
+    {% if tugonly|length > 0 %}
+    <h4>Private Flying the Tug.</h4>
+    <div class="table">
+        <div class="row">
+            <div class="heading">id</div>
+            <div class="heading">Date</div>
+            <div class="heading heading mobile_port_supress mobile_land_supress">Type</div>
+            <div class="heading heading ">Regn</div>
+            <div class="heading heading mobile_port_supress">PIC</div>
+            <div class="heading heading mobile_port_supress">P2</div>
+            <div class="heading heading mobile_port_supress mobile_land_supress">Takeoff</div>
+            <div class="heading heading mobile_port_supress mobile_land_supress">Landed</div>
+            <div class="heading heading mobile_port_supress">Crew Cap</div>
+            <div class="heading heading ">Mins</div>
+            <div class="heading heading ">Amount</div>
+        </div>
+        {% for l in tugonly %}
+        <div class="row">
+            {% if l.paid or l.due == 0 %}
+            <div class="cell" align="right">{{ l.id }}</div>
+            <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+            <div class="cell" align="left">{{ l.regn }}</div>
+            <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
+            <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_supress " align="left">{{ l.crew_capacity }}</div>
+            <div class="cell  " align="right">{{ l.totalmins|hrsmins }}</div>
+            <div class="cell  " align="right">{{ "$%.2f"|format(l.due) }}</div>
+            {% else %}
+            <div class="cell" style="color:red" align="right">{{ l.id }}</div>
+            <div class="cell" style="color:red" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress " style="color:red" align="left">{{ l.actype }}
+            </div>
+            <div class="cell" style="color:red" align="left">{{ l.regn }}</div>
+            <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.pic }}</div>
+            <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.p2 }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+                l.takeoff|hrsminsfromtime }}
+            </div>
+            <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+                l.landed|hrsminsfromtime }}
+            </div>
+            <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.crew_capacity }}</div>
+            <div class="cell  " style="color:red" align="right">{{ l.totalmins|hrsmins }}</div>
+            <div class="cell  " style="color:red" align="right">{{ "$%.2f"|format(l.due) }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+        <!--  towing-->
+        {% if towsummary|length > 0 %}
+          <h4>Towing Summary</h4>
+          <div class="table">
+              <div class="row">
+                  <div class="heading">Date</div>
+                  <div class="heading heading ">Count</div>
+                  <div class="heading heading ">Minutes</div>
+              </div>
+          {% for l in towsummary %}
+              <div class="row">
+                  <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+                  <div class="cell  " align="right">{{ l.tows }}</div>
+                  <div class="cell  " align="right">{{ l.towmins|hrsmins }}</div>
+              </div>
+         {% endfor %}
+          <h4>Tow Detail</h4>
+        <div class="row">
+            <div class="heading">id</div>
+            <div class="heading">Date</div>
+            <div class="heading heading mobile_port_supress mobile_land_supress">Type</div>
+            <div class="heading heading ">Regn</div>
+            <div class="heading heading mobile_port_supress">PIC</div>
+            <div class="heading heading mobile_port_supress">P2</div>
+            <div class="heading heading mobile_port_supress mobile_land_supress">Takeoff</div>
+            <div class="heading heading mobile_port_supress mobile_land_supress">Landed</div>
+            <div class="heading heading ">Mins</div>
+        </div>
+        {% for l in tows %}
+        <div class="row">
+            <div class="cell" align="right">{{ l.id }}</div>
+            <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+            <div class="cell" align="left">{{ l.regn }}</div>
+            <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
+            <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+            <div class="cell  " align="right">{{ l.towmins }}</div>
+        </div>
+        {% endfor %}
+
+        {% endif %}
+
 
     </div>
-  {% endfor %}
-  </div>
-{% endblock %}
+    {% endblock %}

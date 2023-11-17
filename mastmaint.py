@@ -472,14 +472,29 @@ def paidupload():
                         flight.paid = True
                         db.session.commit()
                     except Exception as e:
-                        print("Failed to find flights {}:{}".format(fid, str(e)))
+                        flash("Failed to find flights {}:{}".format(fid, str(e)),error)
+                        applog.error("Failed to find flights {}:{}".format(fid, str(e)))
                         pass
         # now remember the date
         thisday = datetime.date.today()
-        db.session.merge(
-            Slot(slot_type='SYSTEM', slot_key='LASTPAIDUPDATE', slot_desc='Date last time invoice data was uploaded',
+        try:
+            slot = db.session.query(Slot).filter_by(slot_key='LASTPAIDUPDATE').first()
+            if slot is None:
+                db.session.add(Slot(slot_type='SYSTEM', slot_key='LASTPAIDUPDATE', slot_desc='Date last time invoice data was uploaded',
                  slot_data=thisday.strftime('%d-%b-%Y')))
-        db.session.commit()
+                db.session.commit()
+            else:
+                slot.slot_data = thisday.strftime('%d-%b-%Y')
+                db.session.commit()
+        except Exception as e:
+            flash("Failed to update the last bank rec date","error")
+            flash(str(e))
+            applog.error("Failed to update the last bank rec date")
+            pass
+        # db.session.merge(
+        #     Slot(slot_type='SYSTEM', slot_key='LASTPAIDUPDATE', slot_desc='Date last time invoice data was uploaded',
+        #          slot_data=thisday.strftime('%d-%b-%Y')))
+        # db.session.commit()
         return redirect(url_for('mastmaint.unpaidflights'))
     return render_template('mastmaint/paidupload.html', form=form)
 

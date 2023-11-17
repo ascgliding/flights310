@@ -11,6 +11,7 @@ from flask_wtf import FlaskForm
 from wtforms.fields import  DateField
 from asc.wtforms_ext import MatButtonField, TextButtonField
 from asc.common import *
+from asc.schema import SqliteDecimal
 import os
 import xlsxwriter
 
@@ -57,7 +58,7 @@ def logbook():
         if thisuser.userid is None:
             flash("Your userid is not associated with a pilot.  Sorry about that...")
             return render_template("index.html")
-        # Get this user:
+        # Glider Flights
         sql = sqltext("""
             SELECT
                 t0.id,
@@ -78,14 +79,18 @@ def logbook():
                     WHEN t1.seat_count = 2 AND t0.p2 = '' THEN 'P1'
                     WHEN t1.seat_count = 2 AND t2.instructor = 1 THEN 'DI' 
                     ELSE 'P1'
-                END crew_capacity
+                END crew_capacity,
+                (tow_charge + glider_charge + other_charge )  due,
+                t0.paid
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
                 LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
                 WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
-                and t0.flt_date >= :startdate
-                and t0.flt_date <= :enddate 
+                and ((t0.flt_date >= :startdate
+                    and t0.flt_date <= :enddate)
+                    or (due != 0 and paid == 0) )
                 and t0.linetype = 'FL'
+                and ac_regn != 'TUG ONLY'
             """)
         sql = sql.columns(id=db.Integer,
                          flt_date=db.Date,
@@ -97,10 +102,124 @@ def logbook():
                          landed=db.Time,
                          totalmins=db.Integer,
                          seat_count=db.Integer,
-                         crew_capacity=db.String
+                         crew_capacity=db.String,
+                         due=SqliteDecimal(10,2),
+                         paid=db.Boolean
                          )
+        # Tug Private Flying
+        tugonly = sqltext("""
+                    SELECT
+                t0.id,
+                t0.flt_date,
+                t0.pic,
+                t0.p2,
+                COALESCE(t1.TYPE,"Unknown") actype,
+                CASE WHEN ac_regn = 'TUG ONLY'
+                    THEN tug_regn
+                    ELSE ac_regn
+                END regn,
+                time(takeoff) takeoff,
+                time(landed) landed,
+                coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) totalmins,
+                coalesce(t1.seat_count,0) seat_count,
+                CASE WHEN t0.p2 = t2.fullname THEN 'P2'
+                    WHEN t1.seat_count = 1 THEN 'P1'
+                    WHEN t1.seat_count = 2 AND t0.p2 = '' THEN 'P1'
+                    WHEN t1.seat_count = 2 AND t2.instructor = 1 THEN 'DI' 
+                    ELSE 'P1'
+                END crew_capacity,
+                (tow_charge + glider_charge + other_charge )  due,
+                t0.paid
+                FROM flights t0
+                LEFT OUTER JOIN aircraft t1 ON t0.tug_regn = t1.regn
+                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
+                and ((t0.flt_date >= :startdate
+                    and t0.flt_date <= :enddate)
+                    or (due != 0 and paid == 0) )
+                and t0.linetype = 'FL'
+                and ac_regn = 'TUG ONLY'
+        """)
+        tugonly = tugonly.columns(id=db.Integer,
+                          flt_date=db.Date,
+                          pic=db.String,
+                          p2=db.String,
+                          actype=db.String,
+                          regn=db.String,
+                          takeoff=db.Time,
+                          landed=db.Time,
+                          totalmins=db.Integer,
+                          seat_count=db.Integer,
+                          crew_capacity=db.String,
+                          due=SqliteDecimal(10, 2),
+                          paid=db.Boolean
+                          )
+        # Towing - Detail
+        towdetail = sqltext("""
+            SELECT
+                t0.id,
+                t0.flt_date,
+                t0.pic,
+                t0.p2,
+                COALESCE(t1.TYPE,"Unknown") actype,
+                ac_regn,
+                time(takeoff) takeoff,
+                time(tug_down) landed,
+                coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0) towmins
+                FROM flights t0
+                LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
+                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                WHERE upper(t2.fullname) = t0.tow_pilot
+                and (t0.flt_date >= :startdate
+                    and t0.flt_date <= :enddate)
+                and t0.linetype = 'FL'
+                and ac_regn != 'TUG ONLY'
+                and tug_regn not in ('SELF LAUNCH', 'WINCH')
+        """)
+        towdetail = towdetail.columns(id=db.Integer,
+                          flt_date=db.Date,
+                          pic=db.String,
+                          p2=db.String,
+                          actype=db.String,
+                          regn=db.String,
+                          takeoff=db.Time,
+                          landed=db.Time,
+                          towmins=db.Integer
+                          )
+        # towing - summary
+        tow_summary = sqltext("""
+                SELECT
+                t0.flt_date,
+                count(*) tows,
+                sum(coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0)) towmins
+                FROM flights t0
+                LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
+                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                WHERE upper(t2.fullname) = t0.tow_pilot
+                and (t0.flt_date >= :startdate
+                    and t0.flt_date <= :enddate)
+                and t0.linetype = 'FL'
+                and ac_regn != 'TUG ONLY'
+                and tug_regn not in ('SELF LAUNCH', 'WINCH')
+                group by 1
+                order by 1
+                """)
+        tow_summary = tow_summary.columns(
+                          flt_date=db.Date,
+                          tows=db.Integer,
+                          towmins=db.Integer
+                          )
+
         flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
-        return render_template('logbook/logbook.html', list=flights, startdate=startdate, enddate=enddate)
+        slot = db.session.query(Slot).filter_by(slot_key='LASTPAIDUPDATE').first()
+        tugonlyflights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        tows = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        print(tows)
+        towsummary = db.engine.execute(tow_summary, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        return render_template('logbook/logbook.html', list=flights, tugonly=tugonlyflights,
+                                tows=tows, towsummary=towsummary,
+                               startdate=startdate, enddate=enddate,
+                               lastupdate=slot.slot_data)
     if request.method == "POST":
         return url_for("logbook.logbook",sdate=None,edate=None)
 
