@@ -51,11 +51,11 @@ class ExcelPromptForm(FlaskForm):
                             help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
 
 class AcctsExportForm(FlaskForm):
-    export_dates = BooleanField('Use exported date',
-                              description='Ticked will check export dates and update export dates',
+    export_dates = BooleanField('Only export records previously not processed.',
+                              description='If NOT selected then the system does not look at the exported date on the flight record and may result in double posting.',
                               default=1)
     include_header = BooleanField('Include Header Record',
-                                  description='Include the header record in the csv.  Leave unchecked for GNU',
+                                  description='Include the header record in the csv.  Leave unchecked for GNU, Select for debugging purposes.',
                                 default = 0)
     start_date = DateField('Start Date',
                          description='Start Date')
@@ -216,18 +216,10 @@ def exportaccts():
         if len(flights) == 0:
             flash("There are no flights to export in this range","warning")
             return render_template('export/exportaccts.html', form=thisform, title="Export to Accts System")
-        else:
-            flash("There are {} flights to export in this range".format(len(flights)), "warning")
-        #for w in fltsummary:
-        #    f = datetime.datetime.strptime(w.flt_date,'%Y-%m-%d').date()
         try:
-            rtndict = getacctsexport(flights,thisform.export_dates.data, thisform.include_header.data)
             return redirect(
                 url_for('export.exportacctsmsgs', pstart=thisform.start_date.data, pend=thisform.end_date.data,
                         pheader=thisform.include_header.data, pexport_dates=thisform.export_dates.data))
-
-            return render_template('export/exportacctsmsgs.html',  title="Export to Accts System", messages=rtndict['msgs'],filename=rtndict['filename'])
-            return send_file(getacctsexport(flights,thisform.export_dates.data, thisform.include_header.data), as_attachment=True)
         except Exception as e:
             flash(str(e),"error")
             return render_template('export/exportaccts.html', form=thisform, title="Export to Accts System")
@@ -247,27 +239,27 @@ def exportacctsmsgs(pstart,pend,pheader,pexport_dates):
     if request.method == 'GET':
         if export_dates:
             sql = sqltext("""
-                    SELECT id,flt_date 
+                    SELECT id,flt_date
                     FROM flights
                     where flt_date >= :startdate
-                    and flt_date <= :enddate 
+                    and flt_date <= :enddate
                     and linetype = 'FL'
                     and accts_export_date is null
                   """)
         else:
             sql = sqltext("""
-                    SELECT id,flt_date  
+                    SELECT id,flt_date
                     FROM flights
                     where flt_date >= :startdate
-                    and flt_date <= :enddate 
+                    and flt_date <= :enddate
                     and linetype = 'FL'
                   """)
         flights = db.engine.execute(sql, startdate=start, enddate=end).fetchall()
-        # if len(flights) == 0:
-        #     flash("There are no flights to export in this range","warning")
-        #     return render_template('export/exportacctsmsgs.html',  title="Export to Accts System")
-        # else:
-        #     flash("There are {} flights to export in this range".format(len(flights)), "warning")
+        if len(flights) == 0:
+            flash("There are no flights to export in this range","warning")
+            return render_template('export/exportacctsmsgs.html',  title="Export to Accts System")
+        else:
+            flash("There are {} flights to export in this range".format(len(flights)), "warning")
         # Now get the file.
         rtndict = getacctsexport(flights, export_dates, header)
         session['EXPORTFILE'] = rtndict['filename']
@@ -486,7 +478,7 @@ def getacctsexport(fltlist,pexport_date,pheader):
         if other_club_member_slot is None:
             raise ValueError("Other Club Member slot missing")
         if other_club_member_slot.slot_data is None:
-            raise ValueError("Other Club Member valu is not set")
+            raise ValueError("Other Club Member value is not set")
         fieldnames = ['id', 'date_opened', 'owner_id', 'billing_id', 'notes', 'date', 'desc', 'action',
                       'account', 'quantity', 'price', 'disc_type', 'disc_how', 'discount', 'taxable', 'taxincluded',
                       'tax_table', 'date_posted', 'due_date', 'account_posted', 'memo_posted', 'accu_splits']
