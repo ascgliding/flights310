@@ -202,6 +202,7 @@ def exportaccts():
                     where flt_date >= :startdate
                     and flt_date <= :enddate 
                     and linetype = 'FL'
+                    and paid = False
                     and accts_export_date is null
                   """)
         else:
@@ -210,6 +211,7 @@ def exportaccts():
                     FROM flights
                     where flt_date >= :startdate
                     and flt_date <= :enddate 
+                    and paid = False
                     and linetype = 'FL'
                   """)
         flights = db.engine.execute(sql, startdate=thisform.start_date.data, enddate=thisform.end_date.data).fetchall()
@@ -244,6 +246,7 @@ def exportacctsmsgs(pstart,pend,pheader,pexport_dates):
                     where flt_date >= :startdate
                     and flt_date <= :enddate
                     and linetype = 'FL'
+                    and paid = False
                     and accts_export_date is null
                   """)
         else:
@@ -252,6 +255,7 @@ def exportacctsmsgs(pstart,pend,pheader,pexport_dates):
                     FROM flights
                     where flt_date >= :startdate
                     and flt_date <= :enddate
+                    and paid = False
                     and linetype = 'FL'
                   """)
         flights = db.engine.execute(sql, startdate=start, enddate=end).fetchall()
@@ -523,43 +527,44 @@ def getacctsexport(fltlist,pexport_date,pheader):
                             {'flt': f.id, 'type': 'Warning', 'msg': 'No Glider Charge'})
             # Process Aerotow
             if oneflt.tow_charge is not None:
-                if oneflt.tug_rec() is None:
-                    rtndict['msgs'].append(
-                        {'flt': f.id, 'type': 'Error', 'msg': 'No Tug Regn'})
-                elif oneflt.ac_regn != constREGN_FOR_TUG_ONLY and oneflt.tug_rec().accts_income_tow is None:
-                    rtndict['msgs'].append(
-                        {'flt': f.id, 'type': 'Error', 'msg': 'Income Account missing for Tow'})
-                elif oneflt.ac_regn == constREGN_FOR_TUG_ONLY and oneflt.tug_rec().accts_income_acct is None:
-                    rtndict['msgs'].append(
-                        {'flt': f.id, 'type': 'Error', 'msg': 'Income Account missing for Private Hire'})
-                else:
-                    if oneflt.tow_charge > 0:
-                        thisrec = {}
-                        if rows_added == 0:
-                            thisrec['id'] = "FL-" + str(f.id).zfill(6)
-                            thisrec['notes'] = 'Paid by {}'.format(oneflt.payment_note)
-                            if oneflt.general_note is not None:
-                                thisrec['notes'] = thisrec['notes'] + ' ' + oneflt.general_note.replace('\n',' ')
+                if oneflt.tow_charge != 0:
+                    if oneflt.tug_rec() is None:
+                        rtndict['msgs'].append(
+                            {'flt': f.id, 'type': 'Error', 'msg': 'No Tug Regn'})
+                    elif oneflt.ac_regn != constREGN_FOR_TUG_ONLY and oneflt.tug_rec().accts_income_tow is None:
+                        rtndict['msgs'].append(
+                            {'flt': f.id, 'type': 'Error', 'msg': 'Income Account missing for Tow'})
+                    elif oneflt.ac_regn == constREGN_FOR_TUG_ONLY and oneflt.tug_rec().accts_income_acct is None:
+                        rtndict['msgs'].append(
+                            {'flt': f.id, 'type': 'Error', 'msg': 'Income Account missing for Private Hire'})
+                    else:
+                        if oneflt.tow_charge > 0:
+                            thisrec = {}
+                            if rows_added == 0:
+                                thisrec['id'] = "FL-" + str(f.id).zfill(6)
+                                thisrec['notes'] = 'Paid by {}'.format(oneflt.payment_note)
+                                if oneflt.general_note is not None:
+                                    thisrec['notes'] = thisrec['notes'] + ' ' + oneflt.general_note.replace('\n',' ')
+                                    rtndict['msgs'].append(
+                                        {'flt': f.id, 'type': 'Warning', 'msg': 'There is a general note'})
+                            if oneflt.payer_rec() is None:
+                                thisrec['owner_id'] = other_club_member_slot.slot_data
                                 rtndict['msgs'].append(
-                                    {'flt': f.id, 'type': 'Warning', 'msg': 'There is a general note'})
-                        if oneflt.payer_rec() is None:
-                            thisrec['owner_id'] = other_club_member_slot.slot_data
-                            rtndict['msgs'].append(
-                                {'flt': f.id, 'type': 'Warning', 'msg': 'Posting to Other Club Member'})
-                        else:
-                            thisrec['owner_id'] = oneflt.payer_rec().accts_cust_code
-                        thisrec['desc']  = 'Aerotow'
-                        thisrec['quantity'] = 1
-                        thisrec['price'] = oneflt.tow_charge
-                        thisrec['taxable'] = 'X'
-                        thisrec['date'] = oneflt.flt_date.strftime("%d/%m/%y")
-                        thisrec['taxincluded'] = 'X'
-                        if oneflt.ac_regn == constREGN_FOR_TUG_ONLY:
-                            thisrec['account'] = oneflt.tug_rec().accts_income_acct
-                        else:
-                            thisrec['account'] = oneflt.tug_rec().accts_income_tow
-                        w.writerow(thisrec)
-                        rows_added += 1
+                                    {'flt': f.id, 'type': 'Warning', 'msg': 'Posting to Other Club Member'})
+                            else:
+                                thisrec['owner_id'] = oneflt.payer_rec().accts_cust_code
+                            thisrec['desc']  = 'Aerotow'
+                            thisrec['quantity'] = 1
+                            thisrec['price'] = oneflt.tow_charge
+                            thisrec['taxable'] = 'X'
+                            thisrec['date'] = oneflt.flt_date.strftime("%d/%m/%y")
+                            thisrec['taxincluded'] = 'X'
+                            if oneflt.ac_regn == constREGN_FOR_TUG_ONLY:
+                                thisrec['account'] = oneflt.tug_rec().accts_income_acct
+                            else:
+                                thisrec['account'] = oneflt.tug_rec().accts_income_tow
+                            w.writerow(thisrec)
+                            rows_added += 1
             if oneflt.glider_charge > 0:
                 if oneflt.aircraft_rec() is None:
                     rtndict['msgs'].append(
