@@ -13,7 +13,8 @@ applog = app.logger
 
 @app.before_request
 def before_request():
-    applog.debug("In before_request")
+    # applog.debug("In before_request")
+    pass
 
 @bp.route('/')
 def index():

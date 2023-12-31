@@ -265,6 +265,7 @@ def slotmaint(id):
         if thisrec.id is None:
             db.session.add(thisrec)
         db.session.commit()
+        applog.info("Location Recorded from slotmaint: Lat: {} Long: {}".format(request.form['latitude'],request.form['longitude']))
         return redirect(url_for('mastmaint.slotlist'))
     return render_template('mastmaint/slotmaint.html', form=thisform)
 

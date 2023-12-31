@@ -175,9 +175,9 @@ class NoteForm(FlaskForm):
 
 # TODO: Test Error Handling in Production environment.
 
-@app.before_request
-def before_request():
-    applog.debug("In before_request")
+# @app.before_request
+# def before_request():
+#     applog.debug("In before_request")
 
 
 @bp.route('/daysummary')

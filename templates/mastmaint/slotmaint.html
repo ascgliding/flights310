@@ -13,9 +13,18 @@ Slot Maintenance
     <li>{{ render_field(form.slot_key) }}</li>
     <li>{{ render_field(form.slot_desc) }}</li>
     <li>{{ render_field(form.slot_data) }}</li>
+    <li>
+        <label for="latitude" class="prompt">Latitude</label>
+        <input type="text" name="latitude" id="latitude">
+    </li>
+    <li>
+        <label for="longitude" class="prompt">Longitude</label>
+        <input type="text" name="longitude" id="longitude">
+    </li>
   </ul>
   {{ form.btnsubmit() }}
   {{ form.cancel() }}
+      <input id="setpos" type="button" value="Set Position" onclick="updatepos('latitude','longitude')" class="textbtn">
   {{ form.delete() }}
 
 </form>

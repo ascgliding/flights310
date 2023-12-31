@@ -54,6 +54,133 @@ the database.
 
 Try to avoid the web browser's back button.  This is often causes problems.
 
+Caravan Hardware Setup
+======================
+
+There is a large tablet in the caravan.  There is also a mobile phone.
+The tablet does not have a mobile data facility so the phone is required in order
+to connect to a mobile data network (in our case "2 degrees").  The phone must have
+data available.
+
+If, for any reason, you cannot get a connection, follow these steps:
+
+Phone - Mobile Hot Spot
+-----------------------
+
+On the phone, "mobile hotspot" must be selected.  To check this,
+put your finger at the top of the screen and swipe down.  Look for icon shown in the
+screen shot below, it should be white on a blue background.  If it is two shades of
+grey, then it is not selected.  Tap it with your finger to get white-on-blue.
+
+.. image:: README_USER_SCR002.jpg
+   :scale: 15%
+
+Table - Wifi 
+------------
+
+On the tablet - check the wifi signal appears on the top right hand corner
+The icon looks like this:
+
+
+.. image:: README_USER_SCR018.jpg
+
+It should appear here:
+
+.. image:: README_USER_SCR011.jpg
+   :scale: 15%
+
+If this is missing follow the steps in the following section to pair the phone to the tablet
+
+
+Pairing the Phone to the tablet
+-------------------------------
+
+Tap on the Apps icon on the home page:
+
+
+.. image:: README_USER_SCR016.jpg
+   :scale: 15%
+
+Tap on "Settings":
+
+
+.. image:: README_USER_SCR015.jpg
+   :scale: 15%
+
+
+Tap on Wifi and then "ASC Galaxy":
+
+
+.. image:: README_USER_SCR014.jpg
+   :scale: 15%
+
+You may or may not be prompted for the password.  Once the phone has been paired once, then this should not happen again unless
+the password, phone or connection name has changed.  If you are prompted for the password enter the correct password.  At time
+of writing this is "udul597h9":
+
+
+.. image:: README_USER_SCR013.jpg
+   :scale: 15%
+    
+When complete it should say "Connected":
+
+.. image:: README_USER_SCR012.jpg
+   :scale: 15%
+
+What happens when we run out of data.
+-------------------------------------
+
+Our account plan is structured so that we should have enough data for a month
+in which we record 250 flights.  This is about 20 per day.  If we run out
+of data then the phone will need to be topped up.
+
+The first thing to note is that the phone must have access to the internet in some manner
+in order to top it up.   THEREFORE if it runs out of data, then it cannot be topped up
+using just the phone.  It must be connected to some other source that will proivide internet
+access.  The easiest way is to turn on mobile hotspot on another phone and pair them.
+
+Once you have access to the internet then you can select the 2 degrees app on the main
+screen:
+
+.. image:: README_USER_SCR003.jpg
+   :scale: 15%
+
+When the application starts you see the following screen:
+
+.. image:: README_USER_SCR004.jpg
+   :scale: 15%
+
+
+This should really be checked each day.  If the available data is less than 20mb then
+update the plan.  This is done as follows:
+
+.. image:: README_USER_SCR010.jpg
+   :scale: 15%
+
+
+.. image:: README_USER_SCR005.jpg
+   :scale: 15%
+
+
+.. image:: README_USER_SCR006.jpg
+   :scale: 15%
+
+
+.. image:: README_USER_SCR007.jpg
+   :scale: 15%
+
+
+.. image:: README_USER_SCR008.jpg
+   :scale: 15%
+
+
+.. image:: README_USER_SCR009.jpg
+   :scale: 15%
+
+
+
+
+
 ******************
 Daily Transactions
 ******************
@@ -61,7 +188,8 @@ Daily Transactions
 There are two types of entries:
 
 * Flights : As you would expect, the details of a given flight movement.
-* Notes : Any free format text.  Use this for recording things like the purchase of tow tickets, log books.  Any kind of text note.
+* Notes : Any free format text.  Use this for recording things like the purchase of tow tickets, log books.  
+  Any kind of text note.
 
 
 The day summary screen shows all the dates on which we have had flights (in descending order).
@@ -165,13 +293,15 @@ Select the payment method from the down list.
 Changing the Tow Pilot and Tow Aircraft
 =======================================
 
-This is a simple case of changing the values on the first flight (or any flight) of the day.  Subsequent new
+This is a simple case of changing the values on the first flight (or any flight) of
+the day.  Subsequent new
 records will default from the previous flight.
 
 Recording Trial Flights
 =======================
 
-Set the P2 to "Trial Flight".  Add a note to the flight that includes the name of the person.
+Set the P2 to "Trial Flight".
+Add a note to the flight that includes the name of the person.
 
 In the payments section use the calc tab.  The payer should be set to "Trial Flight".
 Put ALL of the amount in the aerotow.  Normally this will be $150.  Service people pay the normal

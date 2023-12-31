@@ -13,8 +13,19 @@
     PageBreak
 
 ===========================
-User Documentation
+Technical  Documentation
 ===========================
+
+*************************
+Passwords, Keys, Licences
+*************************
+
+The system is supported by a number of accounts on different platforms, including
+a 2 degrees account for data.  There are accounts and passwords for python anywhere,
+sendgrid for mail, the 2 degrees account and so on.
+
+All of these are stored in "asckeys" (google doc) on Ray's personal Google drive and shared with (at time of writing)
+Lionel, Kishan and Ivor.
 
 *****
 Setup

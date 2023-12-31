@@ -19,10 +19,10 @@ applog = app.logger
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
-
-@app.before_request
-def before_request():
-    applog.debug("In before_request")
+#
+# @app.before_request
+# def before_request():
+#     applog.debug("In before_request")
 
 
 # def is_safe_url(target):

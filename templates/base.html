@@ -9,6 +9,22 @@ function goBack() {
   window.history.back();
 };
 
+// updatepos looks requires the following variables on a page
+function updatepos(latitudefield,longitudefield) {
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(function(position) {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+    // alert(latitudefield + ":" + latitude + "\n" + longitudefield + ":" + longitude);
+    document.getElementById(latitudefield).value = latitude;
+    document.getElementById(longitudefield).value = longitude;
+  });
+} else {
+  console.log("Geolocation is not supported by this browser.");
+}
+};
+
 function checkcookie () {  if (navigator.cookieEnabled){
     document.getElementById("cookiemessage").hidden = true;
     console.log("cookies enabled")
