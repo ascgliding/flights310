@@ -602,6 +602,66 @@ Sending email is done via sendgrid.
 
 The API Key is stored in the database in the slots table.
 
+************
+Geo Locating
+************
+
+This is done via Javascript.
+
+Big Note:  I made this work using HTTP when testing using pycharm on my local machine, however, I found that at PythonAnywhere (and possibly any live site) HTTPS must be used to get the javascript to work.
+Start by adding some javascript to base.html (or any html that is included in every page):
+
+javascript::
+
+    // updatepos looks requires the following variables on a page
+    function updatepos(latitudefield,longitudefield) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+        // alert(latitudefield + ":" + latitude + "\n" + longitudefield + ":" + longitude);
+        document.getElementById(latitudefield).value = latitude;
+        document.getElementById(longitudefield).value = longitude;
+      });
+    } else {
+      console.log("Geolocation is not supported by this browser.");
+    }
+    };
+
+
+Note that this function is passed the id of two fields on the page.
+One for latitude and one for longitude.  The intention is that there is a button placed on the page to update the two fields.
+Like this::
+
+    <ul>
+      <li>
+          <label for="latitude" class="prompt">Latitude</label>
+          <input type="text" name="latitude" id="latitude">
+      </li>
+      <li>
+          <label for="longitude" class="prompt">Longitude</label>
+          <input type="text" name="longitude" id="longitude">
+      </li>
+    </ul>
+    <input id="setpos" type="button" value="Set Position" onclick="updatepos('latitude','longitude')" class="textbtn">
+
+It is possible to do this on page load rather than having a button,
+however this is somewhat frowned upon.
+Chrome will record a violation in the page log if you do this on page load
+(even if the user has permitted access to location details).
+
+The more acceptable method is to have some function or button that gets the
+location and then does something with it (an example is "get my nearest store").
+If doing this on page load, you would need to nominate a pair of fields that are
+the same on every page (and probably hidden).
+
+Samples from the log file::
+
+    2024-01-01|10:33:30|mastmaint.py|slotmaint|INFO|None|Location Recorded from slotmaint: Desc: tablet in hangar Lat: -36.7832743 Long: 174.6354158
+    2024-01-01|10:59:51|mastmaint.py|slotmaint|INFO|None|Location Recorded from slotmaint: Desc: My phone in hangar Lat: -36.7841594 Long: 174.636487
+    2024-01-01|11:19:28|mastmaint.py|slotmaint|INFO|None|Location Recorded from slotmaint: Desc: tablet at 26 launch pt Lat: -36.7832743 Long: 174.6354158
+
 
 ===========
 Environment
