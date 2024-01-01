@@ -83,6 +83,7 @@ def register():
                     mail.send()
             login_user(User(username), remember=True, duration=datetime.timedelta(days=5))
             app.logger.info('User : {} Logged in'.format(username))
+            app.logger.info("User Agent:{}".format(request.user_agent.string))
             return redirect(url_for('index'))
 
         flash(error)
@@ -113,6 +114,7 @@ def login():
                 db.session.commit()
                 login_user(thisuser, remember=True, duration=datetime.timedelta(days=5))
                 app.logger.info('User : {} Logged in'.format(thisuser.fullname or thisuser.name))
+                app.logger.info("User Agent:{}".format(request.user_agent.string))
                 # when this page has been called due to a fresh login required function then it has a "next" parameter
                 # which is the page the person originally asked for, so we should go there if defined
                 next = request.args.get('next')

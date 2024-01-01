@@ -335,7 +335,10 @@ def changeflight(id):
             thisrec.tug_regn = lastflt.tug_regn
         # on a mobile platform the flight date is always the current date.  On windows or linux it will be prompted.
         # is todays date equal to the flight date?
-        applog.info("User Agent:{}".format(request.user_agent.platform))
+        # As at 2 Jan 2024, this does not work.  Plaform will always return none.
+        # what is required is to look at user_agent.string and check for the word "Mobile".  But I am reluctant to
+        # change it because it has been working fine for ages.....
+        # applog.info("User Agent:{}".format(request.user_agent.platform))
         if request.user_agent.platform is not None and request.user_agent.platform not in ['windows', 'linux']:
             thisrec.flt_date = datetime.date.today()
     else:
@@ -410,7 +413,7 @@ def changeflight(id):
                 # thisrec.pic_gnz_no = thisrec.get_pic_gnz_no()
                 # thisrec.p2_gnz_no = thisrec.get_p2_gnz_no()
                 db.session.add(thisrec)
-                applog.info('New Flight added: {}'.format(thisrec.id))
+                applog.info('New Flight added')
             elif thisform.delete.data:
                 db.session.delete(thisrec)
                 applog.info('Flight {} deleted'.format(id))

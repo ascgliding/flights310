@@ -34,7 +34,7 @@ class UserIDFilter(logging.Filter):
     # The standard logger does not include an attribute for the user name.  This is done by adding this function
     def filter(record):
         try:
-            record.user_id = session.get('user_id')
+            record.user_id = session.get('_user_id')
         except Exception as e:
             if sys.platform == 'win32':
                 record.user_id = os.getlogin()
