@@ -413,7 +413,10 @@ def changeflight(id):
                 # thisrec.pic_gnz_no = thisrec.get_pic_gnz_no()
                 # thisrec.p2_gnz_no = thisrec.get_p2_gnz_no()
                 db.session.add(thisrec)
-                applog.info('New Flight added')
+                # to get the inserted record id, you need to flush and refresh.
+                db.session.flush()
+                db.session.refresh(thisrec)
+                applog.info('New Flight added: {}'.format(thisrec.id))
             elif thisform.delete.data:
                 db.session.delete(thisrec)
                 applog.info('Flight {} deleted'.format(id))
