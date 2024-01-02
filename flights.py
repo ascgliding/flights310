@@ -382,7 +382,7 @@ def changeflight(id):
         order by ac_regn
         """)
     if thisrec.flt_date is not None:
-        activeacdate = thisrec.flt_date - datetime.timedelta(days=90)
+        activeacdate = thisrec.flt_date - datetime.timedelta(days=5)
     else:
         activeacdate = datetime.date.today()
     acregnlist = [r[0] for r in db.engine.execute(sql, date=activeacdate).fetchall()]
