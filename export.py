@@ -557,6 +557,7 @@ def getacctsexport(fltlist,pexport_date,pheader):
                             thisrec['quantity'] = 1
                             thisrec['price'] = oneflt.tow_charge
                             thisrec['taxable'] = 'X'
+                            thisrec['tax_table'] = 'GST'
                             thisrec['date'] = oneflt.flt_date.strftime("%d/%m/%y")
                             thisrec['taxincluded'] = 'X'
                             if oneflt.ac_regn == constREGN_FOR_TUG_ONLY:
@@ -592,6 +593,7 @@ def getacctsexport(fltlist,pexport_date,pheader):
                     thisrec['quantity'] = 1
                     thisrec['price'] = oneflt.glider_charge
                     thisrec['taxable'] = 'X'
+                    thisrec['tax_table'] = 'GST'
                     thisrec['date'] = oneflt.flt_date.strftime("%d/%m/%y")
                     thisrec['taxincluded'] = 'X'
                     thisrec['account'] = oneflt.aircraft_rec().accts_income_acct

@@ -55,10 +55,14 @@
     </div>
   {% for f in flights %}
     {% if f.linetype == 'FL' %}
-    <div class="row">
+    {% if f.payment_note == '' %}
+    <div class="row" style="color:red">
+    {% else %}
+    <div class="row" >
+    {% endif %}
       <div class="cell"><a href="{{ url_for('flights.changeflight', id=f.id) }}">{{ f.id | displayfornone }}</a></div>
-      <div class="cell" align="left">{{ f.pic }}</div>
-      <div class="cell" align="left">{{ f.p2 }}</div>
+      <div class="cell" align="left" >{{ f.pic }}</div>
+      <div class="cell" align="left" >{{ f.p2 }}</div>
       <div class="cell" align="left">{{ f.ac_regn }}</div>
       <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.tow_pilot | nameinitials }}</div>
       <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.tug_regn | displayfornone}}</div>

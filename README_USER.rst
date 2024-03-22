@@ -4,17 +4,24 @@
 .. The ### directives are processed by rst2pdf.
 .. footer:: Page ###Page### of ###Total###
 
-.. sectnum ::
 
-.. contents:: Table of Contents
+===========================
+Flight Recording System
+===========================
 
 .. raw:: pdf
 
     PageBreak
 
-===========================
-User Documentation
-===========================
+
+.. contents:: Table of Contents
+
+.. sectnum::
+
+.. raw:: pdf
+
+    PageBreak
+
 
 ************************
 Access And Registration
@@ -75,7 +82,7 @@ grey, then it is not selected.  Tap it with your finger to get white-on-blue.
 .. image:: README_USER_SCR002.jpg
    :scale: 15%
 
-Table - Wifi 
+Tablet - Wifi 
 ------------
 
 On the tablet - check the wifi signal appears on the top right hand corner
