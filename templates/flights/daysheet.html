@@ -55,7 +55,7 @@
     </div>
   {% for f in flights %}
     {% if f.linetype == 'FL' %}
-    {% if f.payment_note == '' %}
+    {% if (f.payment_note == '' or f.payment_note == None)  and f.landed != None  %}
     <div class="row" style="color:red">
     {% else %}
     <div class="row" >
