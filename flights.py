@@ -410,8 +410,12 @@ def changeflight(id):
         try:
             thisform.populate_obj(thisrec)
             if thisrec.id is None:
-                # thisrec.pic_gnz_no = thisrec.get_pic_gnz_no()
-                # thisrec.p2_gnz_no = thisrec.get_p2_gnz_no()
+                # then we are in Add mode.
+                # set payment type
+                thisac = db.session.query(Aircraft).filter(Aircraft.regn == thisrec.ac_regn).order_by(Aircraft.id.desc()).first()
+                if thisac is not None:
+                    if thisac.rate_per_hour == 0  and thisrec.tug_regn == constTOW_FOR_SELF_LAUNCH:
+                        thisrec.payment_note = 'No Pmt Required'
                 db.session.add(thisrec)
                 # to get the inserted record id, you need to flush and refresh.
                 db.session.flush()
@@ -443,6 +447,7 @@ def changeflight(id):
             flash(e)
             return render_template('flights/changeflight.html', form=thisform, pilots=pilotlist, ac=acregnlist, towielist=towielist)
         return redirect(url_for('flights.daysheet', date=thisrec.flt_date.strftime('%Y-%m-%d')))
+    # Else must be display new/existing flight
     applog.debug('About to render changefligt at b with id {}'.format(thisform.id.data))
     return render_template('flights/changeflight.html', form=thisform, pilots=pilotlist, ac=acregnlist, towielist=towielist, towregnlist=towregnlist)
 
