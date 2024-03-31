@@ -30,6 +30,11 @@ class development(Config):
     LOGCLEAR = True
     LOGLEVEL = 'DEBUG'
 
+class dayend(Config):
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(app.instance_path, 'asc.sqlite')
+    LOGCLEAR = False
+    LOGLEVEL = 'DEBUG'
+
 class production(Config):
     # Note that this config assumes Unix.
     SQLALCHEMY_DATABASE_URI = 'sqlite:////' + os.path.join(app.instance_path, 'asc.sqlite')

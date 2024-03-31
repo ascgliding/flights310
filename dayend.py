@@ -9,17 +9,11 @@ from asc.mailer import ascmailer
 # In order to trap errors from the engine
 import sqlalchemy.exc
 from sqlalchemy import text as sqltext, func
-
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
 
-
-
 app = create_app()
 log = app.logger
-
-
-
 
 try:
     del os.environ['PYTHONHOME']
@@ -30,15 +24,6 @@ except KeyError as e:
 print("sys.path is ".format(sys.path))
 print("pwd is {}".format(os.getcwd()))
 print("pythonpath (in create_app dayend)_ is {}".format(os.environ['PYTHONPATH']))
-
-# print("app instance path (in create_app dayend.py)_ is {}".format(app.instance_path))
-
-# from  asc.mailer import ascmailer
-
-# def test():
-#     thismailer = ascmailer('testmail')
-#     thismailer.body = 'here is mail from the dayend'
-#     thismailer.add_recipient('ray@rayburns.nz')
 
 def testmailer():
     """
