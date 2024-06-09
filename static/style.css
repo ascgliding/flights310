@@ -92,22 +92,33 @@ div .title
         overflow: hidden;
     }
 
+.radiogroup
+    {
+        font-size:0.85rem;
+        display:inline-block;
+        width:300px;
+        border-style:solid;
+        border-width:1px;
+        border-color:#ff0000;
+        border-radius:0.25rem;
+    }
 
-/*----
-don't define this at all because sometimes I want a table-cell (i.e in a table)
-and sometimes I want just whatever it is (e.g. a label or input)
-.mobile_land_supress { display: table-cell; }
-.mobile_port_supress { display: table-cell; }
----*/
+
 
 /* --- It is important that media queries are defined from the lowest to the highest
        The sequence in which they occur matters.  ---- */
 
 /* -----  apply only to phone devices  Portrait -----*/
 
+/*
+Jun 24
+Changed from:
 @media only screen and (max-width: 30em) {
+to: */
 
-.mobile_port_supress
+@media only screen and (max-width: 480px) {
+
+.mobile_port_suppress
     { display: none;}
 
 
@@ -130,18 +141,25 @@ div .cell_date
     {
         display: none;
     }
+/* Notphone is a shorthand for both mobile_port_suppress and mobile_land_suppress */
 .notphone
     { display: none;}
 }
 
 /* -----  apply only to phone devices at most Landscape -----*/
 
-@media only screen and (max-width: 60em) {
+/* TODO:  The viewport for landscape will need to include both the max-width AND the min-width - see flaskskeleton */
 
-label             { text-align:left;
-                    display:block;
+/*
+Jun 24 changed from :
+@media only screen and (max-width: 60em) {
+to :*/
+@media only screen and (max-width: 960px) and (min-width: 481px) {
+
+label             { text-align:right;
+                    display:inline-block;
                     color: var(--main-fg-colour);
-                    width:100%}
+                    width:30%}
 label.nophone      {
                     display:none;
                     }
@@ -158,28 +176,42 @@ div .cell_date
         display: none;
     }
 
+/* Notphone is a shorthand for both mobile_port_suppress and mobile_land_suppress */
 .notphone
     { display: none;}
 
-.mobile_land_supress
+.mobile_land_suppress
     { display: none;}
 
 }
 
 /* -----  apply  to  devices not portrait -----*/
+/* TODO: Find where this is used and do something different (flights) */
 
-@media only screen and (min-width:31em) {
+/*  30em is 480px  (at pixel size of 16) */
+/* Jun 24: changed from 31em to 480px */
 
-.not_portrait_supress
+/*
+@media only screen and (min-width:480px) {
+.not_portrait_suppress
     { display: none;}
+    }
+*/
 
-}
 
 /* -----  apply only to non-phone devices  -----*/
-@media only screen and (min-width: 60em) {
+/* jun 24 changed from: /*
+/* @media only screen and (min-width: 60em) {  */
+/* to */
+
+/*
+@media only screen and (min-width: 961px)  {
+*/
+@media only screen and (min-width: 961px)  {
 
 label             { text-align:right;
                     display:inline-block;
+                    color: var(--main-fg-colour);
                     width:20%
                     }
 div .cell_date
@@ -191,12 +223,14 @@ div .cell_date
         padding-right: 5px;
     }
 div .cell_phone_date
-    {
-        display: none;
-    }
+    { display: none; }
 
 .phone
     { display: none;}
+
+.full_screen_suppress
+    { display: none;}
+
 }
 
 
@@ -240,6 +274,57 @@ input[type=submit] { align-self: start; }
                   border: 1px solid #aacbe2; }
 .error          { background: #f0d6d6; padding: 0.5em; }
 .warning        { background: #cee5F5; padding: 0.5em; }
+
+
+
+/* Custom Select */
+.custom-select {
+  min-width: 50px;
+  position: relative;
+}
+
+select {
+  appearance: none;
+  /*  safari  */
+  -webkit-appearance: none;
+  /*  other styles for aesthetics */
+  width: 200px;
+  font-size: .85rem;
+  padding: 0.375em 1em 0.375em 0.5em;
+  background-color: #fCfcfc;
+  /* border: 1px solid #caced1;*/
+  border: 1px solid #ff0000;
+  border-radius: 0.25rem;
+  color: #000;
+  cursor: pointer;
+}
+
+.custom-select::before,
+.custom-select::after {
+  --size: 0.3rem;
+  content: "";
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+}
+
+.custom-select::before {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-bottom: var(--size) solid black;
+  top: 40%;
+}
+
+.custom-select::after {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-top: var(--size) solid black;
+  top: 55%;
+}
+/*  End of custom select */
+
+
+
 
 
 
@@ -487,10 +572,6 @@ input[type=submit] { align-self: start; }
 }
 
 
-@media screen and (max-width: 30em) {
-    .pagemenucol { 100%
-    }
-}
 
 .pagemenurow {
     display: flex;
