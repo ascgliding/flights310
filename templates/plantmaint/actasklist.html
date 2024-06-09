@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}{{ acmaint.regn }} Tasks{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('plantmaint.acselectnewtask') }}"><button id="addbtn"></button></a>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Id</div>
+      <div class="heading" >Description</div>
+      <div class="heading mobile_port_suppress" >Next Due</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress" >Due Notes </div>
+    </div>
+  {% for l in acmaint.tasks %}
+    <div class="row">
+      {% if l.days_to_go <= 0 %}
+      <div class="cell"><a href="{{ url_for('plantmaint.actaskmaint', id=l.id) }}">{{ l.id }}</a></div>
+      <div class="cell   " style="color:red" align="left">{{ l.description }}</div>
+      <div class="cell  mobile_port_suppress  " style="color:red" align="left">{{ l.next_due_date }}</div>
+      <div class="cell  mobile_port_suppress mobile_land_suppress " style="color:red" align="left">{{ l.next_due_message }}</div>
+      {% else %}
+      <div class="cell"><a href="{{ url_for('plantmaint.actaskmaint', id=l.id) }}">{{ l.id }}</a></div>
+      <div class="cell   " align="left">{{ l.description }}</div>
+      <div class="cell  mobile_port_suppress  " align="left">{{ l.next_due_date }}</div>
+      <div class="cell  mobile_port_suppress mobile_land_suppress " align="left">{{ l.next_due_message }}</div>
+      {% endif %}
+    </div>
+    <div class="row mobile_port_suppress mobile_land_suppress">
+      <div class="cell"></div>
+      <div class="cell  mobile_port_suppress " align="left"><I>{{ l.recurrence_description }}</I></div>
+      <div class="cell"></div>
+      <div class="cell mobile_port_suppress mobile_land_suppress"><I>Daily Average : {{ '%0.2f'|format(l.daily_use or 0) }}</I></div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

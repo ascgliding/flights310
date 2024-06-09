@@ -18,16 +18,16 @@
     <div class="row">
       <div class="heading">id</div>
       <div class="heading" >Regn</div>
-      <div class="heading heading mobile_port_supress" >Type</div>
-      <div class="heading heading mobile_port_supress mobile_land_supress" >Rate</div>
+      <div class="heading heading mobile_port_suppress" >Type</div>
+      <div class="heading heading mobile_port_suppress mobile_land_suppress" >Rate</div>
 
     </div>
   {% for l in list %}
     <div class="row">
       <div class="cell"><a href="{{ url_for('mastmaint.aircraftmaint', id=l['id']) }}">{{ l['id'] }}</a></div>
       <div class="cell" align="left">{{ l['regn'] }}</div>
-      <div class="cell  mobile_port_supress " align="left">{{ l['type'] }}</div>
-      <div class="cell  mobile_port_supress mobile_land_supress " align="left">{{ l['rate_per_hour'] }}</div>
+      <div class="cell  mobile_port_suppress " align="left">{{ l['type'] }}</div>
+      <div class="cell  mobile_port_suppress mobile_land_suppress " align="left">{{ l['rate_per_hour'] }}</div>
     </div>
     {#
     {% if not loop.last %}

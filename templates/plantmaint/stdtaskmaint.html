@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock %}
+{% block content %}
+<ul>
+  <li style="list-style-type:disc;margin-left:30px">To define a task that is the earlier of a date or a meter reading, make the task CALENDAR based
+  and then add the Meter id and reading value</li>
+</ul>
+<form method="Post" autocomplete="off">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    <li>{{ render_field(form.task_description) }}</li>
+    <li>
+      <label for="task_basis">Task Basis</label>
+      <div class="radiogroup">
+        {% for f in form.task_basis %}
+          {{ f.label }} : {{ f }}
+        {% endfor %}
+      </div>
+    </li>
+    <li>
+    </br>
+    <label for="task_calendar_uom">Calendar Uom</label>
+      <div class="radiogroup">
+      {% for f in form.task_calendar_uom %}
+        {{ f.label }}{{f}}
+      {% endfor %}
+      </div>
+    </li>
+    <li>{{ render_field(form.task_calendar_period) }}</li>
+    </br>
+    <li>{{ render_field(form.task_meter_id) }}</li>
+    <li>{{ render_field(form.task_meter_period) }}</li>
+    </br>
+    <li>{{ thisdesc }}</li>
+  </ul>
+</fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+  {{ form.delete() }}
+</form>
+{% endblock %}

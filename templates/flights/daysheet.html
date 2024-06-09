@@ -40,18 +40,18 @@
       <div class="heading" >PIC</div>
       <div class="heading" >P2</div>
       <div class="heading" >Glider</div>
-      <div class="heading mobile_port_supress mobile_land_supress ">Towie</div>
-      <div class="heading mobile_port_supress mobile_land_supress ">Tug</div>
-      <div class="heading mobile_port_supress  " align="right">Takeoff</div>
-      <div class="heading mobile_port_supress  " align="right">Tug Land</div>
-      <div class="heading mobile_port_supress  " align="right">Landed</div>
-      <div class="heading mobile_port_supress  " align="right">Height</div>
-      <div class="heading mobile_port_supress mobile_land_supress " align="right">Launch Time</div>
-      <div class="heading mobile_port_supress mobile_land_supress " align="right">Launch Cost</div>
-      <div class="heading mobile_port_supress " align="right">Glider Time</div>
-      <div class="heading mobile_port_supress mobile_land_supress " align="right">Glider Cost</div>
-      <div class="heading mobile_port_supress mobile_land_supress " align="right">Total Cost</div>
-      <div class="heading mobile_port_supress mobile_land_supress " align="left">Payment</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress ">Towie</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress ">Tug</div>
+      <div class="heading mobile_port_suppress  " align="right">Takeoff</div>
+      <div class="heading mobile_port_suppress  " align="right">Tug Land</div>
+      <div class="heading mobile_port_suppress  " align="right">Landed</div>
+      <div class="heading mobile_port_suppress  " align="right">Height</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress " align="right">Launch Time</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress " align="right">Launch Cost</div>
+      <div class="heading mobile_port_suppress " align="right">Glider Time</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress " align="right">Glider Cost</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress " align="right">Total Cost</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress " align="left">Payment</div>
     </div>
   {% for f in flights %}
     {% if f.linetype == 'FL' %}
@@ -64,28 +64,28 @@
       <div class="cell" align="left" >{{ f.pic }}</div>
       <div class="cell" align="left" >{{ f.p2 }}</div>
       <div class="cell" align="left">{{ f.ac_regn }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.tow_pilot | nameinitials }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.tug_regn | displayfornone}}</div>
-      <div class="cell mobile_port_supress  " align="right">{{ f.takeoff.strftime('%H:%M') if f.takeoff != None else '--:--' }}</div>
-      <div class="cell mobile_port_supress  " align="right">{{ f.tug_down.strftime('%H:%M') if f.tug_down != None else '--:--'  }}</div>
-      <div class="cell mobile_port_supress  " align="right">{{ f.landed.strftime('%H:%M') if f.landed != None else '--:--'  }}</div>
-      <div class="cell mobile_port_supress  " align="right">{{ f.release_height | displayfornone}}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.tow_mins() | displayfornone }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.tow_charge | displayfornone}}</div>
-      <div class="cell mobile_port_supress " align="right">{{ f.glider_mins() | hrsmins }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.glider_charge | displayfornone }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="right">{{ f.total_charge() | displayfornone }}</div>
-      <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ f.payment_note | displayfornone}}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="left">{{ f.tow_pilot | nameinitials }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="left">{{ f.tug_regn | displayfornone}}</div>
+      <div class="cell mobile_port_suppress  " align="right">{{ f.takeoff.strftime('%H:%M') if f.takeoff != None else '--:--' }}</div>
+      <div class="cell mobile_port_suppress  " align="right">{{ f.tug_down.strftime('%H:%M') if f.tug_down != None else '--:--'  }}</div>
+      <div class="cell mobile_port_suppress  " align="right">{{ f.landed.strftime('%H:%M') if f.landed != None else '--:--'  }}</div>
+      <div class="cell mobile_port_suppress  " align="right">{{ f.release_height | displayfornone}}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="right">{{ f.tow_mins() | displayfornone }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="right">{{ f.tow_charge | displayfornone}}</div>
+      <div class="cell mobile_port_suppress " align="right">{{ f.glider_mins() | hrsmins }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="right">{{ f.glider_charge | displayfornone }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="right">{{ f.total_charge() | displayfornone }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress " align="left">{{ f.payment_note | displayfornone}}</div>
     </div>
    {% else %}
     <div class="row">
       <div class="cell" style="width:10%;padding-bottom:15px;"><a href="{{ url_for('flights.linenote', id=f.id) }}">{{ f.id | displayfornone }}</a></div>
 <!--      <span style="display-inline-block;white-space: nowrap; overflow:hidden; text-overflow: ellipsis max-width: 50ch;">-->
-<!--&lt;!&ndash;      <div class="cell mobile_port_supress" style="position:absolute;width:90%;font-style:italic; text-overflow:ellipsis;max-width:100ch;" align="left">{{ f.general_note }}</div>&ndash;&gt;-->
-<!--      <div class="cell mobile_port_supress" style="width:90%; font-style:italic; " align="left">{{ f.general_note }}</div>-->
+<!--&lt;!&ndash;      <div class="cell mobile_port_suppress" style="position:absolute;width:90%;font-style:italic; text-overflow:ellipsis;max-width:100ch;" align="left">{{ f.general_note }}</div>&ndash;&gt;-->
+<!--      <div class="cell mobile_port_suppress" style="width:90%; font-style:italic; " align="left">{{ f.general_note }}</div>-->
 <!--        </span>-->
-      <div class="cell mobile_port_supress" style="position:absolute;width:90%;font-style:italic; text-overflow:ellipsis;max-width:70ch;white-space: nowrap" align="left">{{ f.general_note }}</div>
-      <div class="cell not_portrait_supress" style="position:absolute;width:90%;font-style:italic" align="left">Note</div>
+      <div class="cell mobile_port_suppress" style="position:absolute;width:90%;font-style:italic; text-overflow:ellipsis;max-width:70ch;white-space: nowrap" align="left">{{ f.general_note }}</div>
+      <div class="cell mobile_land_suppress full_screen_suppress" style="position:absolute;width:90%;font-style:italic" align="left">Note</div>
     </div>
    {% endif %}
   {% endfor %}

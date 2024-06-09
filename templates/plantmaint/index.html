@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}{{regn}} Scheduled Maintenance{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="pagemenurow">
+  <div class="pagemenucol">
+    <h2>Maintenance Functions for {{regn}}</h2>
+    <p><a href="{{ url_for('plantmaint.acmeterlist') }}">Maintain Meters</a></p>
+    <p><a href="{{ url_for('plantmaint.actasklist') }}">Maintain Tasks</a></p>
+    <p><a href="{{ url_for('plantmaint.acaddnewreading') }}">Add Readings</a></p>
+    <p><a href="{{ url_for('plantmaint.changeac') }}">Change Aircraft</a></p>
+    {#
+    <p><a href="{{ url_for('plantmaint.testform') }}">testform</a></p>
+    #}
+  </div>
+</div>
+<div class="pagemenurow">
+{% if current_user.administrator %}
+  <div class="pagemenucol">
+    <h4>Database Maintenance (Airfraft Independant)</h4>
+    <p><a href="{{ url_for('plantmaint.stdtasklist') }}">Maintain Standard Tasks</a></p>
+    <p><a href="{{ url_for('plantmaint.stdmeterlist') }}">Maintain Standard Meters</a></p>
+    <p><a href="{{ url_for('plantmaint.stduserlist') }}">Maintain User Access</a></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

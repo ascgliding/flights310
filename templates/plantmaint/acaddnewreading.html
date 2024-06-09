@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+Add New reading to Aircraft
+<br/><br/>
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    <li> {{ render_field(form.reading_date) }}</li>
+    {% for f in form %}
+     {% if f.id not in ['reading_date', 'donebtn', 'cancelbtn' ,'csrf_token','note'] %}
+          <li>
+            {{ render_field(f) }}
+               </li>
+                <div style="display:inline;color:red;font-size:10px;width:30px;align:right" >
+                ( {{ lastreadings[f.id] }} )
+                     </div>
+
+      {% endif %}
+    {% endfor %}
+    <li>{{ render_field(form.note) }}</li>
+  </ul>
+    </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+</form>
+{% endblock %}

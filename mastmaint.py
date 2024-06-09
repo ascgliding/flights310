@@ -51,7 +51,7 @@ class PilotForm(FlaskForm):
     yg_member = BooleanField('Youth Glide Member', description='Tick if pilot is a member of Youth Glide')
     gnz_no = IntegerField('GNZ No', description="Enter the GNZ No")
     accts_cust_code = StringField('Customer Code', description='The Customer code in the accounts system',
-                                  render_kw={'class': 'mobile_port_supress mobile_land_supress'})
+                                  render_kw={'class': 'mobile_port_suppress mobile_land_suppress'})
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
@@ -86,10 +86,10 @@ class AircraftForm(FlaskForm):
     owner = StringField('Owner', description="Aircraft Owner")
     default_pilot = StringField('Default Pilot', description='Default pilot for pic')
     accts_income_acct = StringField('Income Account', description='GL Income account',
-                                    render_kw={'class': 'mobile_port_supress mobile_land_supress longnote'})
+                                    render_kw={'class': 'mobile_port_suppress mobile_land_suppress longnote'})
 
     accts_income_tow = StringField('Income Account - Tow Fees', description='GL Income account - Tow Fees',
-                                   render_kw={'class': 'mobile_port_supress mobile_land_supress longnote'})
+                                   render_kw={'class': 'mobile_port_suppress mobile_land_suppress longnote'})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})

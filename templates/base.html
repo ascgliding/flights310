@@ -25,6 +25,7 @@ if (navigator.geolocation) {
 }
 };
 
+
 function checkcookie () {  if (navigator.cookieEnabled){
     document.getElementById("cookiemessage").hidden = true;
     console.log("cookies enabled")
@@ -87,23 +88,6 @@ function myLower(cObj)
 
 </script>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
-<script>
-
- //$( document ).ready(function() {
- //       console.log( "document loaded" );
- ////  The form needs to have the id set to "trapchange".
- //       $('#trapchange input').on( 'input', function() {
- //           //This would be called if any of the input element has got a change inside the form
- //       console.log('data changed');
- //      });
- //   });
-
-
-</script>
-
-
 {% macro render_field(field) %}
 
 {# field.label #}
@@ -113,7 +97,7 @@ function myLower(cObj)
   {% if field.errors %}
   <ul class=errors>
     {% for error in field.errors %}
-    <li style="margin-left:5%; color:red; font-size:60%;">{{ error }}</li>
+    <li style="margin-left:5%; color:red; font-size:80%;">{{ error }}</li>
     {% endfor %}
   </ul>
   {% endif %}
@@ -131,9 +115,13 @@ function myLower(cObj)
   {% endif %}
   {% endmacro %}
 
+  <!-- This is absolutely critical if you want the site to work on a mobile device -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <nav>
-      <h1 class="notphone">Auckland Aviation Sports Club</h1>
-      <h1 class="phone">AASC</h1>
+      <h1 class="full_screen_suppress mobile_land_suppress">AASC</h1>
+      <h1 class="mobile_port_suppress mobile_land_suppress">Auckland Aviation Sports Club</h1>
+      <h1 class="mobile_port_suppress full_screen_suppress">Gliding Club</h1>
       {% if current_user is defined %}
       <span class="notphone">{{ current_user.fullname or current_user.name or 'Anonymous' }}</span>
       {% else %}
@@ -147,6 +135,9 @@ function myLower(cObj)
         <p><a href="{{ url_for('logbook.logbook') }}">Logbook</a></p>
         <p><a href="{{ url_for('auth.profile') }}">Profile</a></p>
         <p><a href="{{ url_for('auth.logout') }}">Log Out</a></p>
+        {% if 'regn' in session %}
+          <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
+        {% endif %}
         <div class="nophxone">
           <p><a href="{{ url_for('mastmaint.index') }}">Maintenance</a></p>
           {% if current_user.administrator %}
@@ -162,8 +153,6 @@ function myLower(cObj)
   </nav>
   <section class="content">
     <header>
-      <!-- This is absolutely critical if you want the site to work on a mobile device -->
-      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
       {% block header %}{% endblock %}
     </header>
     <noscript align="center" style="font-size:300%;color:red;"></br>>This site will not work without Javascript. Please

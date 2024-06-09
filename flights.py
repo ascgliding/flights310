@@ -68,7 +68,7 @@ class FlightForm(FlaskForm):
                      render_kw={'list': "activepilots"})
     flt_date = DateField('Date',
                          description='Flight Date',
-                         render_kw={'class': 'mobile_port_supress mobile_land_supress'})
+                         render_kw={'class': 'mobile_port_suppress mobile_land_suppress'})
     ac_regn = StringField('Regn',
                           [validators.DataRequired(message='You cannot have a blank code')],
                           description='Last 3 characters of AC Registration',

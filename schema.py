@@ -1,3 +1,6 @@
+import decimal
+
+import sqlalchemy.exc
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 
@@ -9,6 +12,7 @@ from decimal import Decimal
 from sqlalchemy.orm import relationship
 import sqlalchemy.types as types
 from decimal import *
+import re
 
 
 class SchemaError(Exception):
@@ -39,6 +43,7 @@ class SqliteDecimal(types.TypeDecorator):
     # This TypeDecorator use Sqlalchemy Integer as impl. It converts Decimals
     # from Python to Integers which is later stored in Sqlite database.
     impl = Integer
+    cache_ok = False
 
     def __init__(self, precision, scale):
         # Precision is never used, but added just to keep consistency with
@@ -64,6 +69,52 @@ class SqliteDecimal(types.TypeDecorator):
         return value
 
 
+class SqliteDecHrs(types.TypeDecorator):
+    impl = Integer
+
+    def __init__(self):
+        types.TypeDecorator.__init__(self)
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            if isinstance(value, datetime.timedelta):
+                return value.total_seconds() / 60
+            if isinstance(value, int):
+                # The passed value is already a number of hours
+                value = int(value * 60)
+                return value
+            if isinstance(value, float) or isinstance(value, Decimal):
+                return round(value * 60)
+            if isinstance(value, str):
+                # see if we can convert it to a number:
+                try:
+                    dechrs = float(value)
+                    return round(float(value) * 60)
+                except Exception as e:
+                    pass  # If the coversion fails then try converting from hrs:mins
+                # IT can only contain numbers or ":"
+                if re.match("[\d:\s]+$", value) is None:
+                    # does not look like a valid time
+                    # raise sqlalchemy.exc.DataError("Not a valid time")
+                    # raise ValueError("Not a valid time")
+                    return None
+                # Now convert to a time
+                bits = value.split(':')
+                hrs = int(bits[0])
+                if len(bits) > 1:  # Occasionally, only hrs iss specified
+                    mins = int(bits[1])
+                else:
+                    mins = 0
+                return (hrs * 60) + mins
+        return value
+
+    # def process_result_value(self, value, dialect):
+    #     if value is not None:
+    #         #value = datetime.timedelta(minutes=value)
+    #         #value = value / 60
+    #     return value
+
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -73,7 +124,7 @@ class User(db.Model):
     email = db.Column(db.String, comment='Users email address')
     administrator = db.Column(db.Boolean, comment='Set if a sysadmin', default=False)
     authenticated = db.Column(db.Boolean, comment='True if user is logged in', default=False)
-    gnz_no = db.Column(db.Integer, comment='GNZ No',default=False)
+    gnz_no = db.Column(db.Integer, comment='GNZ No', default=False)
     password_hash = db.Column(db.String, comment="Hashed password")
     approved = db.Column(db.Boolean, comment='True if user has been approved', default=False)
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
@@ -143,10 +194,10 @@ class Flight(db.Model):
     id = db.Column(db.Integer, db.Sequence('flights_id_seq'), primary_key=True)
     flt_date = db.Column(db.Date, comment='The date of this flight', default=datetime.date.today())
     linetype = db.Column(db.String(2), comment="Type of Line - flight or comment.", default="FL")
-    pic = db.Column(db.String,  comment='Name of Pilot in charge')
-#    pic_gnz_no = db.Column(db.Integer, comment='GNZ No of PIC')
+    pic = db.Column(db.String, comment='Name of Pilot in charge')
+    #    pic_gnz_no = db.Column(db.Integer, comment='GNZ No of PIC')
     p2 = db.Column(db.String, comment='Name of second pilot')
-#    p2_gnz_no = db.Column(db.Integer, comment='GNZ No of P2')
+    #    p2_gnz_no = db.Column(db.Integer, comment='GNZ No of P2')
     ac_regn = db.Column(db.String, comment='Aircraft Registration')
     tow_pilot = db.Column(db.String, comment='Tow Pilot')
     tug_regn = db.Column(db.String, comment='Tug Registration')
@@ -212,14 +263,14 @@ class Flight(db.Model):
             return 0
         else:
             return Decimal((datetime.datetime.combine(self.flt_date, self.tug_down) -
-                    datetime.datetime.combine(self.flt_date, self.takeoff)).seconds / 60)
+                            datetime.datetime.combine(self.flt_date, self.takeoff)).seconds / 60)
 
     def glider_mins(self) -> Decimal:
         if self.landed is None:
             return 0
         else:
             return Decimal((datetime.datetime.combine(self.flt_date, self.landed) -
-                    datetime.datetime.combine(self.flt_date, self.takeoff)).seconds / 60)
+                            datetime.datetime.combine(self.flt_date, self.takeoff)).seconds / 60)
 
     @db.validates('ac_regn', 'tug_regn', "tow_pilot")
     def convert_upper(self, key, value):
@@ -259,7 +310,7 @@ class Pilot(db.Model):
     bscheme = db.Column(db.Boolean, comment='Set if Pilot participates in B Scheme', default=True)
     yg_member = db.Column(db.Boolean, comment='Set if Pilot is a Youth Glide member', default=True)
     gnz_no = db.Column(db.Integer, comment="GNZ Number")
-    accts_cust_code = db.Column(db.String,comment='Customer code in accounting system')
+    accts_cust_code = db.Column(db.String, comment='Customer code in accounting system')
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
 
@@ -293,7 +344,6 @@ class Aircraft(db.Model):
     regn = db.Column(db.String, comment="Aircraft Regsiration")
     type = db.Column(db.String, comment="Type/Model e.g. Ka6CR")
 
-
     launch = db.Column(db.Boolean, comment='Set if Regn is a launch method', default=False)
     # each of the following rates are calculated and the TOTAL returned
     rate_per_hour = db.Column(SqliteDecimal(10, 2), nullable=False, default=0)
@@ -311,11 +361,10 @@ class Aircraft(db.Model):
     seat_count = db.Column(db.Integer, comment="Seat Count")
     accts_income_acct = db.Column(db.String, comment="GL income account")
     accts_income_tow = db.Column(db.String, comment="GL income account - aerotow")
-    owner = db.Column(db.String,comment = "Aircraft Owner")
+    owner = db.Column(db.String, comment="Aircraft Owner")
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
-
 
     @db.validates('regn')
     def convert_upper(self, key, value):
@@ -381,11 +430,183 @@ class MemberTrans(db.Model):
         self.transdate = datetime.date.today()
         self.transsubtype = ''
 
+
 class Roster(db.Model):
     __tablename__ = "roster"
 
     id = db.Column(db.Integer, db.Sequence('roster_id_seq'), primary_key=True)
     roster_date = db.Column(db.Date, comment='The Roster dat', default=datetime.date.today())
-    roster_inst = db.Column(db.String,  comment='Name of Duty Instructor')
-    roster_tp = db.Column(db.String,  comment='Name of Duty Tow Pilot')
-    roster_dp = db.Column(db.String,  comment='Name of Duty Pilot')
+    roster_inst = db.Column(db.String, comment='Name of Duty Instructor')
+    roster_tp = db.Column(db.String, comment='Name of Duty Tow Pilot')
+    roster_dp = db.Column(db.String, comment='Name of Duty Pilot')
+
+
+#
+# Maintenance Database
+#
+
+
+class Meters(db.Model):
+    __tablename__ = "meters"
+
+    id = db.Column(db.Integer, db.Sequence('meters_id_seq'), primary_key=True)
+    meter_name = db.Column(db.String, comment='Meter Name', nullable=False, unique=True)
+    # The uom has a big impact on how the meter readings are stored.
+    # Note that Decimal hours is a qty.  Hours is stored as a total number of minutes
+    # uom = db.Column(db.Enum('Months', 'Day', 'Hours', 'Qty'),default='Month',comment = "Unit of Measure")
+    uom = db.Column(db.Enum('Time', 'Qty'), default='Time', comment="Unit of Measure")
+
+    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
+    def __str__():
+        return str(id)
+
+
+class Tasks(db.Model):
+    __tablename__ = "tasks"
+
+    id = db.Column(db.Integer, db.Sequence('tasks_id_seq'), primary_key=True)
+    task_description = db.Column(db.String, comment='The description of the task', nullable=False, unique=True)
+
+    task_basis = db.Column(db.Enum('Calendar', 'Meter'),
+                           comment='Is this task Date based task or based on a meter reading')
+
+    task_calendar_uom = db.Column(db.Enum('Years', 'Months', 'Days'), comment='Uom for calendar based tasks')
+    task_calendar_period = db.Column(db.Integer, comment='The number of days, months or years as appropriate')
+
+    task_meter_id = db.Column(db.Integer, ForeignKey(Meters.id), comment="Meter id")
+    # meter = relationship(Meters)
+    task_meter_period = db.Column(db.Integer, comment='The Incremental value for the task')
+    task_meter_note = db.Column(db.String, comment='Any note related to the meter reading.')
+
+    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
+    def recurrence_description(self):  # -> str:
+        rtnval = "No Recurrence"
+        if self.task_basis == 'Calendar':
+            rtnval = "Every " + str(self.task_calendar_period) + " " + (self.task_calendar_uom or 'No unit defined')
+            if self.task_meter_id is not None:
+                rtnval = rtnval + " or "
+                m = Meters.query.filter_by(id=self.task_meter_id).first()
+                rtnval = rtnval + "Every " + str(self.task_meter_period) + " " + m.meter_name + "(" + m.uom + ")"
+        if self.task_basis == 'Meter':
+            m = Meters.query.filter_by(id=self.task_meter_id).first()
+            rtnval = "Every " + str(self.task_meter_period) + " " + m.meter_name + " (" + m.uom + ")"
+        return rtnval
+
+
+class ACMeters(db.Model):
+    __tablename__ = 'acmeters'
+
+    id = db.Column(db.Integer, db.Sequence('acmeters_id_seq'), primary_key=True)
+    ac_id = db.Column(db.Integer, ForeignKey(Aircraft.id), comment="Aircraft for this meter")
+    meter_id = db.Column(db.Integer, ForeignKey(Meters.id), comment="Meter id")
+    meter_reset_date = db.Column(db.Date, comment="The date the meter was changed or reset")
+    meter_reset_value = db.Column(SqliteDecimal(10, 2), comment="The value of the new meter at replacement", default=0)
+    # In some cases, at data entry we will want the user to enter the difference as with the number of landings
+    # but in other cases we will want to enter the actual meter reading, as with the tacho
+    entry_prompt = db.Column(db.String, comment='Text to appear as data entry prompt', default='Enter Value', )
+    entry_method = db.Column(db.Enum('Reading', 'Delta'), default='Reading',
+                             comment='Should the user enter the delta or the meter reading')
+    entry_uom = db.Column(db.Enum('Decimal Hours', 'Hours:Minutes', 'Qty'))
+    auto_update = db.Column(db.Boolean, comment='Automatically update from club flying records', default=False)
+
+    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
+    @db.validates('entry_prompt')
+    def convert_upper(self, key, value):
+        if value is None:
+            raise SchemaError('The entry prompt must not be empty')
+        if len(value) == 0:
+            raise SchemaError('The entry prompt must not be empty')
+        return value
+
+
+class ACTasks(db.Model):
+    __tablename__ = 'actasks'
+
+    id = db.Column(db.Integer, db.Sequence('maintschedule_id_seq'), primary_key=True)
+    ac_id = db.Column(db.Integer, ForeignKey(Aircraft.id), comment="Aircraft for this meter")
+    task_id = db.Column(db.Integer, ForeignKey(Tasks.id), comment="Required Task")
+    meter_id = db.Column(db.Integer, ForeignKey(Meters.id),
+                         comment="Meter id, for tasks that are calendar OR meter based")
+    last_done = db.Column(db.Date)
+    last_done_reading = db.Column(SqliteDecimal(10, 2), comment='The meter reading when this task was last done')
+    estimate_days = db.Column(db.Integer, comment='The number of days to use for an average', default=90)
+
+    warning_days = db.Column(db.Integer,
+                             comment="The number of days before the due date in which a warning will be emailed")
+    warning_email = db.Column(db.String,
+                              comment=" space delimited list of email addresses that a warning will be sent to")
+
+    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
+    def meter_rec(self):
+        return ACMeters.query.filter_by(ac_id=self.ac_id).filter_by(meter_id=self.meter_id).first()
+
+
+class MeterReadings(db.Model):
+    __tablename__ = 'meterreadings'
+
+    id = db.Column(db.Integer, db.Sequence('meterreadings_id_seq'), primary_key=True)
+    ac_id = db.Column(db.Integer, ForeignKey(Aircraft.id), comment="Aircraft for this meter")
+    meter_id = db.Column(db.Integer, ForeignKey(Meters.id), comment="Meter id")
+    reading_date = db.Column(db.Date, comment='The time this meter reading was recorded', default=datetime.datetime.now)
+    # Where the UOM of is 'Day' then this is the number of days, Months follows on.
+    # Where the uom is Qty, then this is the count (e.g. Landings)
+    # Where the uom is Hours then this is the number of MINUTES.
+    # meter_reading = db.Column(SqliteDecimal(10,2), comment='The meter reading at the time')
+    # meter_delta = db.Column(SqliteDecimal(10,2), comment='The difference between this and the last reading')
+    meter_reading = db.Column(SqliteDecimal(10, 2), comment='The meter reading at the time', nullable=False)
+    meter_delta = db.Column(SqliteDecimal(10, 2), comment='The difference between this and the last reading')
+    note = db.Column(db.String, comment="Any Note related to this reading, or this date.")
+
+    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
+    # You will need to cognizant that the reading is in hours
+    def Hours(self) -> Decimal:
+        if self.meter_reading is None:
+            return 0
+        else:
+            return Decimal(self.meter_reading / 60).quantize(Decimal('.01'))
+
+    def HrsMins(self) -> datetime.timedelta:
+        if self.meter_reading is None:
+            return datetime.timedelta(minutes=0)
+        else:
+            return datetime.timedelta(minutes=self.meter_reading)
+
+
+class MaintHistory(db.Model):
+    __tablename__ = 'mainthistory'
+
+    id = db.Column(db.Integer, db.Sequence('mainthistory_id_seq'), primary_key=True)
+    ac_id = db.Column(db.Integer, ForeignKey(Aircraft.id), comment="Aircraft for this record")
+    #  The task id CAN be zero.  It could just be misellaneous work e.g. Compression test done,  Tyre replaced.
+    task_id = db.Column(db.Integer, ForeignKey(Tasks.id), comment="Required Task")
+    #  Note that the task description need not be a specfic task
+    task_description = db.Column(db.String, comment="Description of the work undertaken")
+    meter_id = db.Column(db.Integer, ForeignKey(Meters.id), comment="Meter id")
+    meter_reading = db.Column(SqliteDecimal(10, 2), comment="Meter reading at time of event")
+    history_date = db.Column(db.Date, comment='The time this event occurred', default=datetime.datetime.now)
+
+    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
+
+class ACMaintUser(db.Model):
+    __tablename__ = 'acmaintuser'
+
+    id = db.Column(db.Integer, db.Sequence('mainthistory_id_seq'), primary_key=True)
+    ac_id = db.Column(db.Integer, ForeignKey(Aircraft.id), comment="Aircraft for this record")
+    user_id = db.Column(db.Integer, ForeignKey(User.id), comment="User who can maintain")
+    # all - includes standard tasks and meters
+    # aircraft - anything to do with this aircraft
+    # readings - just enter readings.
+    maint_level = db.Column(db.Enum('All', 'Aircraft', 'Readings'), default='Readings',
+                            comment='Level of detail allowed')

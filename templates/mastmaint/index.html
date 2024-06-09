@@ -17,7 +17,7 @@
   <div class="pagemenucol">
     <h4>General</h4>
     <p><a href="{{ url_for('auth.userlist') }}">User Maintenance</a></p>
-    <a href="{{ url_for('mastmaint.slotlist') }}">Slot Maintenance</a>
+    <p><a class="notphone" href="{{ url_for('mastmaint.slotlist') }}">Slot Maintenance</a></p>
     <p><a href="{{ url_for('mastmaint.rosterlist') }}">Roster List</a></p>
   </div>
   {% endif %}
@@ -32,6 +32,10 @@
     <p class="notphone"><a href="{{ url_for('mastmaint.userverify') }}">Verify Users, Pilots and Members</a></p>
     <p class="notphone"><a href="{{ url_for('export.exportutil') }}">Utilisation Export</a></p>
     <p class="notphone"><a href="{{ url_for('export.exporttugmovements') }}">Tug Movements</a></p>
+  </div>
+  <div class="pagemenucol">
+    <h4>Scheduled Maintenance</h4>
+    <p><a href="{{ url_for('plantmaint.maintainedac') }}">Aircraft Scheduled Maintenance</a></p>
   </div>
 </div>
 <a href="{{ url_for('flights.daysummary') }}">Flight Maintenance</a>

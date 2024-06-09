@@ -210,10 +210,10 @@ def hrsmins(pmins):
                 raise ValueError('Cannot convert parameter to integer')
             pmins = int(pmins)
         except Exception as e:
-            raise ValueError('Unable to change float/decimal to int')
+            raise ValueError('Unable to change float/decimal to int ({})({})'.format(pmins,type(pmins)))
     if not (isinstance(pmins, int) or isinstance(pmins, int)):
         applog.debug("A call to hrsmins was passed type {} value {}".format(str(type(pmins)), pmins))
-        raise Exception("Parameter to hrsmins is not an integer")
+        raise Exception("Parameter to hrsmins is not an integer ({})".format(pmins))
 
     if pmins:
         hrs = int(pmins/60)
@@ -251,9 +251,11 @@ def hrsdec(pmins):
     """
     if pmins is None:
         return "0:00"
-    if not (isinstance(pmins, int) or isinstance(pmins, int)):
+    if isinstance(pmins, decimal.Decimal):
+        pmins = int(pmins)
+    if not (isinstance(pmins, int) or isinstance(pmins, decimal.Decimal)):
         applog.debug("A call to hrsdec was passed type {} value {}".format(str(type(pmins)), pmins))
-        raise Exception("Parameter to hrsdec is not an integer")
+        raise Exception("Parameter to hrsdec is not an integer ({})".format(pmins))
     if pmins:
         return decimal.Decimal(pmins)/ decimal.Decimal(60)
     else:

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Aircraft Meters{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('plantmaint.acselectnewmeter') }}"><button id="addbtn"></button></a>
+      </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading mobile_port_suppress mobile_land_suppress" >Id</div>
+      <div class="heading" >Regn</div>
+      <div class="heading" >Meter Name</div>
+      <div class="heading ">Readings</div>
+    </div>
+  {% for l in ac.meters %}
+    <div class="row">
+      <div class="cell mobile_port_suppress mobile_land_suppress"><a href="{{ url_for('plantmaint.acmetermaint',id=l.id) }}">{{ l.id }}</a></div>
+      <div class="cell" align="left">{{ ac.regn }}</div>
+      <div class="cell  mobile_port_suppress " align="left">{{ l.meter_name }}</div>
+      <div class="cell"><a href="{{ url_for('plantmaint.acmeterreadinglist', meter_id=l.meter_id) }}">Readings</a></div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}{{ list[0]["regn"] }}  {{ list[0]["meter_name"] }} Meter Readings{% endblock %}</h1>
+    </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading mobile_port_suppress" >Id</div>
+      <div class="heading" >Date</div>
+      <div class="heading" align="right">Reading</div>
+      <div class="heading" align="right">Change</div>
+      <div class="heading mobile_port_suppress " style="width:50%" >Note</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress"  >Remove</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell mobile_port_suppress" >{{ l['id'] }}</div>
+<!--      <div class="cell" >{{ l['seq'] }}</div>-->
+      <div class="cell" align="center">{{ l['reading_date'].strftime('%d-%m-%Y') }}</div>
+      {% if l['uom'] == 'Time' %}
+        <div class="cell   " align="right">{{ l['meter_reading']|hrsmins }}</div>
+        <div class="cell   " align="right">{{ l['meter_delta']|hrsmins  }}</div>
+      {% else %}
+        <div class="cell   " align="right">{{ l['meter_reading'] }}</div>
+        <div class="cell   " align="right">{{ l['meter_delta'] }}</div>
+      {% endif %}
+      <div class="cell  mobile_port_suppress " style="width:50%">{{ l['note'] }}</div>
+      <!-- You can only remove the first one - otherwise all the deltas will be screwed up -->
+      {% if l['seq'] == 1 %}
+      <div class="cell  mobile_port_suppress mobile_land_suppress " style="width:5%">
+         <a class="action" href="{{ url_for('plantmaint.acmeterreadingremove', reading_id=l['id']) }}">Remove</a>
+      </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

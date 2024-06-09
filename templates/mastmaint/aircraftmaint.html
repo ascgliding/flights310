@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block header %}
-Aircraft Maintenance
 {% endblock %}
 {% block content %}
 <form method="Post">
   {{ form.csrf_token }}
-  {{ form.name }}
+  <fieldset>
+    <legend>{{ form.name }} Aircraft Maintenance</legend>
   <ul>
     <li>{{ render_field(form.regn) }}</li>
     <li>{{ render_field(form.type) }}</li>
@@ -25,8 +25,9 @@ Aircraft Maintenance
     <li>{{ render_field(form.accts_income_tow) }}</li>
 
   </ul>
+  </fieldset>
   {{ form.btnsubmit() }}
-  {{ form.cancel() }}
+  {{ form.cancel(formnovalidate=true) }}
   {{ form.delete() }}
 
 </form>

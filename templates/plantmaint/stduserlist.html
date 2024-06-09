@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}User Access{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        <a class="action" href="{{ url_for('plantmaint.stdusermaint', id=0) }}"><button id="addbtn"></button></a>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >id</div>
+      <div class="heading" >Aircraft</div>
+      <div class="heading" >User</div>
+      <div class="heading" >Level</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell"><a href="{{ url_for('plantmaint.stdusermaint', id=l.id) }}">{{ l.id }}</a></div>
+      <div class="cell" align="left">{{ l['regn'] }}</div>
+      <div class="cell" align="left">{{ l['fullname']}}</div>
+      <div class="cell" align="left">{{ l['maint_level'] }}</div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

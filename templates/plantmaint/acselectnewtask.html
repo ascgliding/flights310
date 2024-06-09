@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+Select a new task to add to this a/c (note that existing tasks are not shown)
+<br/><br/>
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    <li>{{ render_field(form.task_id) }}</li>
+  </ul>
+    </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+</form>
+{% endblock %}

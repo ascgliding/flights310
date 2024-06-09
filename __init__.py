@@ -310,12 +310,18 @@ def resgister_blueprints(app):
             from . import logbook
             app.register_blueprint(logbook.bp)
             app.add_url_rule('/logbook', endpoint='logbook')
+            # Register the plant maintenance Blueprint
+            app_for_log = 'plantmaint'
+            from . import plantmaint
+            app.register_blueprint(plantmaint.bp)
+            app.add_url_rule('/plantmaint', endpoint='plantmaint')
             # Register the RESTAPI
             app_for_log = 'restapi'
             from . import restapi
             app.register_blueprint(restapi.bp)
             # Register the Excel Export
             from . import export
+            app_for_log = 'export'
             app.register_blueprint(export.bp)
             #
             app.logger.info("All blueprints successfully registered")

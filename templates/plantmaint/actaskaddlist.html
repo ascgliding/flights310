@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Select New Task for Aircraft{% endblock %}</h1>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Id</div>
+      <div class="heading" >Task Description</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+{#      <div class="cell"><a href="{{ url_for('plantmaint.actaskmaint', id=l['id']) }}">{{ l['id'] }}</a></div> #}
+      <div class="cell" align="left">{{ l['id'] }}</div>
+      <div class="cell" align="left">{{ l['task_description'] }}</div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

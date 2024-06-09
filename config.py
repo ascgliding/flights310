@@ -20,8 +20,6 @@ class Config(object):
     LOGFILE='asc.log'
     LOGCLEAR=True
     LOGLEVEL='INFO'
-    #TODO : remove and place in environment variable
-    # DATABASE = os.path.join(app.instance_path, 'asc.sqlite'),
 
 
 class development(Config):

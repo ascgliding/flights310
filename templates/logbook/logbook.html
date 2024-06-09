@@ -34,13 +34,13 @@
     <div class="row">
         <div class="heading">id</div>
         <div class="heading">Date</div>
-        <div class="heading heading mobile_port_supress mobile_land_supress">Type</div>
+        <div class="heading heading mobile_port_suppress mobile_land_suppress">Type</div>
         <div class="heading heading ">Regn</div>
-        <div class="heading heading mobile_port_supress">PIC</div>
-        <div class="heading heading mobile_port_supress">P2</div>
-        <div class="heading heading mobile_port_supress mobile_land_supress">Takeoff</div>
-        <div class="heading heading mobile_port_supress mobile_land_supress">Landed</div>
-        <div class="heading heading mobile_port_supress">Crew Cap</div>
+        <div class="heading heading mobile_port_suppress">PIC</div>
+        <div class="heading heading mobile_port_suppress">P2</div>
+        <div class="heading heading mobile_port_suppress mobile_land_suppress">Takeoff</div>
+        <div class="heading heading mobile_port_suppress mobile_land_suppress">Landed</div>
+        <div class="heading heading mobile_port_suppress">Crew Cap</div>
         <div class="heading heading ">Mins</div>
         <div class="heading heading ">Amount</div>
     </div>
@@ -49,29 +49,29 @@
         {% if l.paid or l.due == 0 %}
         <div class="cell" align="right">{{ l.id }}</div>
         <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
-        <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+        <div class="cell mobile_port_suppress mobile_land_suppress " align="left">{{ l.actype }}</div>
         <div class="cell" align="left">{{ l.regn }}</div>
-        <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
-        <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
-        <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
-        <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
-        <div class="cell mobile_port_supress " align="left">{{ l.crew_capacity }}</div>
+        <div class="cell mobile_port_suppress " align="left">{{ l.pic }}</div>
+        <div class="cell mobile_port_suppress " align="left">{{ l.p2 }}</div>
+        <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+        <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+        <div class="cell mobile_port_suppress " align="left">{{ l.crew_capacity }}</div>
         <div class="cell  " align="right">{{ l.totalmins|hrsmins }}</div>
         <div class="cell  " align="right">{{ "$%.2f"|format(l.due) }}</div>
         {% else %}
         <div class="cell" style="color:red" align="right">{{ l.id }}</div>
         <div class="cell" style="color:red" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
-        <div class="cell mobile_port_supress mobile_land_supress " style="color:red" align="left">{{ l.actype }}</div>
+        <div class="cell mobile_port_suppress mobile_land_suppress " style="color:red" align="left">{{ l.actype }}</div>
         <div class="cell" style="color:red" align="left">{{ l.regn }}</div>
-        <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.pic }}</div>
-        <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.p2 }}</div>
-        <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+        <div class="cell mobile_port_suppress " style="color:red" align="left">{{ l.pic }}</div>
+        <div class="cell mobile_port_suppress " style="color:red" align="left">{{ l.p2 }}</div>
+        <div class="cell mobile_port_suppress mobile_land_suppress" style="color:red" align="left">{{
             l.takeoff|hrsminsfromtime }}
         </div>
-        <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+        <div class="cell mobile_port_suppress mobile_land_suppress" style="color:red" align="left">{{
             l.landed|hrsminsfromtime }}
         </div>
-        <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.crew_capacity }}</div>
+        <div class="cell mobile_port_suppress " style="color:red" align="left">{{ l.crew_capacity }}</div>
         <div class="cell  " style="color:red" align="right">{{ l.totalmins|hrsmins }}</div>
         <div class="cell  " style="color:red" align="right">{{ "$%.2f"|format(l.due) }}</div>
         {% endif %}
@@ -85,13 +85,13 @@
         <div class="row">
             <div class="heading">id</div>
             <div class="heading">Date</div>
-            <div class="heading heading mobile_port_supress mobile_land_supress">Type</div>
+            <div class="heading heading mobile_port_suppress mobile_land_suppress">Type</div>
             <div class="heading heading ">Regn</div>
-            <div class="heading heading mobile_port_supress">PIC</div>
-            <div class="heading heading mobile_port_supress">P2</div>
-            <div class="heading heading mobile_port_supress mobile_land_supress">Takeoff</div>
-            <div class="heading heading mobile_port_supress mobile_land_supress">Landed</div>
-            <div class="heading heading mobile_port_supress">Crew Cap</div>
+            <div class="heading heading mobile_port_suppress">PIC</div>
+            <div class="heading heading mobile_port_suppress">P2</div>
+            <div class="heading heading mobile_port_suppress mobile_land_suppress">Takeoff</div>
+            <div class="heading heading mobile_port_suppress mobile_land_suppress">Landed</div>
+            <div class="heading heading mobile_port_suppress">Crew Cap</div>
             <div class="heading heading ">Mins</div>
             <div class="heading heading ">Amount</div>
         </div>
@@ -100,30 +100,30 @@
             {% if l.paid or l.due == 0 %}
             <div class="cell" align="right">{{ l.id }}</div>
             <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress " align="left">{{ l.actype }}</div>
             <div class="cell" align="left">{{ l.regn }}</div>
-            <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
-            <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
-            <div class="cell mobile_port_supress " align="left">{{ l.crew_capacity }}</div>
+            <div class="cell mobile_port_suppress " align="left">{{ l.pic }}</div>
+            <div class="cell mobile_port_suppress " align="left">{{ l.p2 }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_suppress " align="left">{{ l.crew_capacity }}</div>
             <div class="cell  " align="right">{{ l.totalmins|hrsmins }}</div>
             <div class="cell  " align="right">{{ "$%.2f"|format(l.due) }}</div>
             {% else %}
             <div class="cell" style="color:red" align="right">{{ l.id }}</div>
             <div class="cell" style="color:red" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress " style="color:red" align="left">{{ l.actype }}
+            <div class="cell mobile_port_suppress mobile_land_suppress " style="color:red" align="left">{{ l.actype }}
             </div>
             <div class="cell" style="color:red" align="left">{{ l.regn }}</div>
-            <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.pic }}</div>
-            <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.p2 }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+            <div class="cell mobile_port_suppress " style="color:red" align="left">{{ l.pic }}</div>
+            <div class="cell mobile_port_suppress " style="color:red" align="left">{{ l.p2 }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress" style="color:red" align="left">{{
                 l.takeoff|hrsminsfromtime }}
             </div>
-            <div class="cell mobile_port_supress mobile_land_supress" style="color:red" align="left">{{
+            <div class="cell mobile_port_suppress mobile_land_suppress" style="color:red" align="left">{{
                 l.landed|hrsminsfromtime }}
             </div>
-            <div class="cell mobile_port_supress " style="color:red" align="left">{{ l.crew_capacity }}</div>
+            <div class="cell mobile_port_suppress " style="color:red" align="left">{{ l.crew_capacity }}</div>
             <div class="cell  " style="color:red" align="right">{{ l.totalmins|hrsmins }}</div>
             <div class="cell  " style="color:red" align="right">{{ "$%.2f"|format(l.due) }}</div>
             {% endif %}
@@ -150,24 +150,24 @@
         <div class="row">
             <div class="heading">id</div>
             <div class="heading">Date</div>
-            <div class="heading heading mobile_port_supress mobile_land_supress">Type</div>
+            <div class="heading heading mobile_port_suppress mobile_land_suppress">Type</div>
             <div class="heading heading ">Regn</div>
-            <div class="heading heading mobile_port_supress">PIC</div>
-            <div class="heading heading mobile_port_supress">P2</div>
-            <div class="heading heading mobile_port_supress mobile_land_supress">Takeoff</div>
-            <div class="heading heading mobile_port_supress mobile_land_supress">Landed</div>
+            <div class="heading heading mobile_port_suppress">PIC</div>
+            <div class="heading heading mobile_port_suppress">P2</div>
+            <div class="heading heading mobile_port_suppress mobile_land_suppress">Takeoff</div>
+            <div class="heading heading mobile_port_suppress mobile_land_suppress">Landed</div>
             <div class="heading heading ">Mins</div>
         </div>
         {% for l in tows %}
         <div class="row">
             <div class="cell" align="right">{{ l.id }}</div>
             <div class="cell" align="left">{{ l.flt_date.strftime("%a %d%b") }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress " align="left">{{ l.actype }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress " align="left">{{ l.actype }}</div>
             <div class="cell" align="left">{{ l.ac_regn }}</div>
-            <div class="cell mobile_port_supress " align="left">{{ l.pic }}</div>
-            <div class="cell mobile_port_supress " align="left">{{ l.p2 }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
-            <div class="cell mobile_port_supress mobile_land_supress" align="left">{{ l.landed|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_suppress " align="left">{{ l.pic }}</div>
+            <div class="cell mobile_port_suppress " align="left">{{ l.p2 }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.takeoff|hrsminsfromtime }}</div>
+            <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.landed|hrsminsfromtime }}</div>
             <div class="cell  " align="right">{{ l.towmins }}</div>
         </div>
         {% endfor %}

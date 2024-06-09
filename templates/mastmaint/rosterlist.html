@@ -19,8 +19,8 @@
       <div class="heading">id</div>
       <div class="heading" >Date</div>
       <div class="heading " >Instructor</div>
-      <div class="heading  mobile_port_supress mobile_land_supress" >Tow Pilot</div>
-      <div class="heading  mobile_port_supress mobile_land_supress" >Duty Pilot</div>
+      <div class="heading  mobile_port_suppress mobile_land_suppress" >Tow Pilot</div>
+      <div class="heading  mobile_port_suppress mobile_land_suppress" >Duty Pilot</div>
 
     </div>
   {% for l in list %}
@@ -29,8 +29,8 @@
       <div class="cell" algin="right">{{ l['id'] }}</div>
       <div class="cell" align="left">{{ l['roster_date'] }}</div>
       <div class="cell" align="left">{{ l['roster_inst'] }}</div>
-      <div class="cell  mobile_port_supress mobile_land_supress " align="left">{{ l['roster_tp'] }}</div>
-      <div class="cell  mobile_port_supress mobile_land_supress " align="left">{{ l['roster_dp'] }}</div>
+      <div class="cell  mobile_port_suppress mobile_land_suppress " align="left">{{ l['roster_tp'] }}</div>
+      <div class="cell  mobile_port_suppress mobile_land_suppress " align="left">{{ l['roster_dp'] }}</div>
     </div>
     {#
     {% if not loop.last %}
