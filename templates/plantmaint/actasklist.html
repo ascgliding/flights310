@@ -5,6 +5,7 @@
   <div style="display:table-row">
     <div style="display:table-cell">
       <h1>{% block title %}{{ acmaint.regn }} Tasks{% endblock %}</h1>
+      <h5>{{ acmaint.currentreadings }}</h5>
     </div>
       <div  style="display:table-cell; text-align: right;" >
         <a class="action" href="{{ url_for('plantmaint.acselectnewtask') }}"><button id="addbtn"></button></a>
@@ -39,7 +40,10 @@
       <div class="cell"></div>
       <div class="cell  mobile_port_suppress " align="left"><I>{{ l.recurrence_description }}</I></div>
       <div class="cell"></div>
-      <div class="cell mobile_port_suppress mobile_land_suppress"><I>Daily Average : {{ '%0.2f'|format(l.daily_use or 0) }}</I></div>
+      <div class="cell mobile_port_suppress mobile_land_suppress">
+        <I>Daily Average : {{ '%0.2f'|format(l.daily_use or 0) }}
+        (Qty or Mins)</I>
+      </div>
     </div>
   {% endfor %}
   </div>

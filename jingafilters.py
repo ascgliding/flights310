@@ -221,7 +221,7 @@ def hrsmins(pmins):
         if hrs > 0:
             return str(hrs) + ':' + "%02d" % mins
         else:
-            return str(mins)
+            return '0:' + str(mins)
     else:
         return ""
 
@@ -257,7 +257,7 @@ def hrsdec(pmins):
         applog.debug("A call to hrsdec was passed type {} value {}".format(str(type(pmins)), pmins))
         raise Exception("Parameter to hrsdec is not an integer ({})".format(pmins))
     if pmins:
-        return decimal.Decimal(pmins)/ decimal.Decimal(60)
+        return round(decimal.Decimal(pmins)/ decimal.Decimal(60),2)
     else:
         return ""
 

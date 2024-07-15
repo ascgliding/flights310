@@ -1,3 +1,4 @@
+
 import os
 import sys
 sys.path.insert(0,os.path.abspath(".."))
@@ -41,6 +42,7 @@ print("pythonpath (in create_app dayend)_ is {}".format(os.environ['PYTHONPATH']
 
 def google_credentials():
     # reuturn a credentials object from the key downloaded from the google api console
+    pass
    
 
 def update_google():

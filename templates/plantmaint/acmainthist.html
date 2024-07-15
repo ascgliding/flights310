@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}{{ acmaint.regn }} Maintenance History{% endblock %}</h1>
+      <h5>{{ acmaint.currentreadings }}</h5>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+        {#
+        <a class="action" href="{{ url_for('plantmaint.acselectnewtask') }}"><button id="addbtn"></button></a>
+        #}
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Id</div>
+      <div class="heading" >Date</div>
+      <div class="heading" >Description</div>
+      <div class="heading mobile_port_suppress" >Meter Reading</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress" >Task </div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell"><a href="{{ url_for('plantmaint.actaskmaint', id=l.id) }}">{{ l.id }}</a></div>
+      <div class="cell  " align="right">{{ l.history_date }}</div>
+      <div class="cell  mobile_port_suppress  " >{{ l.task_description }}</div>
+      <div class="cell  mobile_port_suppress mobile_land_suppress "  align="right">{{ l.actask_rec.std_task_rec.task_description }}</div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

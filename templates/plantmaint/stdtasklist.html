@@ -24,7 +24,7 @@
     <div class="row">
       <div class="cell"><a href="{{ url_for('plantmaint.stdtaskmaint', id=l.id) }}">{{ l.id }}</a></div>
       <div class="cell" align="left">{{ l.task_description }}</div>
-      <div class="cell  mobile_port_suppress" align="left">{{ l.recurrence_description() }}</div>
+      <div class="cell  mobile_port_suppress" align="left">{{ l.recurrence_description }}</div>
     </div>
   {% endfor %}
   </div>

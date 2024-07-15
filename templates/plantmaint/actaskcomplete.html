@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<h1>{% block title %}{{ ac.regn }} Task Completion{% endblock %}</h1>
+<h5>{{ ac.currentreadings }}</h5>
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    <li>{{ render_field(form.history_date) }}</li>
+    <li>{{ render_field(form.task_description) }}</li>
+    {% for f in form %}
+      {% if f.name == 'meter_reading' %}
+       <li>{{ render_field(form.meter_reading) }}  </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+  </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+</form>
+{% endblock %}

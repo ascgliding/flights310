@@ -25,9 +25,12 @@
       <div class="cell mobile_port_suppress" >{{ l['id'] }}</div>
 <!--      <div class="cell" >{{ l['seq'] }}</div>-->
       <div class="cell" align="center">{{ l['reading_date'].strftime('%d-%m-%Y') }}</div>
-      {% if l['uom'] == 'Time' %}
+      {% if l['entry_uom'] == 'Hours:Minutes' %}
         <div class="cell   " align="right">{{ l['meter_reading']|hrsmins }}</div>
         <div class="cell   " align="right">{{ l['meter_delta']|hrsmins  }}</div>
+      {% elif l['entry_uom'] == 'Decimal Hours' %}
+        <div class="cell   " align="right">{{ l['meter_reading']|hrsdec }}</div>
+        <div class="cell   " align="right">{{ l['meter_delta']|hrsdec  }}</div>
       {% else %}
         <div class="cell   " align="right">{{ l['meter_reading'] }}</div>
         <div class="cell   " align="right">{{ l['meter_delta'] }}</div>

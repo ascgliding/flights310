@@ -2,8 +2,15 @@
 {% block header %}
 {% endblock %}
 {% block content %}
-Some important notes:
+<h1>{% block title %}{{ ac.regn }} Task{% endblock %}</h1>
+<h5>{{ ac.currentreadings }}</h5>
+{#
+<div  style="display:table-cell; text-align: right;" >
+  <a class="action" href="{{ url_for('plantmaint.actaskcomplete', task=form.task_id) }}"><button class="textbtn">Complete</button></a>
+</div>
+#}
 <div class="mobile_port_suppress mobile_land_suppress">
+Some important notes:
 <ul>
   <li style="list-style-type:disc;margin-left:30px">A task can be both meter driven and calendar driven.
     In which case the standard task should be calendar based and both a next due date and a next due reading should be entered.
@@ -24,22 +31,41 @@ Some important notes:
     <legend>{{ form.name }}</legend>
   <ul>
     <li>{{ render_field(form.task_id) }}</li>
-    <li>{{ render_field(form.meter_id) }}</li>
+    {% if meter is not none %}
+    <li>
+      <div style="display:inline-block;color:#377ba8;padding-left:20%">Meter Name: {{ meter.meter_name }} </div>
+    </li>
+    {% endif %}
     </br>
     <li>{{ render_field(form.last_done) }}</li>
     {% for f in form %}
     {% if f.name == 'last_done_reading' %}
-      <li>{{ render_field(form.last_done_reading) }} </li> {{ meter.entry_uom }}
+    <li>{{ render_field(form.last_done_reading) }}  </li>
     {% endif %}
     {% endfor %}
+    </br>
+    {% for f in form %}
+    {% if f.name  == 'due_basis_date' %}
+      <li>{{ render_field(form.due_basis_date) }} </li>
+    {% endif %}
+    {% if f.name == 'due_basis_reading' %}
+      <li>{{ render_field(form.due_basis_reading) }} </li>
+    {% endif %}
+    {% endfor %}
+    </br>
     <li>{{ render_field(form.estimate_days) }}</li>
     </br>
     <li>{{ render_field(form.warning_days) }}</li>
     <li>{{ render_field(form.warning_email) }} </li>
+    </br>
+    <li>{{ render_field(form.note) }}</li>
   </ul>
     </fieldset>
   {{ form.btnsubmit() }}
   {{ form.cancel(formnovalidate=true) }}
+  {{ form.complete() }}
+  {{ form.history() }}
+
   {{ form.delete() }}
 </form>
 {% endblock %}

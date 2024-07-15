@@ -83,7 +83,7 @@ grey, then it is not selected.  Tap it with your finger to get white-on-blue.
    :scale: 15%
 
 Tablet - Wifi 
-------------
+-------------
 
 On the tablet - check the wifi signal appears on the top right hand corner
 The icon looks like this:
@@ -340,3 +340,302 @@ Recording ATC Flying in an ASC Aircraft
 
 Each sqn is setup ass a customer in the pilots table.  Select the appropriate sqn from the drop down.
 Usually the amount is $65.  Put this in the aerotow field on the payments screen.
+
+.. raw:: pdf
+
+    PageBreak
+
+***************************
+Aircraft Maintenance System
+***************************
+
+Introduction
+============
+
+The aircraft maintenance system is designed to alert users to upcoming aircraft maintenance.
+
+Each maintenance item is defined as a "task".
+Lifed items are simply a task to replace the lifed item.
+
+Both meter based tasks (e.g. every 50 hours) and calendar based tasks are supported.  
+
+The system has a security function that provides control over who can do what by
+aircraft registration.
+
+There is a concept of "standard" tasks and meters where all available tasks and
+meters are defined, and a set of "aircraft" tasks and meters where specific
+tasks and meters are attached to specific aircraft.
+
+A general note about id numbers
+-------------------------------
+
+Throughout the application rows on screens often have an ID number on the left
+hand side.  Often this is underlined.  Clicking on the ID number will provide
+access to the item.
+
+Note that ID numbers are not necessarily consecutive on ANY screen.  They are
+just a number.  There is very likely to be gaps in the sequence.  This is
+normal.
+
+Standard Items
+==============
+
+Standard Meters
+---------------
+
+A standard meter contains only two data items:
+
+    *   The name of the meter
+    *   The unit of measure.  
+
+        This is what the meter is measuring.  It can only be a counter of some
+        kind, such as the number of landings, the number of takeoffs or a time
+        unit such as tach meter, engine hours meter, airswitch meter, hobbs
+        meter.
+
+Standard Tasks
+--------------
+
+The standard task is a bit more complex.  The standard task contains:
+
+    *   A description of the task.
+    *   Whether the task is calendar based or meter based.
+
+        Where a task is required at the earlier of some time period or some
+        meter reading, then the task basis MUST be set to CALENDAR, and meter
+        id specified as well as the calendar  details.
+
+    *   For calendar based tasks then a calendar unit of measure (years, months
+        or days) is required and the number of years, months or days.
+    *   Similarly, where a task is meter based, then the meter name and the reading
+        is required.
+
+Aircraft Items
+==============
+
+The system keeps track of which aircraft you are currently working on in each
+session.  The first time in each session it will prompt you for the
+registration.  After you select the aircraft it will remember that registration
+until you change it.
+
+For each aircraft you need to define which meters are installed and which tasks
+are required.
+
+Meters
+------
+
+Add a new meter by pressing the "+" icon in the top RH corner.  A drop down list
+of available meters that are *NOT YET INSTALLED* on the aircraft is displayed.  Press enter
+to select the appropriate one.
+
+Once selected, the meter is added to the airraft and appears in the list.  
+You should **Immediately** click on the underscored id on the LHS to then set
+the following attributes for the meter:
+
+    *   Meter Prompt
+
+        This is the label text that will appear on the screen when prompting the
+        user to enter a meter reading.  It is very important that you include in
+        the text something that clearly identifies to anyone adding a meter
+        reading that the value that should be entered is incremental (such as
+        the nunber of landings) as opposed to the a finishing total value (such
+        as a hobbs meter reading from the aircraft).  It is also a good idea
+        to include some reference to the unit of measure.
+
+        Do not assume that qty based readings will be incremental and meter
+        time based meters will be closing values.  The tow plane has all
+        maintenance performed on airframe hours (wheels up to wheels down) and
+        the readings are recorded as the total time in the air in each flying
+        day.  However, it also has a tachometer and the CLOSING meter reading is
+        recorded each day.
+
+    *   Display Unit
+
+        There are three entry / display units.  They are :
+
+        *   Qty.  Use this for number of things such landings count.
+
+        *   Decimal Hours.  Use this for recording time in decimal hours. A
+            decimal point will spearate the hours from the decimal component.
+            When entering values, users will be required to enter the decimal
+            point.  This is useful when the meter being recorded is in decimal
+            hours.
+
+        *   Hours:Minutes.  Use this for recording time in hours and minutes.  A
+            colon will separate the hours from the minutes and user will be
+            required to enter the colon to separate the hours from the minutes.
+            Useful when the meter being recorded displays hours and minutes.
+
+    *   Entry Method.
+
+        This is what we are expecting the user to enter.  There are two options.
+
+        *   Final meter reading.  This is the TOTAL of what we are measuring and
+            used when we are recording something from a displayed meter.
+
+        *   Incremental change.  This is the change in the reading.  For example
+            if you are recording a number of landings, then this is the the
+            number of landings for a given day. 
+
+    *   Auto Update.
+
+        Select this box to have the dayend process automatically add meter
+        readings.  For qty based meter a count of the number of movements will
+        be added.  For Time based meters the time from the flight system (either
+        tow or glider as appropriate) will be added.
+
+        When users are prompted to enter a reading, they are still prompted for
+        these readings but they can be left empty.
+
+Viewing readings
+~~~~~~~~~~~~~~~~
+
+Meter readings can be viewed by clicking on the underlined "readings" word on
+the RHS of each meter in the list.
+
+The readings are listed.  If a mistake is made entering a reading then the last
+meter reading (only) can be removed.  You cannot change readings other than the
+last one because each reading contains both the CLOSING value and the difference
+between this reading and the previous reading.  Removing anything other than the
+last one will cause these two numbers to get out of sync.
+
+Tasks
+-----
+
+After selecting the tasks option from the menu a list of defined tasks for the
+aircraft is displayed.  For each task, the name of the task and when it is next
+due is displayed.  Next to the date is a note describing how the due date was
+derived.  It may be a simple calendar basis or meter basis or the earlier of the
+two (or a few others such as the date having already expired).
+
+Below each task line is a line that describes the task frequency and the daily
+average.  For time based tasks this is a *daily* average in **MINUTES**.
+
+Note that daily averages are based on elapsed days not flying days.  i.e. it
+does not matter whether the a/c has flown or not, the average is still
+calculated over the elapsed days.  This because we are trying to determine when
+the task is due and that is completely independant of actual flying.
+
+Select the "+" in the top LH side to add a new new task.  When this is selected
+a screen with dropdown list is displayed.  Only tasks that are not already on
+this aircraft are displayed.  After selecting a new task the task list is
+re-displayed.  Select the underlined id number on the left hand side to define
+the following attributes: 
+
+    *   Last Done & Last Done Meter Reading
+
+        Probably the two most important fields.  The system cannot predict when
+        a task is due if it does not know when it was last done.  Add an
+        appropriate date and the meter reading (if applicable) when it was last
+        done.
+
+    *   Regeneration Basis.
+
+        In general, the determination of the next due date for a given task is based
+        on when the task was LAST done.  It is possible that a task may need to
+        be next performed on when it was last DUE rather than when it was last
+        DONE.  For example, a 50 hour check on the two plane is repeated when
+        it was due.  To effect this, enter a value in the regeneration basis
+        field.  This value should be less than the next due and is likely to
+        be some time in the distant past.  For example if you enter "1200"
+        in the field, then the task will fall due at meter readings of 1250,
+        1300, 1350, 1400, 1450 and so on.  The system will select the next
+        value greater than when it was last done.  Using the above example, if
+        the task was last done at 1455 hours, then it will be next due at 1500
+        hours.
+
+    *   Average over days.
+
+        This is only related to tasks which are triggered by a meter reading.
+        The Average over days field will have no impact on calendar based tasks.
+
+        The is the number of days in the past the system will look to determine
+        an average.  Gliding typically occurs more in the summer than the winter
+        and therefore tasks that are based on a meter reading of some sort will
+        be affected if an average is taken at the beginning of a season (where
+        it will be more impacted by winter readings) than at the end of a season
+        (where it will be more impacted by summer readings).
+
+        Entering a small number of days in this field will make the prediction
+        more responsive to changes in the pattern than a large number.  Where a
+        task typically takes more than a year to occur (e.g. 3000 hour check)
+        then the average days should be set to 365. Where the task comes around
+        quickly (e.g. 50 hour inspection) then the average should be set shorter
+        (30 days).
+
+        The system will use a maximum of 365 days and a minimum of 30 days.
+        Values less than 30 will be set to 30 for calculation purposes and
+        values greater than 365 will be set to 365.
+
+    *   Warning Days and Warning Email.  
+
+        The number of days before a task is predicted to be required before an
+        email is sent.  The Warning EMail is self-evident.
+
+    *   Completion.
+
+        The completion button at the bottom of the screen is used to reccord the
+        completion of a task.  Completing a task will prompt for a completion
+        date, some text and a meter reading (if the task has a linked meter).
+        Where a meter reading is recorded for task, the system will create a
+        record in the readings table if possible.  It is possible to record
+        completion of a task some time later than it was actually performed.  If
+        subsequent meter readings have been recorded then the completion
+        function will keep a record of the meter reading on the history table
+        but it will NOT be able to record the reading on the readings table.
+
+    *   History
+
+        The history button at the bottom of the screen will display the
+        maintenance history for this task.  The history function on the main
+        screen will display the history for all tasks.
+
+
+
+Adding new readings
+-------------------
+
+Users can enter meter readings at any time.  When the option is selected the
+user is prompted with a data and a note field and then a prompt for each meter
+recorded against the aircraft.
+
+The last reading is shown on the screen in red.
+
+Meter readings can only go upwards.  Days in the past or meter readings less
+than the previous are not allowed.
+
+Security
+========
+
+Only system administrators are able to change the standard tasks or standard
+meters or the aircraft security.
+
+For a user to be able to access anything to do with an aircraft they must be
+recorded in the aircraft security table.  Each user must be assigned to the
+aircraft and the given access to either *All* the maintenance functions for an
+aeroplane or just the ability to enter meter readings.
+
+Starting with a New Aircraft
+============================
+
+To establish a new aircraft follow these steps:
+
+    #.  Select the Aircraft
+    #.  Add the Meters
+    #.  Review each meter and check the prompts and units
+    #.  Add Meter readings.  The last 3 months is a good starting point
+    #.  Add the tasks
+
+Phase 2
+=======
+
+At time of this documentation the following items are planned but not yet delivered:
+
+    *   Auto update - not yet written
+    *   Auto emails - not yet written
+    *   Log book Spreadsheet
+
+        The intention is that a spreadsheet will be able to be produced that
+        will be akin to the aircraft logbook.  There will be one sheet listing
+        all meter readings by date.  A second sheet will list the maintenance
+        history (also by date).

@@ -109,6 +109,7 @@ class SlotForm(FlaskForm):
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
 
+#TODO:  Add maintenance to roster
 class RosterUploadForm(FlaskForm):
     roster_file = FileField('Roster', validators=[FileRequired()], render_kw={"class": "longnote"})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons

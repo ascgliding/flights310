@@ -5,6 +5,7 @@
   <div style="display:table-row">
     <div style="display:table-cell">
       <h1>{% block title %}Aircraft Meters{% endblock %}</h1>
+      <h5>{{ ac.currentreadings }}</h5>
     </div>
       <div  style="display:table-cell; text-align: right;" >
         <a class="action" href="{{ url_for('plantmaint.acselectnewmeter') }}"><button id="addbtn"></button></a>

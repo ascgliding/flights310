@@ -24,6 +24,7 @@ body { max-width: 960px;
     margin: 0 auto;
     background:var(--main-bg-colour); }
 h1 { font-family: serif; color: var(--main-fg-colour); margin: 1rem 0; }
+h5 { font-family: sans-serif; color: black; margin: 1rem 0; font-weight: normal }
 a { color: var(--main-fg-colour); }
 hr { border: none; border-top: 1px solid lightgray; }
 nav { background: lightgray; display: flex; align-items: center; padding: 0 0.5rem; }
@@ -148,8 +149,6 @@ div .cell_date
 
 /* -----  apply only to phone devices at most Landscape -----*/
 
-/* TODO:  The viewport for landscape will need to include both the max-width AND the min-width - see flaskskeleton */
-
 /*
 Jun 24 changed from :
 @media only screen and (max-width: 60em) {
@@ -184,20 +183,6 @@ div .cell_date
     { display: none;}
 
 }
-
-/* -----  apply  to  devices not portrait -----*/
-/* TODO: Find where this is used and do something different (flights) */
-
-/*  30em is 480px  (at pixel size of 16) */
-/* Jun 24: changed from 31em to 480px */
-
-/*
-@media only screen and (min-width:480px) {
-.not_portrait_suppress
-    { display: none;}
-    }
-*/
-
 
 /* -----  apply only to non-phone devices  -----*/
 /* jun 24 changed from: /*
