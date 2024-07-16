@@ -19,8 +19,8 @@
       <div class="heading" >Id</div>
       <div class="heading" >Date</div>
       <div class="heading" >Description</div>
-      <div class="heading" >Meter Name</div>
-      <div class="heading " >Reading</div>
+      <div class="heading mobile_port_suppress" >Meter Name</div>
+      <div class="heading mobile_port_suppress" >Reading</div>
     </div>
   {% for l in list %}
     <div class="row">
@@ -29,7 +29,7 @@
       <div class="cell" align="left">{{ l.task_description }}</div>
       {% if l.actask_rec.std_task_rec.std_meter_rec is not none %}
           <div class="cell  mobile_port_suppress " align="left">{{ l.actask_rec.std_task_rec.std_meter_rec.meter_name }}</div>
-          <div class="cell" align="right">{{ l.formatted_meter_reading }}</div>
+          <div class="cell mobile_port_suppress" align="right">{{ l.formatted_meter_reading }}</div>
       {% endif %}
     </div>
   {% endfor %}
