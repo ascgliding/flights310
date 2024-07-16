@@ -27,7 +27,7 @@
     <div class="row">
       <div class="cell mobile_port_suppress mobile_land_suppress"><a href="{{ url_for('plantmaint.acmetermaint',id=l.id) }}">{{ l.id }}</a></div>
       <div class="cell" align="left">{{ ac.regn }}</div>
-      <div class="cell  mobile_port_suppress " align="left">{{ l.meter_name }}</div>
+      <div class="cell" align="left">{{ l.meter_name }}</div>
       <div class="cell"><a href="{{ url_for('plantmaint.acmeterreadinglist', meter_id=l.meter_id) }}">Readings</a></div>
     </div>
   {% endfor %}
