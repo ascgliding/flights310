@@ -19,14 +19,12 @@
       <div class="heading" >id</div>
       <div class="heading" >Description</div>
       <div class="heading" >Uom</div>
-      <div class="heading" >Display/Entry</div>
     </div>
   {% for l in list %}
     <div class="row">
       <div class="cell"><a href="{{ url_for('plantmaint.stdmetermaint', id=l['id']) }}">{{ l['id'] }}</a></div>
       <div class="cell" align="left">{{ l['meter_name'] }}</div>
       <div class="cell" align="left">{{ l['uom'] }}</div>
-      <div class="cell" align="left">{{ l['entry_uom'] }}</div>
     </div>
   {% endfor %}
   </div>
