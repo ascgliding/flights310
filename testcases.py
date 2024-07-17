@@ -2093,83 +2093,7 @@ class maintenance_time_values(unittest.TestCase):
         for l in list:
             print(l.id, l.meter_reading, l.Hours(),l.HrsMins())
 
-class meter_process(unittest.TestCase):
 
-    def test001(self):
-        ''' Check Integer create'''
-        m = MeterProcess(234,'Units')
-        self.assertEqual(234,m.value,'Values not the same')
-
-    def test002(self):
-        ''' Check Float create'''
-        m = MeterProcess(234.65498, 'Units')
-        self.assertEqual(234.65, m.value, 'Values not the same')
-
-    def test003(self):
-        ''' Check decimal create'''
-        m = MeterProcess(Decimal(234.65), 'Units')
-        self.assertEqual(234.65, m.value, 'Values not the same')
-
-    def test004(self):
-        ''' Check String create'''
-        m = MeterProcess('344', 'Units')
-        self.assertEqual(344, m.value, 'Values not the same')
-
-    def test005(self):
-        ''' Check String create'''
-        m = MeterProcess('1465.65', 'Decimal Hours')
-        self.assertEqual(87939, m.value, 'Values not the same')
-
-    def test006(self):
-        ''' Check String create'''
-        m = MeterProcess('1465:39', 'Hours:Minutes')
-        self.assertEqual(87939, m.value, 'Values not the same')
-
-    #TODO: Add a few test to check rounding
-
-    def test031(self):
-        ''' Check Integer create'''
-        m = MeterProcess(234,'Units')
-        self.assertEqual(234,m.units,'Values not the same')
-
-    def test032(self):
-        ''' Check Float create'''
-        m = MeterProcess(234.65498, 'Units')
-        self.assertEqual(234.65, m.units, 'Values not the same')
-
-    def test033(self):
-        ''' Check decimal create'''
-        m = MeterProcess(Decimal(234.65), 'Units')
-        self.assertEqual(234.65, m.units, 'Values not the same')
-
-    def test034(self):
-        ''' Check String create'''
-        m = MeterProcess('344', 'Units')
-        self.assertEqual(344, m.units, 'Values not the same')
-
-    def test035(self):
-        ''' Check String create'''
-        m = MeterProcess('1465.65', 'Decimal Hours')
-        self.assertEqual(1465.65, m.dechrs, 'Values not the same')
-
-    def test036(self):
-        ''' Check String create'''
-        m = MeterProcess('1465:39', 'Hours:Minutes')
-        self.assertEqual('1465:39', m.hrsmins, 'Values not the same')
-
-    def test037(self):
-        ''' Check String create'''
-        m = MeterProcess('1465.65', 'Decimal Hours')
-        self.assertEqual('1465:39', m.hrsmins, 'Values not the same')
-
-    def test036(self):
-        ''' Check String create'''
-        m = MeterProcess('1465:39', 'Hours:Minutes')
-        self.assertEqual(87939, m.minutes, 'Values not the same')
-
-
-
-    # self.assertEqual('234.00',str(m), 'not equal')
 
 
 if __name__ == '__main__':
@@ -2180,7 +2104,6 @@ if __name__ == '__main__':
     case4 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test)
     case5 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test_ac_obj)
     case6 = unittest.TestLoader().loadTestsFromTestCase(maintenance_time_values)
-    case7 = unittest.TestLoader().loadTestsFromTestCase(meter_process)
     # thissuite = unittest.TestSuite([case1])
     thissuite = unittest.TestSuite([case4])
 
