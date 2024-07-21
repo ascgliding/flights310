@@ -13,22 +13,22 @@ from sqlalchemy import text as sqltext, func
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
 
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
-
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-from googleapiclient.errors import HttpError
+# from pydrive2.auth import GoogleAuth
+# from pydrive2.drive import GoogleDrive
+#
+# from google.oauth2 import service_account
+# from googleapiclient.discovery import build
+# from googleapiclient.http import MediaFileUpload
+# from googleapiclient.errors import HttpError
 from asc.common import *
 import re
 
-import google.auth
+# import google.auth
 
 app = create_app()
 log = app.logger
 
-SCOPES = ['https://www.googleapis.com/auth/drive.metadata', 'https://www.googleapis.com/auth/drive']
+# SCOPES = ['https://www.googleapis.com/auth/drive.metadata', 'https://www.googleapis.com/auth/drive']
 
 
 
@@ -42,46 +42,46 @@ print("sys.path is ".format(sys.path))
 print("pwd is {}".format(os.getcwd()))
 print("pythonpath (in create_app dayend)_ is {}".format(os.environ['PYTHONPATH']))
 
-def google_credentials():
-    # reuturn a credentials object from the key downloaded from the google api console
-    pass
+# def google_credentials():
+#     # reuturn a credentials object from the key downloaded from the google api console
+#     pass
    
 
-def update_google():
-    # from google drive I navidated to my temp folder and grabbed this from the url:
-    mytempid = '1FoSoFYlcNplPH0-ReLuPLw1mqAzYh9RT'
-    service_account_id = 'ascbackup@api-project-1047925931133.iam.gserviceaccount.com'
-    # gauth = GoogleAuth()
-    # drive = GoogleDrive(gauth)
-    # upload_file_list = ['1.jpg', '2.jpg']
-    # for upload_file in upload_file_list:
-    #     gfile = drive.CreateFile({'parents': [{'id': mytempid}]}) # Read file and set it as the content of this instance.
-    #     gfile.SetContentFile(upload_file)
-    #     gfile.Upload() # Upload the file.
-    credentials, project_id = google.auth.default(scopes=SCOPES)
-
-    service = build('drive', 'v3', credentials=credentials)
-
-    # Call the Drive v3 API
-    results = service.files().list(
-        # q=f"'1YJ6gMgACOqVVbcgKviJKtVa5ITgsI1yP' in parents",
-        q=f"'1FoSoFYlcNplPH0-ReLuPLw1mqAzYh9RT' in parents",
-        pageSize=10, fields="nextPageToken, files(id, name, owners, parents)").execute()
-    items = results.get('files', [])
-
-    if not items:
-        print('No files found.')
-    else:
-        # print(items[0])
-
-        print('Files:')
-        for item in items:
-            # print (item)
-            print(u'{0}   {1}   {2}'.format(item['name'], item['owners'], item['parents']))
-
-def quickstart_authentication():
-    gauth = GoogleAuth()
-    gauth.LocalWebserverAuth()
+# def update_google():
+#     # from google drive I navidated to my temp folder and grabbed this from the url:
+#     mytempid = '1FoSoFYlcNplPH0-ReLuPLw1mqAzYh9RT'
+#     service_account_id = 'ascbackup@api-project-1047925931133.iam.gserviceaccount.com'
+#     # gauth = GoogleAuth()
+#     # drive = GoogleDrive(gauth)
+#     # upload_file_list = ['1.jpg', '2.jpg']
+#     # for upload_file in upload_file_list:
+#     #     gfile = drive.CreateFile({'parents': [{'id': mytempid}]}) # Read file and set it as the content of this instance.
+#     #     gfile.SetContentFile(upload_file)
+#     #     gfile.Upload() # Upload the file.
+#     credentials, project_id = google.auth.default(scopes=SCOPES)
+#
+#     service = build('drive', 'v3', credentials=credentials)
+#
+#     # Call the Drive v3 API
+#     results = service.files().list(
+#         # q=f"'1YJ6gMgACOqVVbcgKviJKtVa5ITgsI1yP' in parents",
+#         q=f"'1FoSoFYlcNplPH0-ReLuPLw1mqAzYh9RT' in parents",
+#         pageSize=10, fields="nextPageToken, files(id, name, owners, parents)").execute()
+#     items = results.get('files', [])
+#
+#     if not items:
+#         print('No files found.')
+#     else:
+#         # print(items[0])
+#
+#         print('Files:')
+#         for item in items:
+#             # print (item)
+#             print(u'{0}   {1}   {2}'.format(item['name'], item['owners'], item['parents']))
+#
+# def quickstart_authentication():
+#     gauth = GoogleAuth()
+#     gauth.LocalWebserverAuth()
 
 def testmailer():
     """
