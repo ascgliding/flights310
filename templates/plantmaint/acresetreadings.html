@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<h1>Import Meter Readings from Flight System : {{ac.regn}} / {{acmeter.meter_name }}</h1>
+<h5> {{ ac.currentreadings or '' }}</h5>
+
+<form method="Post">
+  {{ form.csrf_token }}
+  <B>Be Careful:  You are about to reset readings from the flight system into this meter's readings</B>
+  <UL>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">Enter the CLOSING Meter Reading.</li>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">The program will step through all readings and reset the reading value by subtracting the detla
+      recorded on file from the previous reading.</li>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">Any attempt to create a negative reading will cause an error.</li>
+  </UL>
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    </br>
+    <li>{{ render_field(form.lastreading) }}</li>
+  </ul>
+    </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+</form>
+{% endblock %}

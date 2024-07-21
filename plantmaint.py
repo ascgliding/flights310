@@ -26,14 +26,14 @@ from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, optional, Regexp
 # from wtforms_alchemy.fields import QuerySelectField
 from asc.wtforms_ext import MatButtonField, TextButtonField
-#xlsx
+# xlsx
 import xlsxwriter
 from flask import send_file
 from asc.export import ExcelPromptForm
 
-
 from asc.oMaint import ACMaint
 from asc.mailer import ascmailer
+from asc.common import *
 import decimal
 
 app = current_app
@@ -71,7 +71,8 @@ def hrsmins2mins(value) -> int:
         mins = 0
     return int((hrs * 60) + int(mins))
 
-def format_reading(value,fmt) -> str:
+
+def format_reading(value, fmt) -> str:
     if fmt == 'Hours:Minutes' or fmt == 'Time':
         return str(mins2hrsmins(value))
     elif fmt == 'Decimal Hours':
@@ -141,7 +142,7 @@ class HrsField(Field):
         :return: None.  Sets self.data
         """
         if len(valuedata) != 0:
-            if re.match("^[0-9]{0,5}.[0-9]$", valuedata[0]) is None \
+            if re.match("^[0-9]{0,5}.[0-9]{0,2}$", valuedata[0]) is None \
                     and re.match("^[0-9]{0,5}$", valuedata[0]) is None:
                 raise ValidationError("{} is not a valid decimal time".format(valuedata[0]))
             self.data = decimal.Decimal(hrsdec2mins(valuedata[0]))
@@ -272,7 +273,14 @@ class ACMeterMaintForm(FlaskForm):
     auto_update = BooleanField('Auto Update', description='Automatically update from club flying records (overnight).')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-
+    importreading = TextButtonField('Import',
+                                    id="import",
+                                    text='Import Readings',
+                                    help="Import Readings from the flight system")
+    resetreading = TextButtonField('Reset',
+                                    id="reset",
+                                    text='Reset Readings',
+                                    help="Recalculate readings based on an entered final reading.")
 
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
@@ -288,7 +296,7 @@ class ACSelectNewTaskForm(FlaskForm):
         self.task_id.choices = []
         for t in Tasks.query.all():
             if t.id not in current_ac_task_ids \
-            and (t.task_meter_id is None or t.task_meter_id in current_ac_meters_ids):
+                    and (t.task_meter_id is None or t.task_meter_id in current_ac_meters_ids):
                 self.task_id.choices.append((t.id, t.task_description))
 
         self.task_id.validate_choice = False
@@ -329,18 +337,18 @@ class ACTaskForm(FlaskForm):
     warning_email = StringField('Warning Email',
                                 description='comma separated list of email addresses for warning emails')
     note = TextAreaField('Note',
-                       description='Any note associated with the task',
-                       render_kw={'rows':'4'})
+                         description='Any note associated with the task',
+                         render_kw={'rows': '4'})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
     complete = TextButtonField('Transactions',
-                           id="complete",
-                           text='Complete',
-                           help="Record Task Completion")
+                               id="complete",
+                               text='Complete',
+                               help="Record Task Completion")
     history = TextButtonField('History',
-                           id="history",
-                           text='History',
-                           help="Display task completion history")
+                              id="history",
+                              text='History',
+                              help="Display task completion history")
 
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
@@ -352,19 +360,32 @@ class ACAddNewReadingForm(Form):
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
 
+
 class ACTaskComplete(FlaskForm):
     name = "Record Task Completion"
     ac_id = IntegerField('Ac Id', description='not displayed')
     task_id = IntegerField('task Id', description='not displayed')
-    history_date = DateField('Completion Date', description='The date the task was completed', default=datetime.date.today())
+    history_date = DateField('Completion Date', description='The date the task was completed',
+                             default=datetime.date.today())
     task_description = TextAreaField('Task Description', description='Add any relevant Notes')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
 
 
+class ACImportReading(FlaskForm):
+    name = "Import Readings from Flight Details"
+    ac_id = IntegerField('Ac Id', description='not displayed')
+    meter_id = IntegerField('task Id', description='not displayed')
+    start_date = DateField('Start Date', description='The date to start importing', default=datetime.date.today())
+    end_date = DateField('End Date', description='The date to end importing', default=datetime.date.today())
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
 
-
-
+class ACResetReadings(FlaskForm):
+    name = "Import Readings from Flight Details"
+    # Actual Fields added in the view function.
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
 
 
 def maintpagecheck(checkpagename=None):
@@ -383,7 +404,7 @@ def maintpagecheck(checkpagename=None):
         try:
             thisac = ACMaint(session['regn'])
         except Exception as e:
-            flash(str(e),"error")
+            flash(str(e), "error")
             raise RuntimeError('There is a problem in the maintenance program setup for {}'.format(session['regn']))
 
         if thisac is None:
@@ -429,7 +450,8 @@ def maintainedac():
         list = db.engine.execute(sql_to_execute).fetchall()
         return render_template('plantmaint/maintainedac.html', list=list)
 
-@bp.route('/index',defaults={'pregn':None}, methods=['GET'])
+
+@bp.route('/index', defaults={'pregn': None}, methods=['GET'])
 @bp.route('/index/<pregn>', methods=['GET'])
 @login_required
 def index(pregn=None):
@@ -445,7 +467,7 @@ def index(pregn=None):
             thisac = ACMaint(session['regn'])
         except Exception as e:
             flash("There is a problem in the maintenance program setup for {}".format(session['regn']))
-            flash(str(e),"error")
+            flash(str(e), "error")
             return render_template('plantmaint/index.html', regn=pregn, ac=None)
         return render_template('plantmaint/index.html', regn=pregn, ac=thisac)
 
@@ -480,7 +502,7 @@ def stdtaskmaint(id):
         if thisform.delete.data:
             # check if present on any a/c before delete
             if db.session.query(ACTasks.query.filter(ACTasks.task_id == thisrec.id).exists()).scalar():
-                flash("Cannot Delete - this task is defined on an A/C","error")
+                flash("Cannot Delete - this task is defined on an A/C", "error")
                 return redirect(url_for('plantmaint.stdtasklist'))
             db.session.delete(thisrec)
             try:
@@ -565,10 +587,10 @@ def stdmetermaint(id):
             # chk = db.session.query(Tasks).filter(Tasks.task_meter_id == thisrec.id).count()
             # if chk > 0:
             if db.session.query(Tasks.query.filter(Tasks.task_meter_id == thisrec.id).exists()).scalar():
-                flash("Cannot Delete - this Meter is used on an Task","error")
+                flash("Cannot Delete - this Meter is used on an Task", "error")
                 return redirect(url_for('plantmaint.stdmeterlist'))
             if db.session.query(ACMeters.query.filter(ACMeters.meter_id == thisrec.id).exists()).scalar():
-                flash("Cannot Delete - this Meter is used on an aircraft","error")
+                flash("Cannot Delete - this Meter is used on an aircraft", "error")
                 return redirect(url_for('plantmaint.stdmeterlist'))
             if db.session.query(MeterReadings.query.filter(MeterReadings.meter_id == thisrec.id).exists()).scalar():
                 flash("Cannot Delete - this Meter has readings", "error")
@@ -699,34 +721,34 @@ def actaskmaint(id):
         if stdtask.task_meter_id is not None:
             if thisrec.ac_meter_rec.entry_uom == 'Qty':
                 ThisViewFrm.last_done_reading = IntegerField('Last Done Meter Reading in units',
-                         [validators.optional()],
-                         description='The QTY meter reading when this was last done')
+                                                             [validators.optional()],
+                                                             description='The QTY meter reading when this was last done')
             elif thisrec.ac_meter_rec.entry_uom == 'Hours:Minutes':
                 ThisViewFrm.last_done_reading = HrsMinsField('Last Done Meter Reading in Hrs:Mins',
-                         [validators.optional()],
-                         description='The meter reading when this was last done in Hours and Minutes')
+                                                             [validators.optional()],
+                                                             description='The meter reading when this was last done in Hours and Minutes')
             else:
                 ThisViewFrm.last_done_reading = HrsField('Last Done Meter Reading in Decimal Hrs',
-                         [validators.optional()],
-                         description='The meter reading when this was last done in Decimal Hours')
+                                                         [validators.optional()],
+                                                         description='The meter reading when this was last done in Decimal Hours')
         # Add a field for the override due basis depending on the type of task and type of meter
         if stdtask.task_basis == 'Calendar':
             ThisViewFrm.due_basis_date = DateField('Basis Date for regeneration',
-                           [validators.optional()],
-                           description='If task regeneration is independant of when it was last done, enter a date here')
+                                                   [validators.optional()],
+                                                   description='If task regeneration is independant of when it was last done, enter a date here')
         else:
             if thisrec.ac_meter_rec.entry_uom == 'Qty':
                 ThisViewFrm.due_basis_reading = IntegerField('Regneration Basis Reading',
-                        [validators.optional()],
-                        description='If task regeneration is independant of when it was last done, enter a value here')
+                                                             [validators.optional()],
+                                                             description='If task regeneration is independant of when it was last done, enter a value here')
             elif thisrec.ac_meter_rec.entry_uom == 'Hours:Minutes':
                 ThisViewFrm.due_basis_reading = HrsMinsField('Regneration Basis Reading (Hrs:Mins)',
-                         [validators.optional()],
-                         description='If task regeneration is independant of when it was last done, enter a value here')
+                                                             [validators.optional()],
+                                                             description='If task regeneration is independant of when it was last done, enter a value here')
             else:
                 ThisViewFrm.due_basis_reading = HrsField('Regneration Basis Reading (Decimal Hrs)',
-                         [validators.optional()],
-                         description='If task regeneration is independant of when it was last done, enter a value here')
+                                                         [validators.optional()],
+                                                         description='If task regeneration is independant of when it was last done, enter a value here')
 
     thisform = ThisViewFrm(obj=thisrec, task_basis=stdtask.task_basis)
     if request.method == 'POST':
@@ -757,15 +779,17 @@ def actaskmaint(id):
         if stdtask.std_meter_rec is not None:
             if stdtask.std_meter_rec.id not in [m.meter_id for m in thisac.meters]:
                 flash('This Meter is not installed in this a/c.', 'error')
-                return render_template('plantmaint/actaskmaint.html', form=thisform, meter=stdtask.meter_rec(), ac=thisac)
+                return render_template('plantmaint/actaskmaint.html', form=thisform, meter=stdtask.meter_rec(),
+                                       ac=thisac)
             currenttask = [tsk for tsk in thisac.tasks if tsk.id == thisrec.id][0]
             if currenttask.last_meter_reading_value is not None:
                 if thisrec.last_done_reading > currenttask.last_meter_reading_value:
                     # we need to get the formatting correct for the error message:
-                    acmeter = ACMeters.query.filter(ACMeters.ac_id == thisac.id).filter(ACMeters.meter_id == thisrec.meter_id).first()
+                    acmeter = ACMeters.query.filter(ACMeters.ac_id == thisac.id).filter(
+                        ACMeters.meter_id == thisrec.meter_id).first()
                     flash(
                         '{} has a last done reading of {} which is later than the last reading of {}. Is that right?'.format(
-                            currenttask.description, format_reading(thisrec.last_done_reading,acmeter.entry_uom),
+                            currenttask.description, format_reading(thisrec.last_done_reading, acmeter.entry_uom),
                             format_reading(currenttask.last_meter_reading_value, acmeter.entry_uom)), "warning")
         if thisrec.id is None:
             db.session.add(thisrec)
@@ -778,7 +802,8 @@ def actaskmaint(id):
                 "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
                 "error")
         return redirect(url_for('plantmaint.actasklist'))
-    return render_template('plantmaint/actaskmaint.html', form=thisform, meter=thisrec.std_task_rec.std_meter_rec, ac=thisac)
+    return render_template('plantmaint/actaskmaint.html', form=thisform, meter=thisrec.std_task_rec.std_meter_rec,
+                           ac=thisac)
 
 
 @bp.route('/acselectnewtask', methods=['GET', 'POST'])
@@ -841,16 +866,20 @@ def acmetermaint(id):
     if request.method == 'POST':
         if thisform.cancel.data:
             return redirect(url_for('plantmaint.acmeterlist'))
+        if thisform.importreading.data:
+            return redirect(url_for('plantmaint.acimportreading', acmeters_id=id))
+        if thisform.resetreading.data:
+            return redirect(url_for('plantmaint.acresetreadings', acmeters_id=id))
         if thisform.delete.data:
             # Check there are no tasks on this ac for this meter
             for actsk in db.session.query(ACTasks).filter(ACTasks.ac_id == thisac.id):
                 if actsk.std_task_rec.task_meter_id == thisrec.meter_id:
-                    flash("Cannot Delete - There are tasks for this meter on this a/c","error")
+                    flash("Cannot Delete - There are tasks for this meter on this a/c", "error")
                     return redirect(url_for('plantmaint.acmeterlist'))
             # check there are no readings for this ac for this meter
             for rdg in db.session.query(MeterReadings).filter(MeterReadings.ac_id == thisac.id):
                 if rdg.meter_id == thisrec.meter_id:
-                    flash("Cannot Delete - there are Meter Readings for this a/c","error")
+                    flash("Cannot Delete - there are Meter Readings for this a/c", "error")
                     return redirect(url_for('plantmaint.acmeterlist'))
             db.session.delete(thisrec)
             try:
@@ -1018,13 +1047,15 @@ def acaddnewreading():
                             if thismeter is not None and float(thisformfield.data) != 0:
                                 if thismeter.last_reading_date is not None:
                                     if thisdate < thismeter.last_reading_date:
-                                        flash("Date for {} is earlier than last reading value".format(thismeter.meter_name),
+                                        flash("Date for {} is earlier than last reading value".format(
+                                            thismeter.meter_name),
                                               "error")
                                         error_occurred = True
                                     if thismeter.entry_uom != 'Delta':
                                         if thismeter.entry_method == 'Reading':
                                             if thismeter.last_meter_reading > float(thisformfield.data):
-                                                flash("{} Reading is less than last reading value".format(thismeter.meter_name),
+                                                flash("{} Reading is less than last reading value".format(
+                                                    thismeter.meter_name),
                                                       "error")
                                                 error_occurred = True
                                 # we have a valid meter
@@ -1039,7 +1070,7 @@ def acaddnewreading():
                                     if thismeter.entry_method == 'Delta':
                                         newreading.meter_delta = decimal.Decimal(thisformfield.data)
                                         newreading.meter_reading = thismeter.last_meter_reading + \
-                                                    decimal.Decimal(newreading.meter_delta)
+                                                                   decimal.Decimal(newreading.meter_delta)
                                     else:
                                         newreading.meter_reading = decimal.Decimal(thisformfield.data)
                                         newreading.meter_delta = newreading.meter_reading - \
@@ -1065,6 +1096,7 @@ def acaddnewreading():
         flash(str(addedreadingcount) + ' Meter readings added successfully')
         applog.info(str(addedreadingcount) + ' Meter readings added successfully')
         return render_template('plantmaint/index.html', ac=thisac)
+
 
 @bp.route('/acmeterreadinglist/<meter_id>', methods=['GET', 'POST'])
 @login_required
@@ -1125,7 +1157,7 @@ def acmeterreadingremove(reading_id):
     thismeter = thisrec.meter_id
     if thisrec is None:
         flash('No such Reading')
-        return redirect(url_for('plantmaint.acmeterreadingslist', meter_id = thismeter))
+        return redirect(url_for('plantmaint.acmeterreadingslist', meter_id=thismeter))
     if request.method == 'GET':
         db.session.delete(thisrec)
         try:
@@ -1137,7 +1169,8 @@ def acmeterreadingremove(reading_id):
                 "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
                 "error")
     flash("Meter Reading Removed")
-    return redirect(url_for('plantmaint.acmeterreadinglist', meter_id = thismeter))
+    return redirect(url_for('plantmaint.acmeterreadinglist', meter_id=thismeter))
+
 
 @bp.route('/acmaintainhist', methods=['GET'])
 @login_required
@@ -1148,14 +1181,14 @@ def acmaintainhist():
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))
 
-    list = db.session.query(ACMaintHistory).filter(ac_id==thisac.id)
+    list = db.session.query(ACMaintHistory).filter(ac_id == thisac.id)
     if request.method == 'GET':
         return render_template('plantmaint/maintainhist.html', list=list)
 
-@bp.route('/actaskcomplete/<task>', methods=['GET','POST'])
+
+@bp.route('/actaskcomplete/<task>', methods=['GET', 'POST'])
 @login_required
 def actaskcomplete(task):
-
     class ThisViewFrm(ACTaskComplete):
         pass
 
@@ -1167,33 +1200,33 @@ def actaskcomplete(task):
     # check we have a valid task
     thistask = ACTasks.query.get(task)
     if thistask is None:
-        flash('Invalid AC Task Record',"error")
+        flash('Invalid AC Task Record', "error")
         return redirect(url_for('plantmaint.actasklist'))
     if thistask.ac_id != thisac.id:
-        flash('Something very wrong.  Task for wrong a/c',"error")
+        flash('Something very wrong.  Task for wrong a/c', "error")
         return redirect(url_for('plantmaint.actasklist'))
     thisrec = ACMaintHistory()
     if thistask.std_task_rec.std_meter_rec is not None:
         # then we need to add the reading
         thisacmeter = db.session.query(ACMeters) \
-            .filter(ACMeters.ac_id==thistask.ac_id) \
-            .filter(ACMeters.meter_id==thistask.std_task_rec.task_meter_id) \
+            .filter(ACMeters.ac_id == thistask.ac_id) \
+            .filter(ACMeters.meter_id == thistask.std_task_rec.task_meter_id) \
             .first()
         if thisacmeter is None:
-            flash("Could not determine the correct meter to prompt","error")
+            flash("Could not determine the correct meter to prompt", "error")
         else:
             if thisacmeter.entry_uom == 'Qty':
                 ThisViewFrm.meter_reading = IntegerField('Completion Meter Reading in units',
-                         [validators.optional()],
-                         description='The QTY meter reading when this was last done')
+                                                         [validators.optional()],
+                                                         description='The QTY meter reading when this was last done')
             elif thisacmeter.entry_uom == 'Hours:Minutes':
                 ThisViewFrm.meter_reading = HrsMinsField('Completion Meter Reading in Hrs:Mins',
-                         [validators.optional()],
-                         description='The meter reading when this was last done in Hours and Minutes')
+                                                         [validators.optional()],
+                                                         description='The meter reading when this was last done in Hours and Minutes')
             else:
                 ThisViewFrm.meter_reading = HrsField('Completion Meter Reading in Decimal Hrs',
-                         [validators.optional()],
-                         description='The meter reading when this was last done in Decimal Hours')
+                                                     [validators.optional()],
+                                                     description='The meter reading when this was last done in Decimal Hours')
     # Set default values
     if thisrec.id is None:  # add mode - first time in
         thisrec.ac_id = thisac.id
@@ -1210,22 +1243,23 @@ def actaskcomplete(task):
         # reading, then add a new reading.  Otherwise echo a message.
         thistask = [t for t in thisac.tasks if t.id == int(task)]
         if len(thistask) == 0:
-            flash('This task cannot be found on the aircraft','error')
+            flash('This task cannot be found on the aircraft', 'error')
             return redirect(url_for('plantmaint.actasklist'))
         thistask = thistask[0]
         print(thistask)
         # Is a meter associated with this task?
         if thistask.contains_meter:
-            if (thistask.last_meter_reading_date or datetime.date(2200,1,1)) >= thisform.history_date.data:
+            if (thistask.last_meter_reading_date or datetime.date(2200, 1, 1)) >= thisform.history_date.data:
                 flash('The meter reading was not added to readings because there are later readings')
             else:
                 # we only get here if the last meter reading date is < than the date on the form.
                 if thisform.meter_reading.data < thistask.last_meter_reading_value:
-                    flash('You have entered a meter reading that is less than latest reading.  Completion not recorded - Please Retry'
-                          ,"error")
+                    flash(
+                        'You have entered a meter reading that is less than latest reading.  Completion not recorded - Please Retry'
+                        , "error")
                     return redirect(url_for('plantmaint.actaskmaint', id=task))
                 # add a meter reading.
-                newreading = MeterReadings(ac_id = thisac.id,meter_id=thistask.meter_id,
+                newreading = MeterReadings(ac_id=thisac.id, meter_id=thistask.meter_id,
                                            meter_reading=thisform.meter_reading.data,
                                            meter_delta=thisform.meter_reading.data - thistask.last_meter_reading_value,
                                            note=str(thistask) + ' Completion Recording')
@@ -1249,7 +1283,8 @@ def actaskcomplete(task):
         return redirect(url_for('plantmaint.actasklist'))
     return render_template('plantmaint/actaskcomplete.html', form=thisform, ac=thisac)
 
-@bp.route('/achistorylist/<task>', methods=['GET','POST'])
+
+@bp.route('/achistorylist/<task>', methods=['GET', 'POST'])
 @login_required
 def achistorylist(task):
     '''
@@ -1264,18 +1299,102 @@ def achistorylist(task):
         return redirect(url_for('plantmaint.index', thiac=None))
     print("achistorylist {}".format(task))
     if int(task) == 0:
-        list = db.session.query(ACMaintHistory).filter(ACMaintHistory.ac_id==thisac.id) \
+        list = db.session.query(ACMaintHistory).filter(ACMaintHistory.ac_id == thisac.id) \
             .order_by(ACMaintHistory.history_date.desc()).all()
     else:
         list = db.session.query(ACMaintHistory).filter(ACMaintHistory.ac_id == thisac.id) \
-            .filter(ACMaintHistory.task_id==task) \
+            .filter(ACMaintHistory.task_id == task) \
             .order_by(ACMaintHistory.history_date.desc()).all()
     return render_template("plantmaint/achistorylist.html", list=list, ac=thisac)
 
 
-# TODO: xlsx download for logbook so that all readings go across the page.  Will need delta and running total.
+@bp.route('/acimportreading/<acmeters_id>', methods=['GET', 'POST'])
+@login_required
+def acimportreading(acmeters_id):
+    try:
+        thisac = maintpagecheck()
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('plantmaint.index', ac=None))
+    # The id is the key to acmetersid
+    acmeter = db.session.query(ACMeters).filter(ACMeters.id == acmeters_id).first()
+    if acmeter is None:
+        flash('Meter id invalid', 'error')
+        return render_template('plantmaint/index.html', ac=thisac)
+    thisform = ACImportReading()
+    if request.method == 'GET':
+        thisform.ac_id.data = thisac.id
+        thisform.meter_id.data = acmeter.meter_id
+        thisform.start_date.data = datetime.date.today() - relativedelta(months=6)
+        thisform.end_date.data = datetime.date.today()
+        return render_template('plantmaint/acimportreading.html', form=thisform, ac=thisac, acmeter=acmeter)
+    if request.method == 'POST':
+        if 'cancel' in request.form:
+            return render_template('plantmaint/index.html', ac=thisac)
+        if 'btnsubmit' in request.form:
+            common_set_log(applog)
+            try:
+                readingscreated = create_readings_from_flights(thisac.regn,
+                                                               thisform.start_date.data,
+                                                               thisform.end_date.data,
+                                                               acmeter.meter_id)
+                flash('{} Readings Created'.format(readingscreated))
+            except Exception as e:
+                flash('An Error Occurred: {}'.format(str(e)), 'error')
+            return render_template('plantmaint/index.html', ac=thisac)
 
-@bp.route('/acmaintlogbook', methods=['GET','POST'])
+@bp.route('/acresetreadings/<acmeters_id>', methods=['GET', 'POST'])
+@login_required
+def acresetreadings(acmeters_id):
+    class ThisViewFrm(ACResetReadings):
+        pass
+
+    try:
+        thisac = maintpagecheck()
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('plantmaint.index', ac=None))
+    acmeter = db.session.query(ACMeters).filter(ACMeters.id == acmeters_id).first()
+    try:
+        meter = [m for m in thisac.meters if m.id == int(acmeters_id)][0]
+    except Exception as e:
+        flash('Meter id invalid ({})'.format(str(e)), 'error')
+        return render_template('plantmaint/index.html', ac=thisac)
+    # Add the right kind of field for the meter.
+    if meter.entry_uom == 'Qty':
+        ThisViewFrm.lastreading = IntegerField('Final Meter Reading in units',
+                                               [validators.optional()],
+                                               description='The final QTY meter reading ')
+    elif meter.entry_uom == 'Hours:Minutes':
+        ThisViewFrm.lastreading = HrsMinsField('Final Meter Reading in Hrs:Mins',
+                                               [validators.optional()],
+                                               description='The final reading  in Hours and Minutes')
+    else:
+        ThisViewFrm.lastreading = HrsField('Final Meter Reading in Decimal Hrs',
+                                           [validators.optional()],
+                                           description='The final meter reading  in Decimal Hours')
+    thisform = ThisViewFrm()
+    if request.method == 'GET':
+
+
+
+
+        thisform.lastreading.data = meter.last_meter_reading
+        return render_template('plantmaint/acresetreadings.html', form=thisform, ac=thisac, acmeter=meter)
+    if request.method == 'POST':
+        if 'cancel' in request.form:
+            return render_template('plantmaint/index.html', ac=thisac)
+        if 'btnsubmit' in request.form:
+            common_set_log(applog)
+            try:
+                valueschanged = reset_readings_from_end(thisac.regn,meter.meter_id,thisform.lastreading.data)
+                flash('{} Readings Reset'.format(valueschanged))
+            except Exception as e:
+                flash('An Error Occurred: {}'.format(str(e)), 'error')
+            return render_template('plantmaint/index.html', ac=thisac)
+
+
+@bp.route('/acmaintlogbook', methods=['GET', 'POST'])
 @login_required
 def acmaintlogbook():
     try:
@@ -1285,7 +1404,7 @@ def acmaintlogbook():
         return redirect(url_for('plantmaint.index', ac=None))
     thisform = ExcelPromptForm(name='Export ' + thisac.regn + ' Logbook')
     if request.method == 'GET':
-        thisform.start_date.data =  datetime.date.today() - relativedelta(years=1)
+        thisform.start_date.data = datetime.date.today() - relativedelta(years=1)
         thisform.end_date.data = datetime.date.today()
         return render_template('export/exp_daterange.html', form=thisform, title='Export ' + thisac.regn + ' Logbook')
     if request.method == 'POST':
@@ -1297,11 +1416,12 @@ def acmaintlogbook():
         if readings is None:
             flash("No readings in this date range")
             return redirect(url_for('plantmaint.index', thiac=None))
-        return send_file(createmntlogbookxlsx(thisac,thisform.start_date.data,thisform.end_date.data), as_attachment=True)
+        return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
+                         as_attachment=True)
         return render_template('plantmaint/index.html', ac=thisac)
 
 
-def createmntlogbookxlsx(thisac,pstart,pend):
+def createmntlogbookxlsx(thisac, pstart, pend):
     """
     Creates a spreadsheet ready for download for flights between two dates.
     :param self:
@@ -1330,7 +1450,7 @@ def createmntlogbookxlsx(thisac,pstart,pend):
     """)
     sql = sql.columns(reading_date=db.Date, meter_reading=SqliteDecimal(10, 2), meter_delta=SqliteDecimal(10, 2))
     readings = db.engine.execute(sql, ac_id=thisac.id, start=pstart, end=pend).fetchall()
-    installed_meters = db.session.query(ACMeters).filter(ACMeters.ac_id==thisac.id).all()
+    installed_meters = db.session.query(ACMeters).filter(ACMeters.ac_id == thisac.id).all()
     row = 0
     if len(readings) == 0:
         raise ValueError("No Meter Readings in this range")
@@ -1351,57 +1471,57 @@ def createmntlogbookxlsx(thisac,pstart,pend):
                 "align": "center",
                 "valign": "vcenter",
                 # "fg_color": "blue",
-                "font_color":"#377ba8",
+                "font_color": "#377ba8",
                 "font_size": 14
             }
         )
-        border_fmt = workbook.add_format({'border': 1,'text_wrap':1})
+        border_fmt = workbook.add_format({'border': 1, 'text_wrap': 1})
         # merge_format = workbook.add_format({'align': 'center', 'border': 1})
         date_format = workbook.add_format(dict(datedict, **noborderdict))
         dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
         time_fmt = workbook.add_format(dict(timedict, **noborderdict))
-        hrsmins_fmt = workbook.add_format({'num_format':'[h]:mm'})
+        hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
         row = 3
         ws.write(row, 0, "Date", border_fmt)
         nextcol = 1
-        metercol=[]
+        metercol = []
         for i in installed_meters:
-            ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading',border_fmt)
+            ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading', border_fmt)
             ws.write(row, nextcol + 1, i.std_meter_rec.meter_name + ' Change', border_fmt)
-            metercol.append({"col":nextcol,"meter_name":i.std_meter_rec.meter_name})
+            metercol.append({"col": nextcol, "meter_name": i.std_meter_rec.meter_name})
             nextcol += 2
-        notecol =  (len(metercol) * 2) + 1
-        ws.write(row,nextcol , "Note", border_fmt)
+        notecol = (len(metercol) * 2) + 1
+        ws.write(row, nextcol, "Note", border_fmt)
         row += 2
-        last_row_reading_date = datetime.date(1900,1,1)
+        last_row_reading_date = datetime.date(1900, 1, 1)
         for r in readings:
             if r.reading_date != last_row_reading_date:
                 # new line in logbook
                 row += 1
-                ws.write(row, 0, r.reading_date,date_format)
+                ws.write(row, 0, r.reading_date, date_format)
                 last_row_reading_date = r.reading_date
             # find which column to add this record
             mcol = [c for c in metercol if c["meter_name"] == r.meter_name][0]
             if mcol is not None:
                 if r.entry_uom == 'Hours:Minutes':
-                    ws.write(row, mcol["col"], round(r.meter_reading/(24*60),2),hrsmins_fmt)
+                    ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
                     # in excel this has to be a decimal of one day.  There are 24*60 minutes
                     # in a day
-                    ws.write(row, mcol["col"] + 1 , r.meter_delta/(24*60),hrsmins_fmt)
+                    ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
                 elif r.entry_uom == 'Decimal Hours':
-                    ws.write(row, mcol["col"], round(r.meter_reading/60, 2))
-                    ws.write(row, mcol["col"] + 1, round(r.meter_delta/60,2))
+                    ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
+                    ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))
                 else:
                     ws.write(row, mcol["col"], r.meter_reading)
                     ws.write(row, mcol["col"] + 1, r.meter_delta)
-            ws.write(row, notecol, r.note )
+            ws.write(row, notecol, r.note)
         # col widths
         ws.autofit()
         # autfit overrides
         # ws.set_column(0, 0, 12)
         col = 1
         for i in range(len(installed_meters)):
-            ws.set_column(col, col , 12)
+            ws.set_column(col, col, 12)
             ws.set_column(col + 1, col + 1, 12)
             col += 2
         # Put in the title last so that the autofit works nicely
@@ -1433,18 +1553,18 @@ def createmntlogbookxlsx(thisac,pstart,pend):
         sql = sql.columns(reading_date=db.Date, meter_reading=SqliteDecimal(10, 2))
         history = db.engine.execute(sql, ac_id=thisac.id, start=pstart, end=pend).fetchall()
         row = 3
-        ws.write(row,0 , "Date", border_fmt)
-        ws.write(row,1 , "Reading", border_fmt)
-        ws.write(row,2 , "Description", border_fmt)
-        ws.write(row,3 , "Task Description", border_fmt)
+        ws.write(row, 0, "Date", border_fmt)
+        ws.write(row, 1, "Reading", border_fmt)
+        ws.write(row, 2, "Description", border_fmt)
+        ws.write(row, 3, "Task Description", border_fmt)
         row += 1
         for h in history:
-            ws.write(row,0,h.history_date,date_format)
+            ws.write(row, 0, h.history_date, date_format)
             if h.meter_name is not None:
                 if h.entry_uom == 'Hours:Minutes':
-                    ws.write(row, 1, round(h.meter_reading/(24*60),2),hrsmins_fmt)
+                    ws.write(row, 1, round(h.meter_reading / (24 * 60), 2), hrsmins_fmt)
                 elif h.entry_uom == 'Decimal Hours':
-                    ws.write(row, 1, round(h.meter_reading/60, 2))
+                    ws.write(row, 1, round(h.meter_reading / 60, 2))
                 else:
                     ws.write(row, 1, h.meter_reading)
             ws.write(row, 2, h.description)
@@ -1460,4 +1580,3 @@ def createmntlogbookxlsx(thisac,pstart,pend):
         raise
     workbook.close()
     return filename
-

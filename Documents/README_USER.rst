@@ -487,6 +487,43 @@ the following attributes for the meter:
         When users are prompted to enter a reading, they are still prompted for
         these readings but they can be left empty.
 
+        At the end of each day a process will step through all meters that are
+        marked as auto update and read through the flights file.  It will ignore
+        any days before the last recorded meter reading.  For days after that a
+        meter reading will be added for the total flights or total flight time
+        (as per the meter unit).
+
+    *   Import Readings.
+
+        This function will import readings from the flights system.  The
+        intention is to create a starting point.  As with the auto update
+        function, it will ignore any days prior to the last meter reading.
+
+        *Note especially that pressing this button ignores the auto update flag.
+        i.e. the meter will be update wether it is flagged as auto update or
+        not.*   This is because you have already selected a meter.  The system
+        assumes you know what you are doing.
+
+        If there are no meter readings in the system, then the first meter
+        reading is assumed to be zero.
+
+    *   Reset Readings
+
+        This function will prompt the user for a FINAL meter reading.  The last
+        meter reading will be set to this value and the system will then work
+        backwards, subtracting each previous day's delta from the closing
+        meter reading to determine the closing meter reading for that day.
+
+        The intention is that it is likely that the flights system does not have
+        all movements since the beginning of time for an airframe.  We know what
+        the final reading should be (from the a/c logbooks) so we set that here
+        and let the system determine  the correct readings for each day.
+
+When adding a new meter to the aircraft it is expected that the user knows the
+final meter reading that should be used.  Use the import readings function to
+import the readings from the flight system.  Run the reset readings function to
+calculate past readings.
+
 Viewing readings
 ~~~~~~~~~~~~~~~~
 
@@ -570,7 +607,9 @@ the following attributes:
     *   Warning Days and Warning Email.  
 
         The number of days before a task is predicted to be required before an
-        email is sent.  The Warning EMail is self-evident.
+        email is sent.  The Warning EMail can be a list of email addresses.
+        Where there is a list each email should be separated by a comma, space
+        or semi-colon.
 
     *   Completion.
 
@@ -623,19 +662,7 @@ To establish a new aircraft follow these steps:
     #.  Select the Aircraft
     #.  Add the Meters
     #.  Review each meter and check the prompts and units
-    #.  Add Meter readings.  The last 3 months is a good starting point
+    #.  Add Meter readings.  The last 3 months is a good starting point.
+    #.  Reset the final reading value.
     #.  Add the tasks
 
-Phase 2
-=======
-
-At time of this documentation the following items are planned but not yet delivered:
-
-    *   Auto update - not yet written
-    *   Auto emails - not yet written
-    *   Log book Spreadsheet
-
-        The intention is that a spreadsheet will be able to be produced that
-        will be akin to the aircraft logbook.  There will be one sheet listing
-        all meter readings by date.  A second sheet will list the maintenance
-        history (also by date).

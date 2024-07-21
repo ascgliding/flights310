@@ -134,9 +134,9 @@ class ascmailer:
             raise AttributeError("Parameter must be a list")
         for p in plist:
             if not isinstance(p,dict) and not isinstance(p,list):
-                raise AttributeError("Parameter list item is not a dictionary or a list ({}:{})".format(type(p),p))
+                raise AttributeError("Parameter list item is not a dictionary ({}:{})".format(type(p),p))
         # keyvalues = list(plist[0].keys())
-        htmltable = "<table><tr>"
+        htmltable = "<table style='border-spacing:10px'><tr>"
         if isinstance(plist[0],dict):
             thislist = plist[0].keys()
         else:

@@ -26,6 +26,8 @@ from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,
 from dateutil.relativedelta import relativedelta
 
 from asc.oMaint import ACMaint
+# from asc.oReadingTools import   ReadingTools
+from  asc.common import *
 
 import base64
 
@@ -2093,7 +2095,69 @@ class maintenance_time_values(unittest.TestCase):
         for l in list:
             print(l.id, l.meter_reading, l.Hours(),l.HrsMins())
 
+class sqlalchemy_read_tests(unittest.TestCase):
 
+    """ this set of tests will perform only db reads and therefore
+        is safe to run at any time.
+    """
+    @classmethod
+    def setUpClass(cls):
+        common_set_log(log)
+        delqry = MeterReadings.__table__.delete().where(MeterReadings.ac_id==1)
+        db.session.execute(delqry)
+        db.session.commit()
+
+    # def test001(self):
+    #     """Test sum,count and group by"""
+    #     rows = db.session.query(
+    #         Flight.ac_regn,
+    #         Flight.flt_date,
+    #         func.count(Flight.flt_date).label('movements'),
+    #         func.sum(Flight.tow_charge).label('Towdollars')
+    #         ).filter(Flight.linetype=='FL'
+    #         ).group_by(Flight.flt_date
+    #                    ).group_by(Flight.ac_regn
+    #                    ).all()
+    #     for r in rows:
+    #         print(repr(r))
+    #
+    # def test002(self):
+    #     rows = db.session.query(
+    #         Flight.ac_regn,
+    #         Flight.flt_date,
+    #         func.count(Flight.flt_date).label('movements'),
+    #         ).filter(Flight.linetype=='FL'
+    #         ).group_by(Flight.flt_date
+    #                    ).all()
+    #     for r in rows[1:5]:
+    #         thisimport = flight_summary_for_day(r.ac_regn, r.flt_date)
+    #         # thisimport = ReadingTools.flight_summary_for_day(r.ac_regn, r.flt_date)
+    #         print("mins :{} count {}".format(thisimport['minutes'], thisimport['count']))
+    #
+    # def test003(self):
+    #     create_readings_from_flights("GNF",None,datetime.date(2023,3,2))
+    #
+    # def test004(self):
+    #     """Reset landings from 165"""
+    #     reset_readings_from_end('GNF',1,165)
+    #
+    # def test005(self):
+    #     """ s.b. error for flight time"""
+    #     reset_readings_from_end('GNF',5,4)
+
+
+    def test006(self):
+        sql = sqltext("""
+            select t1.regn as 'regn' ,count(*)
+            from acmeters t0
+            join aircraft t1 on t1.id = t0.ac_id 
+            where auto_update  = 1
+            group by 1
+            """)
+        sql = sql.columns(regn=db.String)
+        list = db.engine.execute(sql).fetchall()
+        for f in list:
+            print(f[0])
 
 
 if __name__ == '__main__':
@@ -2104,8 +2168,9 @@ if __name__ == '__main__':
     case4 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test)
     case5 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test_ac_obj)
     case6 = unittest.TestLoader().loadTestsFromTestCase(maintenance_time_values)
+    case7 = unittest.TestLoader().loadTestsFromTestCase(sqlalchemy_read_tests)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case4])
+    thissuite = unittest.TestSuite([case7])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')

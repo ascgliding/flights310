@@ -103,7 +103,11 @@ div .title
         border-color:#ff0000;
         border-radius:0.25rem;
     }
-
+.ul_instructions
+    {
+        list-style-type:disc;
+        margin-left:30px;
+    }
 
 
 /* --- It is important that media queries are defined from the lowest to the highest

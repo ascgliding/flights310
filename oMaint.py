@@ -6,11 +6,18 @@ from asc import db
 from sqlalchemy import text as sqltext, delete, select
 from flask import current_app
 
+
 # TODO:  why can I not use this when using testcases?
 # app = current_app
 # applog = app.logger
 
 class ACMaint:
+
+    """
+    This class contains three variables which are lists:
+        tasks, meters and users.
+
+    """
 
     class ACMaintError(Exception):
         pass
@@ -24,6 +31,8 @@ class ACMaint:
                 self.__ac_id = ptask.ac_id
                 self.__last_done = ptask.last_done
                 self.__last_done_reading = ptask.last_done_reading
+                self.__warning_days = ptask.warning_days
+                self.__warning_email = ptask.warning_email
                 self.__stdtask = ptask.std_task_rec # Tasks.query.get(ptask.task_id)
                 # applog.debug('creating task for {}'.format(self.__stdtask.task_description))
                 self.__due_basis_date = ptask.due_basis_date
@@ -143,6 +152,14 @@ class ACMaint:
         @property
         def due_basis_reading(self):
             return self.__due_basis_reading
+
+        @property
+        def warning_days(self):
+            return self.__warning_days
+
+        @property
+        def warning_email(self):
+            return self.__warning_email
 
         def __validate_task(self):
             if self.__stdtask.task_basis == 'Calendar':
@@ -459,7 +476,10 @@ class ACMaint:
                         if togo <= 0:
                             self.__next_due_message = 'Meter Based Task Expired'
                         try:
-                            daystogo = int(float(togo) / self.__daily_use)
+                            if self.__daily_use == 0:
+                                daystogo = 0
+                            else:
+                                daystogo = int(float(togo) / self.__daily_use)
                             vnext_date = datetime.date.today() + datetime.timedelta(days=daystogo)
                         except OverflowError as e:
                             vnext_date = None
@@ -531,6 +551,9 @@ class ACMaint:
             else:
                 return self.__regn + "/" + self.__meter_name
 
+        def __repr__(self):
+            return str(self)
+
         @property
         def id(self):
             return self.__id
@@ -600,6 +623,82 @@ class ACMaint:
         @property
         def last_reading_note(self):
             return self.__last_reading_note
+
+        @property
+        def reading_errors(self):
+            return self.__reading_errors()
+
+        #
+        # Public methods for a meter
+        #
+
+        def reset_delta(self):
+            """
+            Reset the delta's starting at the earliest reading
+            :return: The number of changes that were made
+            """
+            readings = db.session.query(MeterReadings) \
+                .filter(MeterReadings.ac_id == self.__ac_id) \
+                .filter(MeterReadings.meter_id == self.__meter_id) \
+                .order_by(MeterReadings.reading_date) \
+                .all()
+            change_count = 0
+            if readings is not None:
+                prev_reading = 0
+                for r in readings:
+                    if r.meter_delta != r.meter_reading - prev_reading :
+                        r.meter_delta = r.meter_reading - prev_reading
+                        change_count += 1
+                    prev_reading = r.meter_reading
+                if change_count > 0:
+                    db.session.commit()
+            return change_count
+
+        def reset_readings(self):
+            """
+            Reset the readings based on the delta.
+            The FIRST reading is not changed - it must be correct
+            :return: The number of changes
+            """
+            readings = db.session.query(MeterReadings) \
+                .filter(MeterReadings.ac_id == self.__ac_id) \
+                .filter(MeterReadings.meter_id == self.__meter_id) \
+                .order_by(MeterReadings.reading_date) \
+                .all()
+            change_count = 0
+            if readings is not None:
+                prev_reading = readings[0].meter_reading
+                for r in readings[1:]:
+                    if r.meter_reading != prev_reading + r.meter_delta :
+                        r.meter_reading = prev_reading + r.meter_delta
+                        change_count += 1
+                    prev_reading = r.meter_reading
+                if change_count > 0:
+                    db.session.commit()
+            return change_count
+
+        def __reading_errors(self):
+            readings = db.session.query(MeterReadings) \
+                .filter(MeterReadings.ac_id == self.__ac_id) \
+                .filter(MeterReadings.meter_id == self.__meter_id) \
+                .order_by(MeterReadings.reading_date) \
+                .all()
+            ok = True
+            messages = []
+            if readings is not None:
+                lastreading = readings[0].meter_reading
+                for r in readings[1:]:
+                    if r.meter_reading != lastreading + r.meter_delta:
+                        ok = False
+                        messages.append('Reading on {} is {}.  Should be {}'.format(r.reading_date, r.meter_reading,
+                                                                                    lastreading + r.meter_delta))
+                    lastreading = r.meter_reading
+                    if len(messages) > 10:
+                        return messages
+            return messages
+
+
+
 
     class ACUser():
 
@@ -701,7 +800,7 @@ class ACMaint:
                 thisuser = self.ACUser(u)
                 self.__users.append(thisuser)
         except Exception as e:
-            raise ACMaint.ACMaintError('Error in maintenance program build for {} ({})'.format(
+            raise ACMaint.ACMaintError('Error in maintenance object build for {} ({})'.format(
                 self.__regn,
                 str(e)))
 
@@ -760,4 +859,10 @@ class ACMaint:
         db.session.add(thismeter)
         db.session.commit()
         self.__build_instance()
+
+
+
+
+
+
 

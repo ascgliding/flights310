@@ -20,6 +20,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.errors import HttpError
+from asc.common import *
+import re
 
 import google.auth
 
@@ -119,6 +121,106 @@ def testmailer():
     except Exception as e:
         self.fail("Error raised :{}".format(e))
 
+def update_auto_readings():
+    sql = sqltext("""
+        select t1.regn 
+        from acmeters t0
+        join aircraft t1 on t1.id = t0.ac_id 
+        where auto_update  = 1
+        group by 1
+        """)
+    rows = db.engine.execute(sql).fetchall()
+    common_set_log(log)
+    for row in rows:
+        create_readings_from_flights(row[0])
+
+def send_one_maintenance_email(address,thelist):
+    # print('TESTING: Email to {}'.format(address))
+    # print('About to send:')
+    # for t in thelist:
+    #     print(t)
+    # send the email here
+    msg = ascmailer('ASC Aircraft tasks due')
+    # msg.add_body("Email should have gone to {}".format(address))
+    msg.add_body_list(thelist)
+    msg.add_recipient(address)
+    msg.send()
+    # print(msg.body)
+
+
+def send_maintenance_emails():
+    sql = sqltext("""
+    select 
+        t1.regn
+        from actasks t0
+            left outer join aircraft t1 on t1.id = t0.ac_id 
+        where warning_days  is NOT NULL 
+        and warning_email is not null
+        group by 1
+    """)
+    ac_with_warnings = db.engine.execute(sql).fetchall()
+    common_set_log(log)
+    emails = []
+    for ac in ac_with_warnings:
+        # print('Processing {}'.format(ac.regn))
+        thisac = ACMaint(ac[0])
+        for t in thisac.tasks:
+            # print('Task {}'.format(t.description))
+            if t.warning_days is not None:
+                if t.next_due_date - relativedelta(days=t.warning_days) <= datetime.date.today():
+                    addresses = re.split(',|;| |\|',t.warning_email)
+                    # print('Addresses: {}'.format(emails))
+                    for addr in addresses:
+                        if "@" in addr :  # looks like an email and deals with any empty list items.
+                            emails.append({'addr':addr,
+                                           'ac':ac[0],
+                                           'due': t.next_due_date,
+                                           'duemsg': t.next_due_message,
+                                           'task': t.description,})
+    # we now have a list of email messages to send that we want to sort into address
+    # order so that we only send each person one email.
+    sortedlist = sorted(emails, key=lambda d: (d['addr'],d['ac'],d['due']) )
+    for s in sortedlist:
+        print(s)
+    print('Now Processing Sorted list')
+    lastaddr = None
+    emailtext = []
+    # emailtext.append({'ac':'Regn',
+    #                   'task':'Task',
+    #                   'due':'Due',
+    #                   'duemsg': 'Due Message'
+    #                     })
+    emailtext.append(['Regn','Task','Due','Message'])
+    for tasks in sortedlist:
+        if lastaddr is not None and lastaddr != tasks['addr']:
+            send_one_maintenance_email(lastaddr,emailtext)
+            emailtext.clear()
+            emailtext.append(['Regn', 'Task', 'Due', 'Message'])
+        emailtext.append({'ac': tasks['ac'],
+                          'task': tasks['task'],
+                          'due': tasks['due'],
+                          'duemsg': tasks['duemsg']
+                          })
+        lastaddr = tasks['addr']
+    # send the last one
+    if len(emailtext) > 1:
+        send_one_maintenance_email(lastaddr, emailtext)
+
+def validate_all_readings():
+    sql = sqltext("""
+        select t1.regn
+            from meterreadings t0
+            left outer join aircraft t1 on t1.id = t0.ac_id
+            group by 1
+    """)
+    ac_with_readings = db.engine.execute(sql).fetchall()
+    for ac in ac_with_readings:
+        thisac = ACMaint(ac[0])
+        print('Checking {}'.format(thisac.regn))
+        for m in thisac.meters:
+            print('Checking meter {}'.format(m.meter_name))
+            for e  in m.reading_errors:
+                print(e)
 
 
 if __name__ == '__main__':
@@ -126,10 +228,11 @@ if __name__ == '__main__':
         log.info("Dayend started")
         # quickstart_authentication()
         # testmailer()
-        update_google()
+        update_auto_readings()
+        send_maintenance_emails()
+        validate_all_readings()
         print("it ran")
         # thismail = ascmailer("Test mail from ASC dayend")
         # thismail.body = "Test Mail"
         # thismail.add_recipient("ray@rayburns.nz")
         # thismail.send()
-

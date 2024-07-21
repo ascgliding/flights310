@@ -22,13 +22,7 @@
     </div>
   {% for l in list %}
     <div class="row">
-<!--      'Landings' and 'AirFrame' are hardcoded into the function that imports readings-->
-<!--      from flights.  So they cannot be changed.-->
-      {% if l['meter_name'] in ['Landings', 'AirFrame'] %}
-        <div class="cell">{{ l['id'] }}</div>
-      {% else %}
-        <div class="cell"><a href="{{ url_for('plantmaint.stdmetermaint', id=l['id']) }}">{{ l['id'] }}</a></div>
-      {% endif %}
+      <div class="cell"><a href="{{ url_for('plantmaint.stdmetermaint', id=l['id']) }}">{{ l['id'] }}</a></div>
       <div class="cell" align="left">{{ l['meter_name'] }}</div>
       <div class="cell" align="left">{{ l['uom'] }}</div>
     </div>

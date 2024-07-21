@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<h1>Import Meter Readings from Flight System : {{ac.regn}} / {{acmeter.std_meter_rec.meter_name }}</h1>
+<h5> {{ ac.currentreadings or '' }}</h5>
+
+<form method="Post">
+  {{ form.csrf_token }}
+  <B>Be Careful:  You are about to import readings from the flight system into this meter's readings</B>
+  <UL>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">Readings will be imported whether they are flagged as auto update or not</li>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">Readings will only be imported from the last reading date on file (irrespective of the specified start date).</li>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">If this is a time meter then flight times will be imported.</li>
+    <li class="ul_instructions mobile_port_suppress mobile_land_suppress">If this is a qty meter then flight movements will be imported.</li>
+  </UL>
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    </br>
+    <li>{{ render_field(form.start_date) }}</li>
+    <li>{{ render_field(form.end_date) }}</li>
+  </ul>
+    </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+</form>
+{% endblock %}
