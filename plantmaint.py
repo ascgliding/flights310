@@ -9,6 +9,8 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 from werkzeug.utils import secure_filename
+from user_agents import parse
+
 import os
 import csv
 
@@ -455,6 +457,7 @@ def maintainedac():
 @bp.route('/index/<pregn>', methods=['GET'])
 @login_required
 def index(pregn=None):
+    applog.info("User agent: {}".format(request.headers.get('User-Agent')))
     if pregn is None:
         if 'regn' in session:
             thisac = ACMaint(session['regn'])
@@ -1416,12 +1419,18 @@ def acmaintlogbook():
         if readings is None:
             flash("No readings in this date range")
             return redirect(url_for('plantmaint.index', thiac=None))
-        return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
-                         as_attachment=True)
+        useragent = request.headers.get('User-Agent')
+        if 'Macintosh' in user_agent_os_extract(useragent):
+            # "numbers" in macos does not support the hours mins formatting so make it a string
+            return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data, True),
+                             as_attachment=True)
+        else:
+            return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
+                             as_attachment=True)
         return render_template('plantmaint/index.html', ac=thisac)
 
 
-def createmntlogbookxlsx(thisac, pstart, pend):
+def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
     """
     Creates a spreadsheet ready for download for flights between two dates.
     :param self:
@@ -1504,10 +1513,14 @@ def createmntlogbookxlsx(thisac, pstart, pend):
             mcol = [c for c in metercol if c["meter_name"] == r.meter_name][0]
             if mcol is not None:
                 if r.entry_uom == 'Hours:Minutes':
-                    ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
-                    # in excel this has to be a decimal of one day.  There are 24*60 minutes
-                    # in a day
-                    ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
+                    if p_hrs_mins_as_string:
+                        ws.write(row, mcol["col"], mins2hrsmins(r.meter_reading))
+                        ws.write(row, mcol["col"] + 1, mins2hrsmins(r.meter_delta))
+                    else:
+                        ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
+                        # in excel this has to be a decimal of one day.  There are 24*60 minutes
+                        # in a day
+                        ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
                 elif r.entry_uom == 'Decimal Hours':
                     ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
                     ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))

@@ -287,5 +287,14 @@ def reset_readings_from_end(p_ac_regn,p_meter_id,p_latest_value=None):
         global_log.info('{} Values changed'.format(changecount))
     return changecount
 
+def user_agent_os_extract(uastring):
+    # find the content between the first two characters
+    mo = re.search("\(.*?\)",uastring)
+    if mo is None:
+        return None
+    return mo.group(0)[1:-1].split[";"]
+
+
+
 
 
