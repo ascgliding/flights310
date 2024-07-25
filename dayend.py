@@ -88,6 +88,7 @@ def testmailer():
     Test application class
     :return:
     """
+    print("*** Send Test Email ***")
     try:
         msg = ascmailer('Test Mailer Subject')
         # thisbody = "<table><tr><th>col1</th><th>col2</th></tr>"
@@ -96,7 +97,7 @@ def testmailer():
         # thisbody = thisbody + "<tr><td>3</td><td>Three</td></tr>"
         # thisbody = thisbody + "</table>"
         # msg.body = thisbody
-        # msg.body = "Heree is the content"
+        # msg.body = "Here is the content"
         msg.add_body("See table below<br>")
         sql = sqltext("""
                select id,pic,landed
@@ -122,6 +123,7 @@ def testmailer():
         self.fail("Error raised :{}".format(e))
 
 def update_auto_readings():
+    print("*** Update Auto Meter Readings ***")
     sql = sqltext("""
         select t1.regn 
         from acmeters t0
@@ -149,6 +151,7 @@ def send_one_maintenance_email(address,thelist):
 
 
 def send_maintenance_emails():
+    print("*** Maintenance Emails ***")
     sql = sqltext("""
     select 
         t1.regn
@@ -207,6 +210,7 @@ def send_maintenance_emails():
         send_one_maintenance_email(lastaddr, emailtext)
 
 def validate_all_readings():
+    print("*** Validating Readings ***")
     sql = sqltext("""
         select t1.regn
             from meterreadings t0
@@ -226,13 +230,8 @@ def validate_all_readings():
 if __name__ == '__main__':
     with app.app_context():
         log.info("Dayend started")
-        # quickstart_authentication()
-        # testmailer()
+        testmailer()
         update_auto_readings()
         send_maintenance_emails()
-        validate_all_readings()
+        #validate_all_readings()
         print("it ran")
-        # thismail = ascmailer("Test mail from ASC dayend")
-        # thismail.body = "Test Mail"
-        # thismail.add_recipient("ray@rayburns.nz")
-        # thismail.send()
