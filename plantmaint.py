@@ -1334,7 +1334,6 @@ def acimportreading(acmeters_id):
         if 'cancel' in request.form:
             return render_template('plantmaint/index.html', ac=thisac)
         if 'btnsubmit' in request.form:
-            common_set_log(applog)
             try:
                 readingscreated = create_readings_from_flights(thisac.regn,
                                                                thisform.start_date.data,
@@ -1418,14 +1417,21 @@ def acmaintlogbook():
         if readings is None:
             flash("No readings in this date range")
             return redirect(url_for('plantmaint.index', thiac=None))
+        common_set_log(applog)
         useragent = request.headers.get('User-Agent')
-        if 'Macintosh' in user_agent_os_extract(useragent):
+        if user_agent_os_match(useragent,"Mac"):
             # "numbers" in macos does not support the hours mins formatting so make it a string
-            return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data, True),
-                             as_attachment=True)
+            try:
+                return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data, True),
+                                 as_attachment=True)
+            except Exception as e:
+                flash(str(e))
         else:
-            return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
+            try:
+                return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
                              as_attachment=True)
+            except Exception as e:
+                flash(str(e))
         return render_template('plantmaint/index.html', ac=thisac)
 
 

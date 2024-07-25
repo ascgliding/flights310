@@ -292,8 +292,19 @@ def user_agent_os_extract(uastring):
     mo = re.search("\(.*?\)",uastring)
     if mo is None:
         return None
-    return mo.group(0)[1:-1].split[";"]
+    # return a list of the values in the first brackets of the user agent.
+    return mo[0][1:-1].split(";")
 
+def user_agent_os_match(uastring,matchstring):
+    # find the content between the first two characters
+    mo = re.search("\(.*?\)",uastring)
+    if mo is None:
+        return False
+    for os in mo[0][1:-1].split(";"):
+        if matchstring in os:
+            return True
+    # If we get to here then it wasn't found
+    return False
 
 
 
