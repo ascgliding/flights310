@@ -25,8 +25,8 @@
     </div>
   {% for l in list %}
     <div class="row">
-<!--      <div class="cell"><a href="{{ url_for('mastmaint.aircraftmaint', id=l['id']) }}">{{ l['id'] }}</a></div>-->
-      <div class="cell" algin="right">{{ l['id'] }}</div>
+      <div class="cell"><a href="{{ url_for('mastmaint.rostermaint', id=l['id']) }}">{{ l['id'] }}</a></div>
+<!--      <div class="cell" algin="right">{{ l['id'] }}</div>-->
       <div class="cell" align="left">{{ l['roster_date'] }}</div>
       <div class="cell" align="left">{{ l['roster_inst'] }}</div>
       <div class="cell  mobile_port_suppress mobile_land_suppress " align="left">{{ l['roster_tp'] }}</div>

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock %}
+{% block content %}
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+  {{ form.name }}
+  <ul>
+    <li>{{ render_field(form.roster_date) }}</li>
+    <li>{{ render_field(form.roster_inst) }}</li>
+    <li>{{ render_field(form.roster_tp) }}</li>
+    <li>{{ render_field(form.roster_dp) }}</li>
+  </ul>
+    <datalist id="instructors">
+      {% for a in instructors %}
+          <option value="{{ a.fullname }}">
+      {% endfor %}
+    </datalist>
+    <datalist id="towpilots">
+      {% for a in towpilots %}
+          <option value="{{ a.fullname }}">
+      {% endfor %}
+    </datalist>
+    <datalist id="allpilots">
+      {% for a in allpilots %}
+          <option value="{{ a.fullname }}">
+      {% endfor %}
+    </datalist>
+  </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel() }}
+  {{ form.delete() }}
+
+</form>
+{% endblock %}

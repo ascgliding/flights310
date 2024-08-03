@@ -109,11 +109,24 @@ class SlotForm(FlaskForm):
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
 
-#TODO:  Add maintenance to roster
 class RosterUploadForm(FlaskForm):
     roster_file = FileField('Roster', validators=[FileRequired()], render_kw={"class": "longnote"})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
+
+class RosterMaintForm(FlaskForm):
+    name = 'Roster Maintenance'
+    roster_date = DateField('Date', description='Roster Date')
+    roster_inst = StringField('Instructor', description='Rostered Instructor',
+                              render_kw={'list': "instructors"})
+    roster_tp = StringField('Tow Pilot', description='Rostered Tow Pilot',
+                            render_kw={'list': "towpilots"})
+    roster_dp = StringField('Duty Pilot', description='Rostered Duty Pilot',
+                            render_kw = {'list': "allpilots"})
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+
 
 
 class PaidUploadForm(FlaskForm):
@@ -444,6 +457,49 @@ def rosterimport():
                 db.session.commit()
         return redirect(url_for('mastmaint.rosterlist'))
     return render_template('mastmaint/rosterupload.html', form=form)
+
+@bp.route('/rostermaint/<id>', methods=['GET', 'POST'])
+@login_required
+def rostermaint(id):
+    if not current_user.administrator:
+        flash("Sorry, this is an admin only function")
+        return render_template('mastmaint.rosterlist.html')
+    thisrec = Roster.query.get(id)
+    if thisrec is None:
+        thisrec = Roster()
+    thisform=RosterMaintForm(obj=thisrec)
+    # add build of dropdown here
+    towpilots = Pilot.query.filter(Pilot.towpilot==True)
+    instructors = Pilot.query.filter(Pilot.instructor==True)
+    allpilots = Pilot.query
+    if thisform.validate_on_submit():
+        if thisform.cancel.data:
+            return redirect(url_for('mastmaint.rosterlist'))
+        if thisform.delete.data:
+            db.session.delete(thisrec)
+            try:
+                applog.info('DELETE:' + repr(thisrec))
+                db.session.commit()
+            except Exception as e:
+                applog.error(str(e))
+                flash(
+                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "error")
+            return redirect(url_for('mastmaint.rosterlist'))
+        thisform.populate_obj(thisrec)
+        if thisrec.id is None:
+            db.session.add(thisrec)
+            applog.info('ADD:' + repr(thisrec))
+        applog.info('UPDATE:' + repr(thisrec))
+        try:
+            db.session.commit()
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+        return redirect(url_for('mastmaint.rosterlist'))
+    return render_template('mastmaint/rostermaint.html', form=thisform, towpilots=towpilots, instructors=instructors, allpilots=allpilots)
 
 
 @bp.route('/paidupload', methods=['GET', 'POST'])
