@@ -81,7 +81,8 @@ def logbook():
                     ELSE 'P1'
                 END crew_capacity,
                 (tow_charge + glider_charge + other_charge )  due,
-                t0.paid
+                -- Instructors only want to see paid/unpaid for their own flights:
+                case when t0.payer != t2.fullname then 1 else t0.paid end paid
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
                 LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
