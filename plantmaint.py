@@ -279,9 +279,9 @@ class ACMeterMaintForm(FlaskForm):
                                     text='Import Readings',
                                     help="Import Readings from the flight system")
     resetreading = TextButtonField('Reset',
-                                    id="reset",
-                                    text='Reset Readings',
-                                    help="Recalculate readings based on an entered final reading.")
+                                   id="reset",
+                                   text='Reset Readings',
+                                   help="Recalculate readings based on an entered final reading.")
 
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
@@ -340,6 +340,15 @@ class ACTaskForm(FlaskForm):
     note = TextAreaField('Note',
                          description='Any note associated with the task',
                          render_kw={'rows': '4'})
+    logbook_include = BooleanField('Include in Logbook',
+                                   description='Include this item as a counter in the logbook spreadsheet')
+    logbook_column_title = StringField('Spreadsheet Title',
+                                       description='Title to be used as a column title in the logbook'    )
+    logbook_start_date = DateField('Starting Date',
+                                   description='The date that you have a reference counter for this field')
+    logbook_start_value = IntegerField('Starting Value',
+                                       description='The value of this reading at the date specifed')
+
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
     complete = TextButtonField('Transactions',
@@ -381,6 +390,7 @@ class ACImportReading(FlaskForm):
     end_date = DateField('End Date', description='The date to end importing', default=datetime.date.today())
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
+
 
 class ACResetReadings(FlaskForm):
     name = "Import Readings from Flight Details"
@@ -720,6 +730,7 @@ def actaskmaint(id):
         flash('No such task')
         return redirect(url_for('plantmaint.actasklist'))
     else:
+        # todo: need same kind of logic for Qty based readings.
         if stdtask.task_meter_id is not None:
             if thisrec.ac_meter_rec.entry_uom == 'Qty':
                 ThisViewFrm.last_done_reading = IntegerField('Last Done Meter Reading in units',
@@ -778,6 +789,7 @@ def actaskmaint(id):
             return render_template('plantmaint/actaskmaint.html', form=thisform, meter=stdtask.std_meter_rec, ac=thisac)
         thisform.populate_obj(thisrec)
         # Code based validation:
+        # Todo:  Starting date must be a valid reading
         if stdtask.std_meter_rec is not None:
             if stdtask.std_meter_rec.id not in [m.meter_id for m in thisac.meters]:
                 flash('This Meter is not installed in this a/c.', 'error')
@@ -1051,14 +1063,14 @@ def acaddnewreading():
                                     if thisdate < thismeter.last_reading_date:
                                         flash("Date for {} is earlier than last reading value".format(
                                             thismeter.meter_name),
-                                              "error")
+                                            "error")
                                         error_occurred = True
                                     if thismeter.entry_uom != 'Delta':
                                         if thismeter.entry_method == 'Reading':
                                             if thismeter.last_meter_reading > float(thisformfield.data):
                                                 flash("{} Reading is less than last reading value".format(
                                                     thismeter.meter_name),
-                                                      "error")
+                                                    "error")
                                                 error_occurred = True
                                 # we have a valid meter
                                 newreading = MeterReadings()
@@ -1344,6 +1356,7 @@ def acimportreading(acmeters_id):
                 flash('An Error Occurred: {}'.format(str(e)), 'error')
             return render_template('plantmaint/index.html', ac=thisac)
 
+
 @bp.route('/acresetreadings/<acmeters_id>', methods=['GET', 'POST'])
 @login_required
 def acresetreadings(acmeters_id):
@@ -1376,10 +1389,6 @@ def acresetreadings(acmeters_id):
                                            description='The final meter reading  in Decimal Hours')
     thisform = ThisViewFrm()
     if request.method == 'GET':
-
-
-
-
         thisform.lastreading.data = meter.last_meter_reading
         return render_template('plantmaint/acresetreadings.html', form=thisform, ac=thisac, acmeter=meter)
     if request.method == 'POST':
@@ -1388,7 +1397,7 @@ def acresetreadings(acmeters_id):
         if 'btnsubmit' in request.form:
             common_set_log(applog)
             try:
-                valueschanged = reset_readings_from_end(thisac.regn,meter.meter_id,thisform.lastreading.data)
+                valueschanged = reset_readings_from_end(thisac.regn, meter.meter_id, thisform.lastreading.data)
                 flash('{} Readings Reset'.format(valueschanged))
             except Exception as e:
                 flash('An Error Occurred: {}'.format(str(e)), 'error')
@@ -1419,7 +1428,7 @@ def acmaintlogbook():
             return redirect(url_for('plantmaint.index', thiac=None))
         common_set_log(applog)
         useragent = request.headers.get('User-Agent')
-        if user_agent_os_match(useragent,"Mac"):
+        if user_agent_os_match(useragent, "Mac"):
             # "numbers" in macos does not support the hours mins formatting so make it a string
             try:
                 return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data, True),
@@ -1429,10 +1438,53 @@ def acmaintlogbook():
         else:
             try:
                 return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
-                             as_attachment=True)
+                                 as_attachment=True)
             except Exception as e:
                 flash(str(e))
         return render_template('plantmaint/index.html', ac=thisac)
+
+
+def build_lifed_item_dict(thisac, m):
+    """
+    Create a dictionary item for the lifed item
+    :param m: an sql returned row
+    :return:
+    """
+    thisdict = {"ac_task_id": m.task_id,
+                "task_id": m.task_id,
+                "meter_id": m.meter_id,
+                "description": m.task_description,
+                "title": m.logbook_column_title,
+                "start_date": m.logbook_start_date,
+                "start_value": m.logbook_start_value
+                }
+    # what we need to do is build a list of readings where the counters are
+    # initialised at the value this thing was last done.
+    # find in readings a reading value that is equal to or just after this item
+    readings = MeterReadings.query.filter(MeterReadings.ac_id == thisac.id) \
+        .filter(MeterReadings.meter_id == m.meter_id) \
+        .filter(MeterReadings.meter_reading >= m.last_done_reading) \
+        .filter(MeterReadings.reading_date >= m.logbook_start_date) \
+        .order_by(MeterReadings.reading_date) \
+        .all()
+    closingreading = m.logbook_start_value
+    readinglist = []
+    for r in readings:
+        onereading = {'reading_date': r.reading_date}
+        onereading["meter_delta"] = r.meter_delta
+        closingreading +=  r.meter_delta
+        onereading["meter_reading"]  = closingreading
+        readinglist.append(onereading)
+    thisdict['readinglist'] = readinglist
+    return thisdict
+
+def get_readings(readingdict,date):
+    for r in readingdict["readinglist"]:
+        if r["reading_date"] == date:
+            return r["meter_delta"], r["meter_reading"]
+    # if we get to here then we didn't find it.
+    return None,None
+
 
 
 def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
@@ -1442,6 +1494,37 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
     :param flights:  List of flights to write
     :return: Name of excel file.
     """
+
+    sql = sqltext("""
+        select 
+            t0.id ac_task_id,
+            t1.id task_id,
+            t2.id meter_id,
+            t1.task_description,
+            t2.meter_name,
+            t2.uom,
+            t0.last_done_reading,
+            t0.logbook_column_title,
+            t0.logbook_start_date,
+            t0.logbook_start_value 
+            from actasks t0
+            join tasks t1 on t0.task_id  = t1.id
+            join meters t2 on t1.task_meter_id  = t2.id
+            where ac_id = :ac_id
+            and (task_meter_id   is not null)
+            and t0.logbook_include
+        """)
+    sql = sql.columns(last_done_reading=SqliteDecimal(10, 2), logbook_start_value=SqliteDecimal(10,2))
+    meter_based_tasks = db.engine.execute(sql, ac_id=thisac.id).fetchall()
+    task_based_columns = []
+    for m in meter_based_tasks:
+        task_based_columns.append(build_lifed_item_dict(thisac, m))
+    for i in task_based_columns:
+        print(i["description"])
+        print("---------------------------------------")
+        for r in i["readinglist"]:
+            print(r)
+
     sql = sqltext("""
     select 
         t0.id,
@@ -1506,6 +1589,12 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
             nextcol += 2
         notecol = (len(metercol) * 2) + 1
         ws.write(row, nextcol, "Note", border_fmt)
+        nextcol += 1
+        for i in task_based_columns:
+            i["col"] = nextcol
+            ws.write(row, nextcol, i["title"] + 'Reading', border_fmt)
+            ws.write(row, nextcol + 1, i["title"] + ' Change', border_fmt)
+            nextcol += 2
         row += 2
         last_row_reading_date = datetime.date(1900, 1, 1)
         for r in readings:
@@ -1532,6 +1621,11 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
                 else:
                     ws.write(row, mcol["col"], r.meter_reading)
                     ws.write(row, mcol["col"] + 1, r.meter_delta)
+            # Now find the meter_based_tasks columns
+            for tbc in task_based_columns:
+                delta,reading = get_readings(tbc,r.reading_date)
+                ws.write(row, tbc["col"], delta)
+                ws.write(row, tbc["col"] + 1, reading)
             ws.write(row, notecol, r.note)
         # col widths
         ws.autofit()

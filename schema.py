@@ -425,6 +425,7 @@ class Member(db.Model):
     nok_phone = db.Column(db.String)
     nok_mobile = db.Column(db.String)
     glider = db.Column(db.String)
+
     transactions = relationship("MemberTrans", cascade="all,delete-orphan")
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
@@ -456,6 +457,9 @@ class MemberTrans(db.Model):
         self.memberid = member
         self.transdate = datetime.date.today()
         self.transsubtype = ''
+
+    def __repr__(self):
+        return self.transtype + '/' + self.transdate.strftime('%d-%m-%Y')
 
 
 class Roster(db.Model):
@@ -625,6 +629,18 @@ class ACTasks(db.Model):
     warning_email = db.Column(db.String,
         comment=" space delimited list of email addresses that a warning will be sent to")
     note = db.Column(db.String, comment="Any Note related to this task")
+
+    # For the purposes of having a separate counter in the logbook:
+    logbook_include = db.Column(db.Boolean, default=False,
+                                comment='Include as Logbook Column')
+    logbook_column_title = db.Column(db.String,
+                                     comment='The column title to appear in the logbook')
+    #  People will not have all the readings so there needs to be a starting reference date and value
+    # The date must be a date for which there is at least one reading
+    logbook_start_date = db.Column(db.Date,
+                                   comment='A reference date for the starting value')
+    logbook_start_value = db.Column(SqliteDecimal(10,2),
+                                    comment='The starting value')
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
