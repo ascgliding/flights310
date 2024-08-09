@@ -60,11 +60,13 @@ Some important notes:
     </br>
     <li>{{ render_field(form.note) }}</li>
     {% if meter is not none %}
-      You can have this task appear as a separate counter in the logbook spreadsheet:
-      <li>{{ render_field(form.logbook_include) }}</li>
-      <li>{{ render_field(form.logbook_column_title) }}</li>
-      <li>{{ render_field(form.logbook_start_date) }}</li>
-      <li>{{ render_field(form.logbook_start_value) }}</li>
+      {% if meter.uom == 'Qty' %}
+        You can have this task appear as a separate counter in the logbook spreadsheet:
+        <li>{{ render_field(form.logbook_include) }}</li>
+        <li>{{ render_field(form.logbook_column_title) }}</li>
+        <li>{{ render_field(form.logbook_start_date) }}</li>
+        <li>{{ render_field(form.logbook_start_value) }}</li>
+      {% endif %}
     {% endif %}
   </ul>
     </fieldset>

@@ -1624,8 +1624,8 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
             # Now find the meter_based_tasks columns
             for tbc in task_based_columns:
                 delta,reading = get_readings(tbc,r.reading_date)
-                ws.write(row, tbc["col"], delta)
-                ws.write(row, tbc["col"] + 1, reading)
+                ws.write(row, tbc["col"], reading)
+                ws.write(row, tbc["col"] + 1, delta)
             ws.write(row, notecol, r.note)
         # col widths
         ws.autofit()
