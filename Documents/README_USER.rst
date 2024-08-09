@@ -328,12 +328,21 @@ time is required.
 Motor gliders that are in the master aircraft table should have their default launch method set to 'SELF LAUNCH'
 and this will cause the tow details to be set automatically.
 
-Recording non-towing flights in RDW
-===================================
+Recording Private flights in a Tow Plane
+========================================
 
-If a pilot flies the tow plane without towing a glider, the glider regn should be set to "TUG ONLY".
-This is a valid value in the drop down list.  A takeoff and tug down time needs to be recorded but
-release height and landed times are left blank.
+To record private flights in a Tow Aircraft:
+
+    *   Set the glider regn to "TUG ONLY".  This is a valid value in the drop down list.
+    *   A takeoff and tug down time needs to be recorded but release height and landed times are left blank.
+    *   Set tow tow pilot as the pic of the tow plane and make sure the tow registration is correct.
+    *   Go to the payment screen, and press "CAlC".  The system will make a guess as to how much
+        you should pad.
+    *   Make sure your name is in the payer field and select the correct payment method.
+    *   It is helpful to the Tug Master to put the starting and ending tach hours in a note
+        attached to the flight.  Select the flight and press the note icon at the bottom of the page.
+
+
 
 Recording ATC Flying in an ASC Aircraft
 =======================================
@@ -610,6 +619,18 @@ the following attributes:
         email is sent.  The Warning EMail can be a list of email addresses.
         Where there is a list each email should be separated by a comma, space
         or semi-colon.
+
+    *   Logbook Entries.
+
+        It is possible to create a separate column in the logbook spreadsheet
+        to record a separate counter for the task.  For example, there is a task
+        to replace the nose hook.  We want a column in the logbook for nose hook
+        operations.  Tick the box that to include this item in the logbook
+        spreadsheet.  Add a column name e.g. "Nose Hook".  It is likely that the
+        system will not have all the logbook entries since the beginning of
+        time, therefore you need to record a reference starting point and value.
+        Pick a date for which you know the reading and enter the date and
+        reading as at that date.
 
     *   Completion.
 
