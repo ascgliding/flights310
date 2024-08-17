@@ -230,7 +230,6 @@ def add_role_security():
     add_user_role('PLTADMIN','Peter Thorpe')
     add_user_role('PLTADMIN','Ray Burns')
     db.session.commit()
-    add_view_security('/auth', 'SYSADMIN')
     add_view_security('/membership', 'CFI')
     add_view_security('/membership', 'DEPUTYCFI')
     add_view_security('/mastmaint/aircraft', 'SYSADMIN')
