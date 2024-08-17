@@ -1,3 +1,5 @@
+import base64
+
 from sendgrid import SendGridAPIClient,Mail
 from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition,Content,To
 import os
@@ -24,7 +26,7 @@ class ascmailer:
         # self.__sg = SendGridAPIClient(api_key=app.config['SENDGRIDAPIKEY'])
         self.__sg = SendGridAPIClient(api_key=self.__apikey.slot_data)
         self.__message = Mail(from_email='ascgliding@gmail.com')
-        self.__attachements = [] # list of filenames
+        self.__attachments = [] # list of filenames
         self.__bodyhtml = ''
         self.__description = 'Mail message'
         self.__recipients = [] # list of email addresses to send to
@@ -172,7 +174,7 @@ class ascmailer:
         # Check if attachment is available
         if not os.path.isfile(value):
             raise FileExistsError("Attachment is not a file on the system")
-        self.__attachements.append(value)
+        self.__attachments.append(value)
 
     def send(self):
         if self.__recipients is None:
@@ -191,8 +193,19 @@ class ascmailer:
         if self.cc != '':
             self.__message.cc = self.__cc
         # Deal with attachements
-        for attachment in self.__attachements:
-            pass
+        for attachment in self.__attachments:
+            print('Attaching {}'.format(attachment))
+            with open(attachment,'rb') as f:
+                data = f.read()
+                f.close
+            encoded_file = base64.b64encode(data).decode()
+            thisfile = Attachment(
+                FileContent(encoded_file),
+                FileName(os.path.basename(attachment)),
+                FileType('application/octet-stream'),
+                Disposition('attachment')
+            )
+            self.__message.attachment = thisfile
         # send it
         try:
             self.__response = self.__sg.send(self.__message)

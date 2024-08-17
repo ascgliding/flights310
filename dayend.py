@@ -12,6 +12,7 @@ import sqlalchemy.exc
 from sqlalchemy import text as sqltext, func
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
+import datetime
 
 # from pydrive2.auth import GoogleAuth
 # from pydrive2.drive import GoogleDrive
@@ -22,6 +23,7 @@ from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,
 # from googleapiclient.errors import HttpError
 from asc.common import *
 import re
+import os
 
 # import google.auth
 
@@ -226,12 +228,25 @@ def validate_all_readings():
             for e  in m.reading_errors:
                 print(e)
 
+def send_db():
+    print('sending Database')
+    print(os.getcwd())
+    msg = ascmailer('Database Backup')
+    # msg.add_body("Email should have gone to {}".format(address))
+    msg.add_body("<html>Here is the Database Backup</html>")
+    msg.add_recipient('ray@rayburns.nz')
+    msg.add_attachment('../instance/asc.sqlite')
+    msg.send()
+
 
 if __name__ == '__main__':
     with app.app_context():
         log.info("Dayend started")
-        testmailer()
+        # testmailer()
         update_auto_readings()
         send_maintenance_emails()
         #validate_all_readings()
+        # send me the database on Saturdays and Sundays.
+        if datetime.datetime.today().weekday() in [ 5,6 ]:
+            send_db()
         print("it ran")
