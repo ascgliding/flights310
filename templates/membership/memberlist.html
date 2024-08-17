@@ -51,19 +51,19 @@
       <div class="cell" align="left">{{ l.firstname }}</div>
       <div class="cell" align="left">{{ l.email_address }}</div>
       {% if l.bfr_due and l.bfr_due <= today  %}
-        <div class="cell" style="color:red" align="left">{{ l.bfr_due|reformatstddate or '' }}</div>
+        <div class="cell" style="background-color:red;color:white" align="left">{{ l.bfr_due|reformatstddate or '' }}</div>
       {% else %}
         {% if l.bfr_due and l.bfr_due <= twomonths %}
-          <div class="cell" style="color:orange" align="left">{{ l.bfr_due|reformatstddate or '' }}</div>
+          <div class="cell" style="background-color:orange" align="left">{{ l.bfr_due|reformatstddate or '' }}</div>
         {% else %}
           <div class="cell" style="color:green" align="left">{{ l.bfr_due|reformatstddate or '' }}</div>
         {% endif %}
       {% endif %}
       {% if l.medical_due and l.medical_due <= today  %}
-        <div class="cell" style="color:red" align="left">{{ l.medical_due|reformatstddate or '' }}</div>
+        <div class="cell" style="background-color:red;color:white" align="left">{{ l.medical_due|reformatstddate or '' }}</div>
       {% else %}
         {% if l.medical_due and l.medical_due <= twomonths %}
-          <div class="cell" style="color:orange" align="left">{{ l.medical_due|reformatstddate or '' }}</div>
+          <div class="cell" style="background-color:orange" align="left">{{ l.medical_due|reformatstddate or '' }}</div>
         {% else %}
           <div class="cell" style="color:green" align="left">{{ l.medical_due|reformatstddate or '' }}</div>
         {% endif %}
