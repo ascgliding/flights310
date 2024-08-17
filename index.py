@@ -24,7 +24,10 @@ def before_request():
     # print('Current User Name {}'.format(current_user.name))
     # m= Member.query.filter(Member.gnz_no==current_user.gnz_no).first()
     # print('Member Name {}'.format(m.fullname))
-    # does this view have any security defined:
+
+    # ensure that the login screen can never have any security restrictions.
+    if request.path in [ '/auth/login', '/auth/logout', '/auth/profile' ]:
+        return None
     sql = sqltext('''
         select count(*)
     	from viewsecurity 

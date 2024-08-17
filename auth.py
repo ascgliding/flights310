@@ -301,6 +301,9 @@ def rolelist():
 @bp.route('/rolemaint/<id>', methods=['GET', 'POST'])
 @login_required
 def rolemaint(id):
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
     thisrec = Role.query.get(id)
     if thisrec is None:
         thisrec = Role()
@@ -346,12 +349,18 @@ def viewlist():
     if not current_user.administrator:
         flash("You are not authorised to this page.")
         return redirect(url_for('index'))
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
     views = db.session.query(ViewSecurity).all()
     return render_template("auth/viewlist.html", views=views)
 
 @bp.route('/viewmaint/<id>', methods=['GET', 'POST'])
 @login_required
 def viewmaint(id):
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
     thisrec = ViewSecurity.query.get(id)
     if thisrec is None:
         thisrec = ViewSecurity()
@@ -405,6 +414,9 @@ def userrolelist():
 @bp.route('/userrolemaint/<id>', methods=['GET', 'POST'])
 @login_required
 def userrolemaint(id):
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
     thisrec = UserRoles.query.get(id)
     if thisrec is None:
         thisrec = UserRoles()
