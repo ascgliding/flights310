@@ -29,24 +29,49 @@
       <li>{{ render_field(form.dob) }}</li>
       <li>{{ render_field(form.email_address) }}</li>
       <li>{{ render_field(form.email_2) }}</li>
-      <li>{{ render_field(form.phone) }}</li>
-      <li>{{ render_field(form.phone2) }}</li>
-      <li>{{ render_field(form.mobile) }}</li>
-      <li>{{ render_field(form.mobile2) }}</li>
+      <li>
+        <div style="display:table;width:100%;border-spacing:10px">
+          <div style="display:table-row">
+            <div style="display:table-cell">{{ render_field(form.phone) }}</div>
+            <div style="display:table-cell">{{ render_field(form.mobile) }}</div>
+          </div>
+          <div style="display:table-row">
+            <div style="display:table-cell">{{ render_field(form.phone2) }}</div>
+            <div style="display:table-cell">{{ render_field(form.mobile2) }}</div>
+          </div>
+        </div>
+      </li>
       <li>{{ render_field(form.address_1) }}</li>
       <li>{{ render_field(form.address_2) }}</li>
       <li>{{ render_field(form.address_3) }}</li>
       <li>
-        <p>{{ render_checkbox(form.committee) }} {{ render_checkbox(form.instructor) }} {{
-          render_checkbox(form.tow_pilot) }} {{ render_checkbox(form.duty_pilot) }}</p>
+        <div style="display:inline-block; width:100%">
+        <div style="display:inline-table;width:100%;border-spacing:10px;border:1px solid">
+          <div style="display:table-row">
+            <div style="display:table-cell;width:30%">{{ render_checkbox(form.committee) }}</div>
+            <div style="display:table-cell;width:30%;text-align:left"> {{ render_checkbox(form.instructor) }}</div>
+            <div style="display:table-cell;width:15%">{{ render_checkbox(form.tow_pilot) }}</div>
+            <div style="display:table-cell;width:15%"> {{ render_checkbox(form.duty_pilot) }}</div>
+            <div style="display:table-cell;width:10%">{{ render_checkbox(form.oo) }}</div>
+          </div>
+        </div>
+          </div>
       </li>
-      <li>{{ render_field(form.oo) }}</li>
       <li>{{ render_field(form.roster) }}</li>
-      <li>{{ render_field(form.nok_name) }}</li>
-      <li>{{ render_field(form.nok_rship) }}</li>
-      <li>{{ render_field(form.nok_phone) }}</li>
-      <li>{{ render_field(form.nok_mobile) }}</li>
+      <li>
+        <div style="display:inline-table;width:100%;border-spacing:10px;border:1px solid">
+          <div style="display:table-row">
+            <div style="display:table-cell;width:50%"> {{ render_field(form.nok_name) }}</div>
+            <div style="display:table-cell;width:50%"> {{ render_field(form.nok_rship) }}</div>
+          </div>
+          <div style="display:table-row">
+            <div style="display:table-cell;width:50%"> {{ render_field(form.nok_phone) }}</div>
+            <div style="display:table-cell;width:50%"> {{ render_field(form.nok_mobile) }}</div>
+          </div>
+        </div>
+      </li>
       <li>{{ render_field(form.glider) }}</li>
+      <li>{{ render_field(form.email_bfr_med) }}</li>
       <datalist id="nok_rship_datalist">
         <option value='GrandFather'>
         <option value='GrandMother'>
@@ -57,12 +82,10 @@
       <li>{{ render_field(form.note) }}</li>
     </ul>
   </fieldset>
-  <div style="display:table-cell; text-align: right;">
     {{ form.btnsubmit() }}
     {{ form.cancel() }}
     {{ form.print() }}
     {{ form.trans() }}
     {{ form.delete() }}
-  </div>
 </form>
 {% endblock %}

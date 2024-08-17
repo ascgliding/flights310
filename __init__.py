@@ -323,6 +323,10 @@ def resgister_blueprints(app):
             from . import export
             app_for_log = 'export'
             app.register_blueprint(export.bp)
+            # Register the Misc unsecured functions
+            from . import misc
+            app_for_log = 'misc'
+            app.register_blueprint(misc.bp)
             #
             app.logger.info("All blueprints successfully registered")
     except Exception as e:

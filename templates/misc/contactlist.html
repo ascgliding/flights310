@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Contact List{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+          <a class="action" href="{{ url_for('misc.contactspreadsheet') }}" ,
+           title="Download Spreadsheet ">
+          <button class="textbtn">Download</button>
+          </a>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Name</div>
+      <div class="heading" >GNZ</div>
+      <div class="heading" >Email</div>
+      <div class="heading" >Phone</div>
+      <div class="heading" >Mobile</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell" align="left">{{l.firstname}} {{ l.surname }}</div>
+      <div class="cell" align="right">{{ l.gnz_no }}</div>
+      <div class="cell" align="left">{{ l.email_address }}</div>
+      <div class="cell" align="left">{{ l.phone }}</div>
+      <div class="cell" align="left">{{ l.mobile }}</div>
+      </div>
+  {% endfor %}
+  </div>
+{% endblock %}

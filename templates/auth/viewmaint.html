@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock %}
+{% block content %}
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>Role Maintenance</legend>
+  <ul>
+    <li>{{ render_field(form.viewname) }}</li>
+    <li>{{ render_field(form.role_id) }}</li>
+  </ul>
+</fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+  {{ form.delete() }}
+</form>
+{% endblock %}

@@ -153,9 +153,6 @@ def index():
 @bp.route('/pilotlist', methods=['GET', 'POST'])
 @login_required
 def pilotlist():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     if request.method == 'GET':
         list = Pilot.query.order_by(Pilot.fullname)
         return render_template('mastmaint/pilotlist.html', list=list)
@@ -164,9 +161,6 @@ def pilotlist():
 @bp.route('/pilotmaint/<id>', methods=['GET', 'POST'])
 @login_required
 def pilotmaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     thispilot = Pilot.query.get(id)
     usernames = [u.name for u in db.session.query(User).distinct()]
     # if thispilot is None then we will be adding
@@ -209,9 +203,6 @@ def pilotmaint(id):
 @bp.route('/aircraftlist', methods=['GET', 'POST'])
 @login_required
 def aircraftlist():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     if request.method == 'GET':
         list = Aircraft.query.order_by(Aircraft.regn)
         return render_template('mastmaint/aircraftlist.html', list=list)
@@ -220,9 +211,6 @@ def aircraftlist():
 @bp.route('/aircraftmaint/<id>', methods=['GET', 'POST'])
 @login_required
 def aircraftmaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     thisaircraft = Aircraft.query.get(id)
     # if thispilot is None then we will be adding
     if thisaircraft is None:
@@ -250,9 +238,6 @@ def aircraftmaint(id):
 @bp.route('/slotlist', methods=['GET', 'POST'])
 @login_required
 def slotlist():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     if request.method == 'GET':
         list = Slot.query.order_by(Slot.slot_type, Slot.slot_key)
         return render_template('mastmaint/slotlist.html', list=list)
@@ -261,9 +246,6 @@ def slotlist():
 @bp.route('/slotmaint/<id>', methods=['GET', 'POST'])
 @login_required
 def slotmaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     thisrec = Slot.query.get(id)
     if thisrec is None:
         thisrec = Slot()
@@ -287,9 +269,6 @@ def slotmaint(id):
 @bp.route('/userverify', methods=['Get'])
 @login_required
 def userverify():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     # see also logbook.py for an example of this code that uses parameters
     sql = sqltext("""
     -- Unapproved user
@@ -380,9 +359,6 @@ def userverify():
 @bp.route('/unpaidflights', methods=['GET', 'POST'])
 @login_required
 def unpaidflights():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     if request.method == 'GET':
         sql = """
                       SELECT t0.id, t0.flt_date, t0.payer,
@@ -407,9 +383,6 @@ def unpaidflights():
 @bp.route('/rosterlist', methods=['GET', 'POST'])
 @login_required
 def rosterlist():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     if request.method == 'GET':
         list = Roster.query.order_by(Roster.roster_date.desc())
         return render_template('mastmaint/rosterlist.html', list=list)
@@ -418,9 +391,6 @@ def rosterlist():
 @bp.route('/rosterimport', methods=['GET', 'POST'])
 @login_required
 def rosterimport():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     form = RosterUploadForm()
     if form.cancel.data:
         return redirect(url_for('mastmaint.rosterlist'))
@@ -461,9 +431,6 @@ def rosterimport():
 @bp.route('/rostermaint/<id>', methods=['GET', 'POST'])
 @login_required
 def rostermaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('mastmaint.rosterlist.html')
     thisrec = Roster.query.get(id)
     if thisrec is None:
         thisrec = Roster()
@@ -505,9 +472,6 @@ def rostermaint(id):
 @bp.route('/paidupload', methods=['GET', 'POST'])
 @login_required
 def paidupload():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     form = PaidUploadForm()
     if form.cancel.data:
         return redirect(url_for('mastmaint.unpaidflights'))
@@ -560,9 +524,6 @@ def paidupload():
 @bp.route('/unpaidemail', methods=['GET', 'POST'])
 @login_required
 def unpaidemail():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     sql = """
                    SELECT t0.id, t0.flt_date, t0.payer,
                      t1.email, 

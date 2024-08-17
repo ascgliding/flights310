@@ -1,7 +1,7 @@
 # import sqlite3
 import os
 import click
-from sqlalchemy import create_engine, text as sqltext
+from sqlalchemy import create_engine, text as sqltext, delete
 # from sqlalchemy.ext.declarative import declarative_base
 # from sqlalchemy import Column, Integer, Boolean, Date, String, Time, DateTime, Sequence
 from sqlalchemy.orm import validates, sessionmaker
@@ -197,6 +197,63 @@ def periodic_mbr_update():
     print('Member:Read {} Inserted {} Updated {} Failed {}'.format(readcount, insertcount, updatecount, failedcount))
     print('Pilot:Read {} Inserted {} Updated {} Failed {}'.format(readcount, epinsert, epupdate, failedcount))
 
+def add_user_role(rolename,username):
+    user = User.query.filter(User.fullname==username).first()
+    role = Role.query.filter(Role.name==rolename).first()
+    db.session.add(UserRoles(user_id=user.id,role_id=role.id))
+
+def add_view_security(pviewname,rolename,pexempt=False):
+    role = Role.query.filter(Role.name==rolename).first()
+    db.session.add(ViewSecurity(viewname=pviewname, role_id = role.id,security_exempt=pexempt))
+
+def add_role_security():
+    click.echo('Loading Roll Based Security')
+    Role.__table__.drop(db.engine)
+    UserRoles.__table__.drop(db.engine)
+    ViewSecurity.__table__.drop(db.engine)
+    db.create_all()
+    click.echo('Loading Roles')
+    thismeter = Meters(meter_name = 'Landings', uom='Qty')  #, entry_uom = 'Units')
+    db.session.add(Role(name='SYSADMIN'))
+    db.session.add(Role(name='PLTADMIN'))
+    db.session.add(Role(name='CFI'))
+    db.session.add(Role(name='DEPUTYCFI'))
+    db.session.add(Role(name='TREASURER'))
+    db.session.add(Role(name='INSTRUCTOR'))
+    db.session.add(Role(name='TOWPILOT'))
+    db.session.commit()
+    add_user_role('SYSADMIN','Ray Burns')
+    add_user_role('CFI','Ray Burns')
+    add_user_role('SYSADMIN','Lionel Page')
+    add_user_role('DEPUTYCFI','Lionel Page')
+    add_user_role('PLTADMIN','Craig Best')
+    add_user_role('PLTADMIN','Peter Thorpe')
+    add_user_role('PLTADMIN','Ray Burns')
+    db.session.commit()
+    add_view_security('/auth', 'SYSADMIN')
+    add_view_security('/membership', 'CFI')
+    add_view_security('/membership', 'DEPUTYCFI')
+    add_view_security('/mastmaint/aircraft', 'SYSADMIN')
+    add_view_security('/mastmaint/aircraft', 'PLTADMIN')
+    add_view_security('/mastmaint/paid', 'SYSADMIN')
+    add_view_security('/mastmaint/paid', 'TREASURER')
+    add_view_security('/mastmaint/pilot', 'SYSADMIN')
+    add_view_security('/mastmaint/pilot', 'TREASURER')
+    add_view_security('/mastmaint/roster', 'SYSADMIN')
+    add_view_security('/mastmaint/roster', 'CFI')
+    add_view_security('/mastmaint/roster', 'DEPUTYCFI')
+    add_view_security('/mastmaint/slot', 'SYSADMIN')
+    add_view_security('/mastmaint/unpaid', 'SYSADMIN')
+    add_view_security('/mastmaint/unpaid', 'TREASURER')
+    add_view_security('/mastmaint/userverify', 'SYSADMIN')
+    add_view_security('/mastmaint/userverify', 'TREASURER')
+    add_view_security('/plantmaint/std', 'SYSADMIN')
+    add_view_security('/plantmaint/std', 'PLTADMIN')
+    db.session.commit()
+
+
+
+
 def add_mbr_data():
     db.create_all()
     click.echo('Loading Mbr Data.')
@@ -254,7 +311,7 @@ def add_mbr_data():
     addslot(('TP', 'Tow Pilot'), 'RATING')
     addslot(('XC', 'Cross Country'), 'RATING')
 
-    with open("membershipdb_members.csv", "r", encoding='Latin-1') as d:
+    with open(os.path.join(app.instance_path,"membershipdb_members.csv"), "r", encoding='Latin-1') as d:
         reader = csv.reader(d, delimiter="|")
         readcount = 0
         insertcount = 0
@@ -264,6 +321,7 @@ def add_mbr_data():
                 readcount += 1
                 m = Member()
                 # These are from the membership db spreadsheet columns B-AD.  Without headings.
+                # Pipe delimited with dd-mm-yyyy format for dates
                 m.active = txt2boolean(r[0])
                 m.gnz_no = r[1]
                 m.type = r[2].upper()
@@ -310,7 +368,9 @@ def add_mbr_data():
     print(' ')
     print('Read {} Inserted {} Failed {}'.format(readcount,insertcount,failedcount))
     print(' ')
-    with open("membershipdb_transactions.csv", "r", encoding='Latin-1') as d:
+    with open(os.path.join(app.instance_path,"membershipdb_transactions.csv"), "r", encoding='Latin-1') as d:
+        # export from the spreadsheet columns A-F pipe delimited, dd-mm-yyyy format for dates.
+        # without headings.
         reader = csv.reader(d, delimiter="|")
         readcount = 0
         insertcount = 0
@@ -573,16 +633,33 @@ def init_db():
 
 def initialise_maint_tables():
     """Drop and rebuild the maintenance database tables"""
-    click.echo("Initialising Maintenance Database")
-    Tasks.__table__.drop(db.engine)
-    Meters.__table__.drop(db.engine)
-    ACMeters.__table__.drop(db.engine)
-    MeterReadings.__table__.drop(db.engine)
-    ACTasks.__table__.drop(db.engine)
-    ACMaintUser.__table__.drop(db.engine)
-    ACMaintHistory.__table__.drop(db.engine)
-    db.create_all()
-    click.echo("Maintenance Database initialisation complete")
+    # click.echo("Initialising Maintenance Database")
+    # Tasks.__table__.drop(db.engine)
+    # Meters.__table__.drop(db.engine)
+    # ACMeters.__table__.drop(db.engine)
+    # MeterReadings.__table__.drop(db.engine)
+    # ACTasks.__table__.drop(db.engine)
+    # ACMaintUser.__table__.drop(db.engine)
+    # ACMaintHistory.__table__.drop(db.engine)
+    # db.create_all()
+    # click.echo("Maintenance Database initialisation complete")
+    click.echo("Clearing RDW Data")
+    thisac = Aircraft.query.filter(Aircraft.regn == 'RDW')
+    if thisac is not None:
+        clearhist(thisac.id)
+    click.echo("RDW Maintenance Database initialisation complete")
+
+def clearhist(ac_id):
+    thisac = Aircraft.query.get(ac_id)
+    d = ACTasks.delete().where(ac_id == ac_id)
+    d.execute()
+    d = ACMeters.delete().where(ac_id==ac_id)
+    d.execute()
+    d = ACMaintHistory.delete().where(ac_id==acid)
+    d.execute()
+    d = MeterReadings.delete().where(ac_id==ac_id)
+    d.execute()
+
 
 def load_maintenance():
     click.echo("Loading RDW maintenancce tables")
@@ -1028,7 +1105,8 @@ def add_task_and_history(pac_id,ptask_desc,plast_done,plast_done_reading,
 @click.option('--updmbr', default=False, is_flag=True, help='Update member and pilot data')
 @click.option('--maintinit', default=False, is_flag=True, help='Initialise the maintenance Tables')
 @click.option('--maintload', default=False, is_flag=True, help='Load the maintenance Tables')
-def cli(test, init, loadcsv, demodata, loadmbr, updmbr, maintinit,maintload):
+@click.option('--loadroles', default=False, is_flag=True, help='Load role based security')
+def cli(test, init, loadcsv, demodata, loadmbr, updmbr, maintinit,maintload, loadroles):
     print("Your current working directory should be the parent of the instance folder")
     if test:
         log.info("cli called with --test")
@@ -1054,6 +1132,9 @@ def cli(test, init, loadcsv, demodata, loadmbr, updmbr, maintinit,maintload):
     if maintload:
         log.info("cli called with --maintlog")
         load_maintenance()
+    if loadroles:
+        log.info("cli called with --loadroles")
+        add_role_security()
 
 
 if __name__ == '__main__':

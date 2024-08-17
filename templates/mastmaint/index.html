@@ -13,10 +13,10 @@
     <h4>Master Files</h4>
     <p><a href="{{ url_for('mastmaint.pilotlist') }}">Pilot Maintenance</a></p>
     <p><a href="{{ url_for('mastmaint.aircraftlist') }}">Aircraft Maintenance</a></p>
+    <p><a href="{{ url_for('membership.memberlist', active='ACTIVE') }}">Membership Maintenance</a></p>
   </div>
   <div class="pagemenucol">
     <h4>General</h4>
-    <p><a href="{{ url_for('auth.userlist') }}">User Maintenance</a></p>
     <p><a class="notphone" href="{{ url_for('mastmaint.slotlist') }}">Slot Maintenance</a></p>
     <p><a href="{{ url_for('mastmaint.rosterlist') }}">Roster List</a></p>
   </div>
@@ -37,6 +37,16 @@
     <h4>Scheduled Maintenance</h4>
     <p><a href="{{ url_for('plantmaint.maintainedac') }}">Aircraft Scheduled Maintenance</a></p>
   </div>
+    {% if current_user.administrator %}
+    <div class="pagemenucol">
+
+      <h4>System Security</h4>
+      <p><a href="{{ url_for('auth.userlist') }}">User Admin</a></p>
+      <p><a href="{{ url_for('auth.rolelist') }}">Roles</a></p>
+      <p><a href="{{ url_for('auth.viewlist') }}">Views</a></p>
+      <p><a href="{{ url_for('auth.userrolelist') }}">User / Roles</a></p>
+    </div>
+    {% endif %}
 </div>
 <a href="{{ url_for('flights.daysummary') }}">Flight Maintenance</a>
 </div>

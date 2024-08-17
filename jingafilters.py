@@ -136,7 +136,7 @@ def reformatstddate(pdate):
     """
     if pdate is None:
         return None
-    if not (isinstance(pdate, datetime.date) or isinstance(pdate, datetime.date)):
+    if not (isinstance(pdate, datetime.date) or isinstance(pdate, datetime.datetime)):
         applog.error("A call was made to reformatstddate with input that was not a date or datetime ({})".format(type(pdate)))
         raise Exception("The input to this function is not in the correct format:{}".format(type(pdate)))
     if isinstance(pdate, datetime.datetime):

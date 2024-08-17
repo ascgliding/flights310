@@ -25,8 +25,8 @@ from wtforms import Form, StringField, PasswordField, validators, SubmitField, S
     TextAreaField, DecimalField, Field, FieldList, ValidationError
 from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, optional, Regexp
-# from wtforms_alchemy.fields import QuerySelectField
 from asc.wtforms_ext import MatButtonField, TextButtonField
+
 # xlsx
 import xlsxwriter
 from flask import send_file
@@ -501,9 +501,6 @@ def stdtasklist():
 @bp.route('/stdtaskmaint/<id>', methods=['GET', 'POST'])
 @login_required
 def stdtaskmaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     thisrec = Tasks.query.get(id)
     if thisrec is None:
         thisrec = Tasks()
@@ -584,9 +581,6 @@ def stdmeterlist():
 @bp.route('/stdmetermaint/<id>', methods=['GET', 'POST'])
 @login_required
 def stdmetermaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     thisrec = Meters.query.get(id)
     if thisrec is None:
         thisrec = Meters()
@@ -653,9 +647,6 @@ def stduserlist():
 @bp.route('/stdusermaint/<id>', methods=['GET', 'POST'])
 @login_required
 def stdusermaint(id):
-    if not current_user.administrator:
-        flash("Sorry, this is an amdin only function")
-        return (render_template('index.html'))
     thisrec = ACMaintUser.query.get(id)
     if thisrec is None:
         thisrec = ACMaintUser()

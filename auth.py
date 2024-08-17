@@ -7,8 +7,17 @@ from flask import (
 from flask_sqlalchemy import SQLAlchemy
 from asc.schema import *
 from asc import db,create_app # but isnt't this already imported by the previous line ?
-# from flask_login import current_user, login_user, LoginManager, logout_user, login_required, UserMixin
 from flask_login import current_user, login_user, login_required, logout_user, fresh_login_required, login_manager
+
+# WTforms
+from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileRequired
+from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField, BooleanField, RadioField, \
+    TextAreaField, DecimalField, Field, FieldList, ValidationError
+from wtforms.fields import EmailField, IntegerField, DateField
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, optional, Regexp
+from asc.wtforms_ext import MatButtonField, TextButtonField
+
 
 from asc.mailer import ascmailer
 
@@ -30,6 +39,27 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 #     test_url = urllib.parse(urllib.parse.urljoin(request.host_url, target))
 #     return test_url.scheme in ('http', 'https') and \
 #            ref_url.netloc == test_url.netloc
+
+class RoleMaint(FlaskForm):
+    name = StringField('Role', description='The name of the Role')
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+
+class ViewMaint(FlaskForm):
+    viewname = StringField('View', description='The leading characters of the view including the path')
+    role_id = SelectField('Role', description='Role who has access')
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+
+class UserRoleMaint(FlaskForm):
+    user_id = SelectField('User', description='User id')
+    role_id = SelectField('Role', description='Role user plays')
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+
 
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
@@ -170,6 +200,7 @@ def profile():
     else:
         return render_template("auth/profile.html")
 
+# This routine is for changing the current user's password
 
 @bp.route('/password', methods=['GET', 'POST'])
 @fresh_login_required
@@ -188,6 +219,23 @@ def password():
         return render_template("auth/password.html")
     else:
         return render_template("auth/password.html")
+
+# This routine is for setting someone else's password.
+@bp.route('/userpassword/<id>', methods=['GET', 'POST'])
+@fresh_login_required
+def userpassword(id):
+    thisuser = User.query.get(id)
+    if request.method == 'POST':
+        # Validate current password
+        if request.form['newpwd'] != request.form['newpwd2']:
+            flash("The new password that you have entered twice are different")
+        else:
+            thisuser.set_password(request.form['newpwd'])
+            db.session.commit()
+            return redirect(url_for('index'))
+        return render_template("auth/userpassword.html", user=thisuser)
+    else:
+        return render_template("auth/userpassword.html", user=thisuser)
 
 
 @bp.route('/userlist')
@@ -209,6 +257,8 @@ def usermaint(id):
     thisuser = User.query.filter_by(id=id).one_or_none()
     if request.method == 'POST' and 'cancelbtn' in request.form:
         return redirect(url_for("auth.userlist"))
+    if request.method == 'POST' and 'pwdbtn' in request.form:
+        return redirect(url_for('auth.userpassword', id=id))
     if request.method == 'POST' and 'donebtn' in request.form:
         if thisuser is None:  # then new user
             # Create one and set the name
@@ -237,3 +287,167 @@ def usermaint(id):
         except Exception as ex:
             flash(str(ex))
     return render_template("auth/usermaint.html", user=thisuser)
+
+# Todo:  Add role maintenance (list and edit), assign role to user, View Maintenance (list and edit)
+@bp.route('/rolelist')
+@fresh_login_required
+def rolelist():
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
+    roles = db.session.query(Role).all()
+    return render_template("auth/rolelist.html", roles=roles)
+
+@bp.route('/rolemaint/<id>', methods=['GET', 'POST'])
+@login_required
+def rolemaint(id):
+    thisrec = Role.query.get(id)
+    if thisrec is None:
+        thisrec = Role()
+    thisform = RoleMaint(obj=thisrec)
+    if request.method == 'POST':
+        if thisform.cancel.data:
+            return redirect(url_for('auth.rolelist'))
+        if thisform.delete.data:
+            db.session.delete(thisrec)
+            try:
+                applog.info('DELETE:' + repr(thisrec))
+                db.session.commit()
+            except Exception as e:
+                applog.error(str(e))
+                flash(
+                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "error")
+            return redirect(url_for('auth.rolelist'))
+        if not thisform.validate_on_submit():
+            for e in thisform.errors:
+                flash(e, "error")
+                return render_template('auth/rolemaint.html', form=thisform)
+        # By this point, we are either adding or updating.
+        thisform.populate_obj(thisrec)
+        # Code based validation:
+        if thisrec.id is None:
+            db.session.add(thisrec)
+        applog.info('UPDATE:' + repr(thisrec))
+        try:
+            db.session.commit()
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+        return redirect(url_for('auth.rolelist'))
+    return render_template('auth/rolemaint.html', form=thisform)
+
+# View Security
+@bp.route('/viewlist')
+@fresh_login_required
+def viewlist():
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
+    views = db.session.query(ViewSecurity).all()
+    return render_template("auth/viewlist.html", views=views)
+
+@bp.route('/viewmaint/<id>', methods=['GET', 'POST'])
+@login_required
+def viewmaint(id):
+    thisrec = ViewSecurity.query.get(id)
+    if thisrec is None:
+        thisrec = ViewSecurity()
+    thisform = ViewMaint(obj=thisrec)
+    thisform.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
+    if request.method == 'POST':
+        if thisform.cancel.data:
+            return redirect(url_for('auth.viewlist'))
+        if thisform.delete.data:
+            db.session.delete(thisrec)
+            try:
+                applog.info('DELETE:' + repr(thisrec))
+                db.session.commit()
+            except Exception as e:
+                applog.error(str(e))
+                flash(
+                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "error")
+            return redirect(url_for('auth.viewlist'))
+        if not thisform.validate_on_submit():
+            for e in thisform.errors:
+                flash(e, "error")
+                return render_template('auth/viewmaint.html', form=thisform)
+        # By this point, we are either adding or updating.
+        thisform.populate_obj(thisrec)
+        # Code based validation:
+        if thisrec.id is None:
+            db.session.add(thisrec)
+        applog.info('UPDATE:' + repr(thisrec))
+        try:
+            db.session.commit()
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+        return redirect(url_for('auth.viewlist'))
+    return render_template('auth/viewmaint.html', form=thisform)
+
+
+# User / Roles Security
+@bp.route('/userrolelist')
+@fresh_login_required
+def userrolelist():
+    if not current_user.administrator:
+        flash("You are not authorised to this page.")
+        return redirect(url_for('index'))
+    views = db.session.query(UserRoles).all()
+    return render_template("auth/userrolelist.html", views=views)
+
+@bp.route('/userrolemaint/<id>', methods=['GET', 'POST'])
+@login_required
+def userrolemaint(id):
+    thisrec = UserRoles.query.get(id)
+    if thisrec is None:
+        thisrec = UserRoles()
+    thisform = UserRoleMaint(obj=thisrec)
+    thisform.user_id.choices = [(r.id, r.fullname) for r in User.query.all()]
+    thisform.role_id.choices = [(r.id, r.name) for r in Role.query.all()]
+    if request.method == 'POST':
+        if thisform.cancel.data:
+            return redirect(url_for('auth.userrolelist'))
+        if thisform.delete.data:
+            db.session.delete(thisrec)
+            try:
+                applog.info('DELETE:' + repr(thisrec))
+                db.session.commit()
+            except Exception as e:
+                applog.error(str(e))
+                flash(
+                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "error")
+            return redirect(url_for('auth.userrolelist'))
+        if not thisform.validate_on_submit():
+            for e in thisform.errors:
+                flash(e, "error")
+                return render_template('auth/userrolemaint.html', form=thisform)
+        # By this point, we are either adding or updating.
+        thisform.populate_obj(thisrec)
+        # Code based validation:
+        if thisrec.id is None:
+            db.session.add(thisrec)
+        applog.info('UPDATE:' + repr(thisrec))
+        try:
+            db.session.commit()
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+        return redirect(url_for('auth.userrolelist'))
+    return render_template('auth/userrolemaint.html', form=thisform)
+
+
+
+
+
+
+

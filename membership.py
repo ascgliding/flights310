@@ -1,6 +1,9 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app
+    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app, send_file
 )
+import datetime
+import xlsxwriter
+from dateutil.relativedelta import *
 from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
@@ -8,7 +11,7 @@ from asc import db,create_app
 from asc.schema import Pilot, Member, Slot, MemberTrans
 from sqlalchemy import text as sqltext
 from sqlalchemy import or_, and_
-
+import os
 # WTforms
 from flask_wtf import FlaskForm
 from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField, BooleanField, RadioField, \
@@ -74,6 +77,7 @@ class MemberForm(FlaskForm):
     nok_phone = StringField('NOK Phone', description='Next of Kin Phone number')
     nok_mobile = StringField('NOK Mobile', description='Next of kin Mobile Number')
     glider = StringField('Glider', description='Registration of privately owned glider')
+    email_bfr_med = BooleanField('Email BFR and Med Warnings', description='Auto email when BFR''s and Emails are soon to expire')
     # transactions = relationship("MemberTrans", backref='memberid')
 
     btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Confirm all Changes")
@@ -83,6 +87,8 @@ class MemberForm(FlaskForm):
     trans = TextButtonField('Transactions', id="transbtn", text='Transactions', help="View transactions for members")
     delete = MatButtonField('delete', id='matdeletebtn', icon='delete', help='Press to delete this record',
                             render_kw={'onclick': 'return ConfirmDelete()'})
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
     def validate_email_address(self, email_address):
         """Email validation."""
@@ -109,7 +115,7 @@ class MemberForm(FlaskForm):
                 raise ValidationError("Email address already in use")
 
 
-class TransactionForm(Form):
+class TransactionForm(FlaskForm):
     id = IntegerField('ID', description='Primary Key')
     memberid = IntegerField('Member', description='The id of the related member field')
     transdate = DateField('Transaction Date', description='The date of the transaction')
@@ -124,12 +130,17 @@ class TransactionForm(Form):
                             help='Press to delete this record', render_kw={'onclick':'return ConfirmDelete()'})
 
 
-@bp.route('/memberlist', methods=['GET', 'POST'])
+@bp.route('/memberlist/', defaults={'active':'ACTIVE'}, methods=['GET', 'POST'])
+@bp.route('/memberlist/<active>', methods=['GET', 'POST'])
 @login_required
-def memberlist():
+def memberlist(active='ACTIVE'):
     if request.method == 'GET':
-        list = Member.query.order_by(Member.surname)
-        return render_template('membership/memberlist.html', list=list)
+        if active=='ACTIVE':
+            list = Member.query.filter(Member.active).order_by(Member.surname)
+        else:
+            list = Member.query.order_by(Member.surname)
+        return render_template('membership/memberlist.html', list=list, active=active, today=datetime.date.today(),
+                               twomonths=datetime.date.today() - relativedelta(months=-2))
 
 
 @bp.route('/membermaint/<id>', methods=['GET', 'POST'])
@@ -187,6 +198,7 @@ def translist(id):
             LEFT JOIN slots AS t2 
                 ON t2.slot_type = t1.slot_desc  AND t2.slot_key = t0.transsubtype 
             WHERE t0.memberid = :member
+            order by t0.transdate desc
         """)
         sqlstmt = sqlstmt.columns(transdate=db.Date)
         list = db.engine.execute(sqlstmt, member=id)
@@ -203,20 +215,282 @@ def transmaint(id, member=None):
         thisrec = MemberTrans(member)
     thisform = TransactionForm(obj=thisrec)
     if thisform.cancel.data:
-        return redirect(url_for('membership.memberlist'))
+        return redirect(url_for('membership.translist',id=member))
     thisform.transtype.choices = [(r.slot_key, r.slot_desc) for r in Slot.query.filter_by(slot_type='TRANSTYPE')]
     thisform.transsubtype.choices = [(r.slot_key, r.slot_desc) for r in Slot.query.filter_by(slot_type='RATING')]
     thisform.transsubtype.choices.append(('', 'N/A'))
     # this is the line that does the work
-    if request.method == 'POST' and thisform.validate():
+    # if request.method == 'POST' and thisform.validate():
+    if thisform.validate_on_submit():
         # Provided the field names are the same, this function updates all the fields
         # on the table.  If there are any that are different then each field needs to be
         # assigned manually.
         thisform.populate_obj(thisrec)
         if thisrec.id is None:
+            thisrec.memberid = member
             db.session.add(thisrec)
         if thisform.delete.data:
             db.session.delete(thisrec)
         db.session.commit()
-        return redirect(url_for('membership.memberlist'))
+        return redirect(url_for('membership.translist',id=member))
     return render_template('membership/transmaint.html', form=thisform)
+
+@bp.route('/spreadsheet>', methods=['GET', 'POST'])
+@login_required
+def spreadsheet():
+    return send_file(createmshipxlsx(True,True,True),
+                     as_attachment=True)
+
+
+def createmshipxlsx(include_currency=False,include_incident=False, include_nok=False):
+    """
+    Creates a spreadsheet ready for download for flights between two dates.
+    :param self:
+    :param flights:  List of flights to write
+    :return: Name of excel file.
+    """
+    # setup workbook:
+    filename = os.path.join(app.instance_path,
+                            "downloads/Members" + ".xlsx")
+    workbook = xlsxwriter.Workbook(filename)
+    borderdict = {'border': 1}
+    noborderdict = {'border': 0}
+    datedict = {'num_format': 'dd-mmm-yy'}
+    timedict = {'num_format': 'h:mm'}
+    dollardict = {'num_format': '$#, ##0.00'}
+    title_merge_format = workbook.add_format(
+        {
+            "bold": 1,
+            "border": 1,
+            "align": "center",
+            "valign": "vcenter",
+            # "fg_color": "blue",
+            "font_color": "#377ba8",
+            "font_size": 14
+        }
+    )
+    sub_heading_merge_format = workbook.add_format(
+        {
+            "bold": 1,
+            "border": 1,
+            "align": "center",
+            "valign": "vcenter",
+        }
+    )
+    col_head_fmt = workbook.add_format({'border': 1, 'text_wrap': 1,
+                                        'bold': 1})
+    border_fmt = workbook.add_format({'border': 1, 'text_wrap': 1})
+    # title_merge_format = workbook.add_format({'align': 'center', 'border': 1})
+    date_fmt = workbook.add_format(dict(datedict, **borderdict))
+    dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
+    time_fmt = workbook.add_format(dict(timedict, **borderdict))
+    hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
+    #
+    #  Add the members Sheet
+    #
+    ssdata = Member.query.filter(Member.active).order_by(Member.surname).all()
+    if len(ssdata) == 0:
+        return
+    ws = workbook.add_worksheet("Members")
+    try:
+        row = 2
+        ws.write(row, 0, "Surname", col_head_fmt)
+        ws.write(row, 1, "First Name", col_head_fmt)
+        ws.write(row, 2, "Rank", col_head_fmt)
+        ws.write(row, 3, "Note", col_head_fmt)
+        ws.write(row, 4, "Address", col_head_fmt)
+        ws.write(row, 6, "Email", col_head_fmt)
+        ws.write(row, 7, "Home", col_head_fmt)
+        ws.write(row, 8, "Mobile", col_head_fmt)
+        ws.write(row, 9, "Class", col_head_fmt)
+        ws.merge_range("E3:F3", "Address",col_head_fmt)
+        row += 1
+        for m in ssdata:
+            ws.write(row, 0, m.surname, border_fmt)
+            ws.write(row, 1, m.firstname, border_fmt)
+            ws.write(row, 2, m.rank, border_fmt)
+            ws.write(row, 3, m.note, border_fmt)
+            ws.write(row, 4, m.address_1, border_fmt)
+            ws.write(row, 5, m.address_2, border_fmt)
+            ws.write(row, 6, m.email_address, border_fmt)
+            ws.write(row, 7, m.phone, border_fmt)
+            ws.write(row, 8, m.mobile, border_fmt)
+            ws.write(row, 9, m.type, border_fmt)
+            row += 1
+        # col widths
+        ws.autofit()
+        # autfit overrides
+        # ws.set_column(0, 0, 12)
+        col = 1
+        # for i in range(len(installed_meters)):
+        #     ws.set_column(col, col, 12)
+        #     ws.set_column(col + 1, col + 1, 12)
+        #     col += 2
+        # Put in the title last so that the autofit works nicely
+        ws.merge_range("A1:J1", "ASC Membership " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+    except Exception as e:
+        applog.error("An error ocurred during spreadsheet create:{}".format(str(e)))
+        applog.debug("Row was:{}".format(row))
+        raise
+    #
+    #  Currency Spreadsheet
+    #
+    if include_currency:
+        ws = workbook.add_worksheet("Currency")
+        try:
+            row = 2
+            ws.write(row, 0, "Name", col_head_fmt)
+            ws.write(row,1, "Last Medical", col_head_fmt)
+            ws.write(row,2, "DOB", col_head_fmt)
+            ws.write(row,3, "Age", col_head_fmt)
+            ws.write(row,4, "Medical Due", col_head_fmt)
+            ws.write(row,5, "BFR/ICR Due", col_head_fmt)
+            ws.write(row,6, "Ratings", col_head_fmt)
+            ws.write(row, 7, "Last Mem Form", col_head_fmt)
+            ws.write(row, 8, "Med Note", col_head_fmt)
+            ws.write(row, 9, "BFR Notee", col_head_fmt)
+            ws.write(row,10, "Currency", col_head_fmt)
+            ws.write(row,11, "Hrs 12 Mths", col_head_fmt)
+            row += 1
+            for m in ssdata:
+                ws.write(row, 0, m.fullname, border_fmt)
+                ws.write(row, 1, m.last_medical, date_fmt)
+                ws.write(row, 2, m.dob, border_fmt)
+                ws.write(row, 3, m.age, border_fmt)
+                ws.write(row, 4, m.medical_due, date_fmt)
+                # this_fmt = date_fmt
+                # this_fmt.set_bg_color('White')
+                # if m.bfr_due is not None and m.bfr_due <= datetime.date.today():
+                #     this_fmt.set_bg_color('red')
+                #     this_fmt.set_fg_color('white')
+                # if m.bfr_due is None:
+                #     ws.write(row,5,datetime.date(2022,3,2))
+                # else:
+                ws.write(row, 5, m.bfr_due, date_fmt)
+                ws.write(row, 6, m.ratings_string, border_fmt)
+                ws.write(row, 7, m.last_mem_form, date_fmt)
+                ws.write(row, 8, 'med note', border_fmt)
+                ws.write(row, 9, 'bfr note', border_fmt)
+                currency_string = ''
+                if m.currency_dict['last90flts'] != 0:
+                    currency_string += str(m.currency_dict['last90flts'])
+                    currency_string += "/"
+                    currency_string += str(round(m.currency_dict['last90mins'] / 60,1))
+                    currency_string += " : "
+                currency_string += str(m.currency_dict['last12flts'])
+                currency_string += "/"
+                currency_string += str(round(m.currency_dict['last12mins'] / 60,1))
+                ws.write(row, 10, currency_string, border_fmt)
+                ws.write(row,11,round(m.currency_dict['last12mins'] / 60,1), border_fmt)
+                row += 1
+            ws.autofit()
+            ws.merge_range("A1:L1", "ASC Curency " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+            theseicons = []
+            # In order to use conditional formatting, the formatting values require the julian number of dates
+            # not a python object.  I'm not quite sure why I needed to add two days, but I checked the values
+            # in excel with what I could get in python and this is the numbers I needed.
+            green = ((datetime.date.today() + relativedelta(days=90)) - datetime.date(1900,1,1)).days + 2
+            orange = ((datetime.date.today() + relativedelta(days=1)) - datetime.date(1900,1,1,)).days + 2
+            theseicons.append({'criteria': '>=', 'type':'number', 'value': green})
+            theseicons.append({'criteria': '<', 'type':'number', 'value': orange})
+            ws.conditional_format(
+                'A1:D1',
+                {'type': 'icon_set',
+                 'icon_style': '4_red_to_black',
+                 'icons': [{'criteria': '>=', 'type': 'number', 'value': 90},
+                           {'criteria': '<', 'type': 'percentile', 'value': 50},
+                           {'criteria': '<=', 'type': 'percent', 'value': 25}]}
+            )
+            ws.conditional_format(3,4,row -1,5,
+                                  {'type':'icon_set',
+                                            'icon_style': '3_traffic_lights',
+                                            'icons':theseicons
+                                            })
+            start = datetime.date(datetime.date.today().year,10,1)
+            if datetime.date.today().month < 10:
+                start -= relativedelta(years=1)
+            red_date = workbook.add_format({'num_format':'dd-mmm-yy',
+                                           'font_color': 'red',
+                                           'border':1})
+            ws.conditional_format(3,7,row - 1,7,
+                                  {'type':'date',
+                                            'criteria': 'less than',
+                                            'value': start - relativedelta(months=1),
+                                            'format':red_date
+                                   }
+                                  )
+        except Exception as e:
+            applog.error("An error ocurred during currency spreadsheet create:{}".format(str(e)))
+            applog.debug("Row was:{}".format(row))
+            raise
+        #
+        # Incidents
+        #
+        if include_incident:
+            ws = workbook.add_worksheet("Incidents")
+            try:
+                sql = sqltext("""
+                    select 
+                    t1.surname,
+                    t1.firstname,
+                    t0.transdate,
+                    t0.transnotes
+                    from membertrans t0
+                    join members t1 on t0.memberid = t1.id 
+                    where t0.transtype = 'IR'
+                    and t0.transdate >= :startdate
+                    order by t0.transdate
+                 """)
+                sql = sql.columns(transdate=db.Date)
+                incidents = db.engine.execute(sql, startdate=datetime.date.today() - relativedelta(months=12)).fetchall()
+                row = 2
+                ws.write(row, 0, "Name", col_head_fmt)
+                ws.write(row,1, "Date", col_head_fmt)
+                ws.write(row,2, "Notes", col_head_fmt)
+                row += 1
+                for ir in incidents:
+                    ws.write(row, 0, ir.firstname + ' ' + ir.surname, border_fmt)
+                    ws.write(row, 1, ir.transdate , date_fmt)
+                    ws.write(row, 2, ir.transnotes , border_fmt)
+                    row += 1
+                ws.autofit()
+                ws.merge_range("A1:C1", "12 Month Incident Summary " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+
+            except Exception as e:
+                applog.error("An error ocurred during currency spreadsheet create:{}".format(str(e)))
+                applog.debug("Row was:{}".format(row))
+                raise
+    #
+    #  NOK Spreadsheet
+    #
+    if include_currency:
+        ws = workbook.add_worksheet("NoK")
+        try:
+            ssdata = Member.query.filter(Member.active).order_by(Member.surname).all()
+            row = 2
+            ws.write(row, 0, "Name", col_head_fmt)
+            ws.write(row,1, "Address", col_head_fmt)
+            ws.write(row,2, "Nok Name", col_head_fmt)
+            ws.write(row,3, "Nok R/Ship", col_head_fmt)
+            ws.write(row,4, "Nok Contact", col_head_fmt)
+            row += 1
+            for m in ssdata:
+                ws.write(row, 0, m.fullname, border_fmt)
+                ws.write(row, 1, m.address_1 +',' + m.address_2, date_fmt)
+                ws.write(row, 2, m.nok_name, border_fmt)
+                ws.write(row, 3, m.nok_rship, border_fmt)
+                if m.nok_phone is None or len(m.nok_phone) < 2:
+                    ws.write(row, 4, m.nok_mobile, border_fmt)
+                else:
+                    ws.write(row, 4, m.nok_phone + ' / ' + m.nok_mobile, border_fmt)
+                row += 1
+            ws.autofit()
+            ws.merge_range("A1:E1", "ASC Next of Kin List " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+        except Exception as e:
+            applog.error("An error ocurred during currency spreadsheet create:{}".format(str(e)))
+            applog.debug("Row was:{}".format(row))
+            raise
+
+    workbook.close()
+    return filename
+

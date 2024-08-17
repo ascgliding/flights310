@@ -180,9 +180,6 @@ def exporttugmovements():
 @bp.route('/exportaccts', methods=['GET', 'POST'])
 @login_required
 def exportaccts():
-    if not current_user.administrator:
-        flash("Sorry, this is an admin only function")
-        return render_template('index.html')
     thisform = AcctsExportForm(name='Export Invoices')
     if thisform.cancel.data:
         return render_template('mastmaint/index.html')

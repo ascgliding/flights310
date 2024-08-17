@@ -6,7 +6,6 @@ from flask_wtf import __version__ as flaskwtf_version
 from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
 
-
 import logging
 import inspect
 from asc.schema import *
@@ -26,6 +25,7 @@ from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,
 from dateutil.relativedelta import relativedelta
 
 from asc.oMaint import ACMaint
+from asc.oMember import OneMember
 # from asc.oReadingTools import   ReadingTools
 from  asc.common import *
 
@@ -2121,18 +2121,18 @@ class sqlalchemy_read_tests(unittest.TestCase):
     #     for r in rows:
     #         print(repr(r))
     #
-    # def test002(self):
-    #     rows = db.session.query(
-    #         Flight.ac_regn,
-    #         Flight.flt_date,
-    #         func.count(Flight.flt_date).label('movements'),
-    #         ).filter(Flight.linetype=='FL'
-    #         ).group_by(Flight.flt_date
-    #                    ).all()
-    #     for r in rows[1:5]:
-    #         thisimport = flight_summary_for_day(r.ac_regn, r.flt_date)
-    #         # thisimport = ReadingTools.flight_summary_for_day(r.ac_regn, r.flt_date)
-    #         print("mins :{} count {}".format(thisimport['minutes'], thisimport['count']))
+    def test002(self):
+        rows = db.session.query(
+            Flight.ac_regn,
+            Flight.flt_date,
+            func.count(Flight.flt_date).label('movements'),
+            ).filter(Flight.linetype=='FL'
+            ).group_by(Flight.flt_date
+                       ).all()
+        for r in rows[1:5]:
+            thissummary = flight_summary_for_day(r.ac_regn, r.flt_date)
+            # thisimport = ReadingTools.flight_summary_for_day(r.ac_regn, r.flt_date)
+            print("A/c: {} date: {} mins :{} count {}".format(r.ac_regn,r.flt_date,thissummary['minutes'], thissummary['count']))
     #
     # def test003(self):
     #     create_readings_from_flights("GNF",None,datetime.date(2023,3,2))
@@ -2159,6 +2159,39 @@ class sqlalchemy_read_tests(unittest.TestCase):
         for f in list:
             print(f[0])
 
+class memberobject(unittest.TestCase):
+    # This cannot be used a general test case because the data chagnes
+
+    def test001(self):
+        thismbr = OneMember(17)
+        print(thismbr.fullname)
+        print('BFR Due:{}'.format(thismbr.bfr_due))
+        print('Medical Due:{}'.format(thismbr.medical_due))
+        print('Mobile / Email: {}/{}'.format(thismbr.mobile, thismbr.email_address))
+        print('login id: {}'.format(thismbr.login_id))
+        print('Accts Customer Code: {}'.format(thismbr.customer_code))
+        print(thismbr.currency_dict)
+
+    def test002(self):
+        thismbr = Member.query.filter(Member.surname=='Sly').first()
+        print(thismbr.fullname)
+        print(thismbr.user_rec)
+        print(thismbr.pilot_rec)
+        print('last BFR : {}'.format(thismbr.last_bfr))
+        print('BFR Due:{}'.format(thismbr.bfr_due))
+        print('last Medical : {}'.format(thismbr.last_medical))
+        print('Medical Due:{}'.format(thismbr.medical_due))
+        print(thismbr.currency_dict)
+        print('Age : {}'.format(thismbr.age))
+
+    def test003(self):
+        for m in Member.query.filter(Member.active).order_by(Member.surname).all():
+            print('{}:{}:{}'.format(m.fullname,m.ratings_string,type(m.medical_due)))
+
+    def test004(self):
+        me = User.query.get(17)
+        print(me.name)
+        print(me.roles)
 
 if __name__ == '__main__':
     print('start of main')
@@ -2169,8 +2202,9 @@ if __name__ == '__main__':
     case5 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test_ac_obj)
     case6 = unittest.TestLoader().loadTestsFromTestCase(maintenance_time_values)
     case7 = unittest.TestLoader().loadTestsFromTestCase(sqlalchemy_read_tests)
+    case8 = unittest.TestLoader().loadTestsFromTestCase(memberobject)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case7])
+    thissuite = unittest.TestSuite([case8])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')

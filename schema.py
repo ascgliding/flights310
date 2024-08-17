@@ -3,6 +3,7 @@ import decimal
 import sqlalchemy.exc
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
+from dateutil.relativedelta import *
 
 from asc import db
 
@@ -11,8 +12,10 @@ from sqlalchemy import Integer, ForeignKey
 from decimal import Decimal
 from sqlalchemy.orm import relationship
 import sqlalchemy.types as types
+from sqlalchemy import text as sqltext
 from decimal import *
 import re
+
 
 
 class SchemaError(Exception):
@@ -185,10 +188,61 @@ class User(db.Model):
         """Always False, as anonymous users aren't supported."""
         return False
 
+    @property
+    def roles(self):
+        sql = sqltext("""
+        select t1.name
+            from user_roles t0
+            join roles t1 on t1.id = t0.role_id
+            join users t2 on t2.id = t0.user_id  
+            where t2.id = :userid
+        """)
+        return [n[0] for n in db.engine.execute(sql, userid=self.id).all()]
+
     def get_id(self):
         """Return the id of a user to satisfy Flask-Login's requirements."""
         # return str(self.id)
         return str(self.name)
+
+
+
+# from flask-user documentation
+# Define the User data-model
+#class User(db.Model, UserMixin):
+#        ...
+#    # Relationships
+#    roles = db.relationship('Role', secondary='user_roles')
+
+# Define the Role data-model
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer(),db.Sequence('role_id_seq'), primary_key=True)
+    name = db.Column(db.String(50), unique=True)
+
+    def __repr__(self):
+        return "Role:" + self.name
+
+# Define the UserRoles association table
+class UserRoles(db.Model):
+    __tablename__ = 'user_roles'
+    id = db.Column(db.Integer(), db.Sequence('userrole_id_seq'), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
+    user_rec = relationship("User")
+    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
+    role_rec = relationship("Role")
+
+class ViewSecurity(db.Model):
+    __tablename__ = 'viewsecurity'
+    id = db.Column(db.Integer(), db.Sequence('viewsecurity_id_seq'), primary_key=True)
+    viewname = db.Column(db.String(128), comment='The view name or start of a view name')
+    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id'))
+    role_rec = relationship("Role")
+    # Where we have a view path such as "/mastmaint" we have some views such as
+    # /mastmaint/roster which I want to make available to all comers. So this can be made exempt.
+    # any role can be used - the role will be ignored.
+    security_exempt = db.Column(db.Boolean, comment='If True then this view is exempt from all security')
+
+
 
 
 class Flight(db.Model):
@@ -425,6 +479,7 @@ class Member(db.Model):
     nok_phone = db.Column(db.String)
     nok_mobile = db.Column(db.String)
     glider = db.Column(db.String)
+    email_bfr_med = db.Column(db.Boolean,comment='Send warning emails',default=True)
 
     transactions = relationship("MemberTrans", cascade="all,delete-orphan")
 
@@ -436,6 +491,132 @@ class Member(db.Model):
 
     def __str(self):
         return self.firstname + " " + self.surname
+
+    @property
+    def fullname(self):
+        return self.firstname + ' ' + self.surname
+
+    @property
+    def user_rec(self):
+        thisuser = User.query.filter(User.gnz_no == self.gnz_no).first()
+        if thisuser is None:
+            thisuser = User.query.filter(User.fullname==self.fullname).first()
+        if thisuser is not None:
+            self.__user_id = thisuser.id
+        return thisuser
+
+    @property
+    def pilot_rec(self):
+        thispilot = Pilot.query.filter(Pilot.gnz_no==self.gnz_no).first()
+        if thispilot is None:
+            thispilot = Pilot.query.filter(Pilot.fullname==self.fullname).first()
+        if thispilot is not None:
+            self.__pilot_id = thispilot.id
+        return thispilot
+
+    @property
+    def age(self):
+        age = relativedelta(datetime.date.today(),self.dob)
+        return age.years + round((age.months/12),1)
+
+    @property
+    def last_medical(self):
+        last_medical = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+            filter(MemberTrans.transtype == 'MD'). \
+            order_by(MemberTrans.transdate.desc()).first()
+        if last_medical is None:
+            return None
+        return last_medical.transdate
+
+
+    @property
+    def medical_due(self):
+        # ONe is required only if QGP and wanting to carry passengers.
+        QGP = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+            filter(MemberTrans.transtype == 'RTG'). \
+            filter(MemberTrans.transsubtype == 'QGP').first()
+        if QGP is None:
+            return None
+        if self.last_medical is None:
+            return datetime.date.today()
+        if self.age >= 40:
+            return self.last_medical + relativedelta(years=2)
+        else:
+            return self.last_medical + relativedelta(years=5)
+
+    @property
+    def last_bfr(self):
+        bfr = MemberTrans.query.filter(MemberTrans.memberid==self.id). \
+                    filter(MemberTrans.transtype=='BFR').\
+                    order_by(MemberTrans.transdate.desc()).first()
+        icr = MemberTrans.query.filter(MemberTrans.memberid==self.id). \
+                    filter(MemberTrans.transtype=='ICR').\
+                    order_by(MemberTrans.transdate.desc()).first()
+        if bfr is None and icr is None:
+            return None
+        if icr is None:
+            return bfr.transdate
+        if bfr.transdate > icr.transdate:
+            return bfr.transdate
+        else:
+            return icr.transdate
+
+    @property
+    def bfr_due(self):
+        if self.last_bfr is None:
+            return None
+        return self.last_bfr + relativedelta(years=2)
+
+    @property
+    def last_mem_form(self):
+        last_mem_form = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+            filter(MemberTrans.transtype == 'MF'). \
+            order_by(MemberTrans.transdate.desc()).first()
+        if last_mem_form is None:
+            return None
+        return last_mem_form.transdate
+
+    @property
+    def ratings_string(self):
+        ratings = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+            filter(MemberTrans.transtype == 'RTG'). \
+            order_by(MemberTrans.transdate.desc()).all()
+        rtglist = (r.transsubtype for r in ratings)
+        return "/".join(rtglist)
+
+
+    @property
+    def currency_dict(self):
+        rtndict = {'totalmins':0,
+                   'totalflts':0,
+                   'last90mins':0,
+                   'last90flts':0,
+                   'last12mins':0,
+                   'last12flts':0,
+                   'instmins':0,
+                   'instflts':0,
+                   'inst12mins':0,
+                   'inst12flts':0}
+        flts = Flight.query.filter((Flight.pic == self.fullname)| (Flight.p2 == self.fullname)).all()
+        for f in flts:
+            rtndict["totalmins"] += f.glider_mins()
+            rtndict["totalflts"] += 1
+            if f.flt_date + relativedelta(days=90) >= datetime.date.today():
+                rtndict["last90mins"] += f.glider_mins()
+                rtndict["last90flts"] += 1
+            if f.flt_date + relativedelta(months=12) >= datetime.date.today():
+                rtndict["last12mins"] += f.glider_mins()
+                rtndict["last12flts"] += 1
+            if self.instructor:
+                thisac = Aircraft.query.filter(Aircraft.regn==f.ac_regn).first()
+                if thisac is not None:
+                    if thisac.seat_count == 2 and f.pic == self.fullname:
+                        rtndict["instmins"] += f.glider_mins()
+                        rtndict["instflts"] += 1
+                        if f.flt_date + relativedelta(months=12) >= datetime.date.today():
+                            rtndict["inst12mins"] += f.glider_mins()
+                            rtndict["inst12flts"] += 1
+        return rtndict
 
 
 class MemberTrans(db.Model):
@@ -451,6 +632,7 @@ class MemberTrans(db.Model):
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+
 
     def __init__(self, member):
         """ This is only called for a new transaction"""

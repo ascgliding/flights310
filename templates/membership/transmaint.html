@@ -15,9 +15,8 @@ Transaction Maintenance
       <li>{{ render_field(form.transnotes) }}</li>
     </ul>
   </fieldset>
-  <div style="display:table-cell; text-align: right;">
-    {# form.btnsubmit() #}
-    <button id="donebtn" type="submit"></button>
-  </div>
+    {{ form.btnsubmit() }}
+    {{ form.cancel() }}
+    {{ form.delete() }}
 </form>
 {% endblock %}
