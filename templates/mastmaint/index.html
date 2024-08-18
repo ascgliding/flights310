@@ -13,6 +13,9 @@
     <p><a href="{{ url_for('mastmaint.pilotlist') }}">Pilot Maintenance</a></p>
     <p><a href="{{ url_for('mastmaint.aircraftlist') }}">Aircraft Maintenance</a></p>
     <p><a href="{{ url_for('membership.memberlist', active='ACTIVE') }}">Membership Maintenance</a></p>
+    {% if not current_user.administrator %}
+      <p><a href="{{ url_for('auth.userlist') }}">User Maintenance</a></p>
+    {% endif %}
   </div>
   <div class="pagemenucol">
     <h4>General</h4>

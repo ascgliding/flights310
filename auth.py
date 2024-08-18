@@ -241,9 +241,6 @@ def userpassword(id):
 @bp.route('/userlist')
 @fresh_login_required
 def userlist():
-    if not current_user.administrator:
-        flash("You are not authorised to this page.")
-        return redirect(url_for('index'))
     users = db.session.query(User).all()
     return render_template("auth/userlist.html", users=users)
 
@@ -251,9 +248,6 @@ def userlist():
 @bp.route('/usermaint/<id>', methods=['GET', 'POST'])
 @fresh_login_required
 def usermaint(id):
-    if not current_user.administrator:
-        flash("You are not authorised to this page.")
-        return redirect(url_for('index'))
     thisuser = User.query.filter_by(id=id).one_or_none()
     if request.method == 'POST' and 'cancelbtn' in request.form:
         return redirect(url_for("auth.userlist"))

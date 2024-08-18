@@ -31,10 +31,12 @@
           <label for="gnz_no">GNZ No</label>
           <input type=number name="gnz_no" id="gnz_no" value="{{ request.form['gnz_no'] or user.gnz_no }}" >
         </li>
+        {% if current_user.administrator %}
         <li>
           <label for="administrator">Administrator</label>
           <input type="checkbox"  id="administrator" name="administrator" {% if user.administrator  %} checked {% endif %}>
         </li>
+        {% endif %}
         <li>
           <label for="approved">Approved</label>
           <input type="checkbox"  id="approved" name="approved" {% if user.approved  %} checked {% endif %}>
