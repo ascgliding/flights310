@@ -8,7 +8,6 @@
 {% block content %}
 
 <div class="pagemenurow">
-{% if current_user.administrator %}
   <div class="pagemenucol">
     <h4>Master Files</h4>
     <p><a href="{{ url_for('mastmaint.pilotlist') }}">Pilot Maintenance</a></p>
@@ -20,7 +19,6 @@
     <p><a class="notphone" href="{{ url_for('mastmaint.slotlist') }}">Slot Maintenance</a></p>
     <p><a href="{{ url_for('mastmaint.rosterlist') }}">Roster List</a></p>
   </div>
-  {% endif %}
 </div>
 <div class="pagemenurow">
   <div class="pagemenucol">

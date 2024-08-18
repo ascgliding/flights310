@@ -21,13 +21,11 @@
   </div>
 </div>
 <div class="pagemenurow">
-{% if current_user.administrator %}
   <div class="pagemenucol">
     <h4>Database Maintenance (Airfraft Independant)</h4>
     <p><a href="{{ url_for('plantmaint.stdtasklist') }}">Maintain Standard Tasks</a></p>
     <p><a href="{{ url_for('plantmaint.stdmeterlist') }}">Maintain Standard Meters</a></p>
     <p><a href="{{ url_for('plantmaint.stduserlist') }}">Maintain User Access</a></p>
   </div>
-  {% endif %}
 </div>
 {% endblock %}
