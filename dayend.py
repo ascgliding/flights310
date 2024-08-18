@@ -100,6 +100,8 @@ def testmailer():
         # thisbody = thisbody + "</table>"
         # msg.body = thisbody
         # msg.body = "Here is the content"
+        msg.add_body("Here is the Test Email")
+        msg.add_body("</br> It is now " + datetime.datetime.now().strftime('%A %d-%b-%Y %H:%M'))
         msg.add_body("See table below<br>")
         sql = sqltext("""
                select id,pic,landed
@@ -233,20 +235,71 @@ def send_db():
     print(os.getcwd())
     msg = ascmailer('Database Backup')
     # msg.add_body("Email should have gone to {}".format(address))
-    msg.add_body("<html>Here is the Database Backup</html>")
+    msgbody
+    msg.add_body("<html>Here is the Database Backup")
+    msg.add_body("</br> It is now " + datetime.datetime.now().strftime('%A %d-%b-%Y %H:%M'))
+    msg.add_body("</html>")
     msg.add_recipient('ray@rayburns.nz')
     msg.add_attachment('../instance/asc.sqlite')
     msg.send()
 
+def send_med_bfr_to_cfi():
+    mems = Member.query.filter(Member.active==True).filter(Member.email_bfr_med==True).order_by(Member.surname)
+    count = 0
+    email_list = [{'name':'Name','medical':'Medical','bfr':'BFR','message':'Message'}]
+    email_list = []
+    for m in mems:
+        msgs = []
+        if m.bfr_due is not None and m.bfr_due < datetime.date.today():
+            msgs.append('BFR Expired')
+        elif m.bfr_due is not None and m.bfr_due < datetime.date.today() - relativedelta(days=60):
+            msgs.append('BFR Coming Up')
+        if m.medical_due is not None and m.medical_due < datetime.date.today():
+            msgs.append('Medical Expired')
+        elif m.medical_due is not None and m.medical_due < datetime.date.today() - relativedelta(days=60):
+            msgs.append('Medical Coming Up')
+        if len(msgs) > 0:
+            count += 1
+            email_list.append({'Name':m.fullname, 'Medical': m.medical_due, 'BFR': m.bfr_due, 'Message':','.join(msgs) })
+    if count > 0:
+        msg = ascmailer('Medical and BFR Status')
+        msg.add_body_list(email_list)
+        msg.add_recipient('ray@rayburns.nz')
+        msg.send()
+
+
+
+def send_stats_to_gnz():
+    """
+    This is the text of the email from Max...
+    The usual 6-monthy flight stats are now called for.  As a reminder of what is required (criteria), please see the attachment.
+        To complete your return just reply to this message with the following information:
+        1.    Number of aero-tow launches
+        2.    Number of winch launches
+        3.    Number of automobile launches
+        4.    Number of self-launches
+        5.    Total number of flights by club gliders (ie not private)
+        -       Number of trial flights within this total
+        -       Number of youth flights (under 26 years) within this total
+        Number of First Solos – please also provide the names of your first-solos so we don’t double-count them!
+    :return:
+    """
+    pass
+
 
 if __name__ == '__main__':
     with app.app_context():
+        # The execution time is 0400.
         log.info("Dayend started")
         # testmailer()
         update_auto_readings()
         send_maintenance_emails()
         #validate_all_readings()
         # send me the database on Saturdays and Sundays.
-        if datetime.datetime.today().weekday() in [ 5,6 ]:
+        if datetime.datetime.today().weekday() in [ 6,0 ]:
+            log.info("Database Emailed during Dayend")
             send_db()
+        # send me medical and BFR data on Friday Mornings.
+        if datetime.datetime.today().weekday() in [ 1,4 ]:
+            send_med_bfr_to_cfi()
         print("it ran")
