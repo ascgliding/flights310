@@ -324,12 +324,14 @@ def userverify():
         WHERE name NOT IN (SELECT fullname FROM pilots)
         AND name NOT LIKE '%trial%'
         and name not like '%pax%'
+        and name not like 'ATC%'
         GROUP BY 2 HAVING count(*) > 1
     -- pilot has chargeable flight in last 30 days but not in pilots table
         UNION
         SELECT id,payer,'Payer has chargeable flight in last 30 days but not in pilots table',2,'ERROR','flights'
         FROM flights
         WHERE payer NOT IN (SELECT fullname FROM pilots)
+        and payer != ''
         AND julianday('now') - julianday(flt_date) < 30
     -- GNZ no different between users and pilots
         union
@@ -343,6 +345,32 @@ def userverify():
         FROM users t0
         JOIN pilots t1 ON t1.fullname = t0.fullname
         WHERE t0.email != t1.email
+            -- pilots who are not members
+        union
+        select t0.id, t0.fullname, 'Pilot has a gnz no that is not in members',2,'ERROR','pilots'
+        from pilots t0
+        where t0.gnz_no not in (select gnz_no from members)
+        and t0.fullname  not like 'ATC%'
+        and t0.fullname not like 'OTHER CLUB%'
+        and t0.fullname not like 'YGNZ%'
+        and t0.fullname not like 'Trial Flight%'
+    -- flights with invalid payer
+        UNION 
+        select t0.id, t0.payer, 'Invalid Payer',2,'ERROR','flights'
+        from flights t0
+        where t0.payer != ''
+        AND julianday('now') - julianday(flt_date) < 30
+        and t0.payer not in (
+        select fullname 
+            from pilots s0
+            join members s1 on s0.gnz_no  = s1.gnz_no 
+            UNION 
+            select s2.fullname 
+            from pilots s2
+            where s2.fullname like 'ATC%'
+            or s2.fullname like 'Trial%'
+            or s2.fullname like 'OTHER CLUB%'
+        )
     -- sort
         ORDER BY priority
             """)
