@@ -113,9 +113,11 @@ class FlightForm(FlaskForm):
                             render_kw={'onclick': 'return ConfirmDelete()'})
 
 class PaymentForm(FlaskForm):
-    payer = StringField('Payer',
-                        description='Person paying for this flight',
-                        render_kw={'list': "pilots"})
+    # payer = StringField('Payer',
+    #                     description='Person paying for this flight',
+    #                     render_kw={'list': "pilots"})
+    payer = SelectField('Payer',
+                        description='Person paying for this flight')
     tow_charge = DecimalField('Launch',
                               description="Launch Charge",
                               places=2,
@@ -567,11 +569,33 @@ def tuglanded(id):
 @login_required
 def payment(id):
     thisrec = Flight.query.get(id)
+
     # if thisrec is None then we have an error
     if thisrec is None:
         flash("Cannot locate flight")
         return redirect(url_for('flights.daysummary'))
     thisform = PaymentForm(obj=thisrec, name='Payment Maintenance')
+    sql = sqltext("""
+            select fullname 
+            from pilots t0
+            join members t1 on t0.gnz_no  = t1.gnz_no 
+            where t1.active = 1
+            UNION 
+            select fullname 
+            from pilots t0
+            where fullname like 'ATC%'
+            or fullname like 'Trial%'
+            or fullname like 'OTHER CLUB%'
+            order by fullname
+             """)
+    pilotlist = [r[0] for r in db.engine.execute(sql).fetchall()]
+    if thisrec.payer is not None and thisrec.payer not in pilotlist:
+        flash("The payer recorded on this flight is invalid.  Please tell the system administrator.","error")
+        applog.error('Invalid payer ({}) recorded on flight {}'.format(thisrec.payer,id))
+        return redirect(url_for('flights.changeflight', id=id))
+    thisform.pilotlist = []
+    if pilotlist is not None:
+        thisform.payer.choices = pilotlist
     if thisform.cancel.data:
         return redirect(url_for('flights.changeflight', id=id))
     if thisform.calc.data:
@@ -599,11 +623,6 @@ def payment(id):
             return render_template('flights/payment.html', form=thisform, glider_time = thisrec.glider_mins())
         return redirect(url_for('flights.daysheet', date=thisrec.flt_date.strftime('%Y-%m-%d')))
     # if we are here then we are getting the data for display
-    sql = sqltext("""
-             select fullname
-             from pilots
-             """)
-    pilotlist = [r[0] for r in db.engine.execute(sql).fetchall()]
     return render_template('flights/payment.html', form=thisform,pilots=pilotlist)
 
 
