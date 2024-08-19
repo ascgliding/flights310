@@ -29,9 +29,9 @@
     <div class="row">
       <div class="cell" align="left">{{l.firstname}} {{ l.surname }}</div>
       <div class="cell mobile_port_suppress " align="right">{{ l.gnz_no }}</div>
-      <div class="cell mobile_port_suppress " align="left">{{ l.email_address }}</div>
+      <div class="cell mobile_port_suppress " align="left"><a href="mailto:{{l.email_address}}">{{ l.email_address }}</a></div>
       <div class="cell mobile_port_suppress " align="left"><a href="tel:{{+l.phone}}">{{ l.phone }}</a></div>
-      <div class="cell mobile_land_suppress" align="left"><a href="tel:{{+l.mobile}}">{{ l.mobile }}<a></a></div>
+      <div class="cell mobile_land_suppress" align="left"><a href="tel:{{+l.mobile}}">{{ l.mobile }}</a></div>
       </div>
   {% endfor %}
   </div>
