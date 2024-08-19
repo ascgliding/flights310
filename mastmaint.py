@@ -339,6 +339,12 @@ def userverify():
         FROM users t0
         JOIN pilots t1 ON t1.fullname = t0.fullname
         WHERE t0.gnz_no != t1.gnz_no
+    -- What if the names don't match up?
+        union
+        select t0.id, t0.fullname, 'Name on pilots table does not match Members (' || t1.firstname || ' '|| t1.surname || ')',3,'ERROR','pilots'
+        from pilots t0
+        join members t1 on t0.gnz_no == t1.gnz_no
+        where t1.firstname || ' ' || t1.surname != t0.fullname
     -- email different between users and pilots
         union
         SELECT t0.id, t0.fullname, 'User email does not match pilots table',8,'ERROR','users'
@@ -367,9 +373,9 @@ def userverify():
             UNION 
             select s2.fullname 
             from pilots s2
-            where s2.fullname like 'ATC%'
-            or s2.fullname like 'Trial%'
-            or s2.fullname like 'OTHER CLUB%'
+            where s2.fullname like 'ATC'
+            or s2.fullname like 'Trial Flight'
+            or s2.fullname like 'OTHER CLUB MEMBER'
         )
     -- sort
         ORDER BY priority
