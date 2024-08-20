@@ -416,8 +416,9 @@ def changeflight(id):
                 # set payment type
                 thisac = db.session.query(Aircraft).filter(Aircraft.regn == thisrec.ac_regn).order_by(Aircraft.id.desc()).first()
                 if thisac is not None:
-                    if thisac.rate_per_hour == 0  and thisrec.tug_regn == constTOW_FOR_SELF_LAUNCH:
+                    if thisac.owner == 'ATC':
                         thisrec.payment_note = 'No Pmt Required'
+                        thisrec.payer = 'ATC'
                 db.session.add(thisrec)
                 # to get the inserted record id, you need to flush and refresh.
                 db.session.flush()
