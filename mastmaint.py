@@ -39,8 +39,10 @@ class PilotForm(FlaskForm):
                            description="Enter the full name - shown on reports and screens")
     email = StringField('Email', [Length(min=6, message=(u'Little short for an email address?')),
                                   Email(message=('That\'s not a valid email address.')),
-                                  DataRequired(message=('That\'s not a valid email address.'))],
-                        description='If an email is provided then information can be emailed to the pilot')
+                                  validators.DataRequired(message=('That\'s not a valid email address.'))],
+                            description='If an email is provided then information can be emailed to the pilot',
+                            render_kw={'size': '50', 'autocomplete': 'dont'})
+
     instructor = BooleanField('Instructor', description='Tick if Instructor')
     towpilot = BooleanField('Tow Pilot', description='Tick if Tow Pilot')
     username = StringField("User Name"
@@ -57,11 +59,12 @@ class PilotForm(FlaskForm):
     cancel = SubmitField('cancel', id='cancelbtn')
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
-    def validate_email(self, email):
-        """Email validation."""
-        pilot = Pilot.query.filter_by(email=email.data).first()
-        if pilot is not None and pilot.code != self.code.data:
-            raise ValidationError('Please use a different email address.')
+    # Can't do this because it does not work if the user changes the code.
+    # def validate_email(self, email):
+    #     """Email validation."""
+    #     pilot = Pilot.query.filter_by(email=email.data).first()
+    #     if pilot is not None and pilot.code != self.code.data:
+    #         raise ValidationError('Please use a different email address.')
 
 
 class AircraftForm(FlaskForm):
@@ -195,7 +198,10 @@ def pilotmaint(id):
             return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
         if thispilot.id is None:
             db.session.add(thispilot)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            flash(str(e),"error")
         return redirect(url_for('mastmaint.pilotlist'))
     return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
 
