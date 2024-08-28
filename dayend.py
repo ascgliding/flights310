@@ -325,7 +325,6 @@ if __name__ == '__main__':
         log.info("Dayend started")
         if datetime.date.today().day == 1:
             send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
-        exit(0)
         # testmailer()
         update_auto_readings()
         send_maintenance_emails()
