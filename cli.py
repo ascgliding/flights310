@@ -1095,6 +1095,150 @@ def add_task_and_history(pac_id,ptask_desc,plast_done,plast_done_reading,
         db.session.add(histrow)
     db.session.commit()
 
+def populate_person_keys():
+    print('processing members')
+    users = User.query.all()
+    for u in users:
+        mbr = Member.query.filter(Member.gnz_no == u.gnz_no).first()
+        if mbr is not None:
+            mbr.user_id = u.id
+        pilot = Pilot.query.filter(Pilot.gnz_no == u.gnz_no).first()
+        if pilot is not None:
+            pilot.user_id = u.id
+    db.session.commit()
+    #
+    print('processing pilots')
+    pilots = Pilot.query.all()
+    for p in pilots:
+        mbr = Member.query.filter(Member.gnz_no == p.gnz_no).first()
+        if mbr is not None:
+            mbr.pilot_id = p.id
+        usr = User.query.filter(User.gnz_no == p.gnz_no).first()
+        if usr is not None:
+            usr.pilot_id = p.id
+    db.session.commit()
+    #
+    print('processing members')
+    members = Member.query.all()
+    for m in members:
+        usr = User.query.filter(User.gnz_no == m.gnz_no).first()
+        if usr is not None:
+            usr.member_id = m.id
+        pilot = Pilot.query.filter(Pilot.gnz_no == m.gnz_no).first()
+        if pilot is not None:
+            pilot.member_id = m.id
+    db.session.commit()
+
+def populate_pilot():
+    """
+    For running after sql script upg_2024Aug24.sql
+    :return:
+    """
+    sql = sqltext("""
+        select firstname, surname
+        from members
+        where gnz_no not in (select gnz_no from pilots)
+    """)
+    errors=db.engine.execute(sql).fetchall()
+    if len(errors) > 0:
+        print("Following members are not in pilots and will get lost:")
+        for e in errors:
+            print("{} {}".format(e.firstname,e.surname))
+    # Pilots has been dropped so reload it.
+    print("Importing Pilots")
+    with open('instance/pilots.csv', 'r') as csvf:
+        counter = 0
+        reader = csv.DictReader(csvf,delimiter=',')
+        for rec in reader:
+            pilot = Pilot()
+            pilot.id = rec['id']
+            pilot.fullname = rec['fullname']
+            pilot.email = rec['email']
+            pilot.towpilot = True if rec['towpilot'] == '1' else False
+            pilot.instructor = True if rec['instructor'] == '1' else False
+            pilot.bscheme = True if rec['bscheme'] == '1' else False
+            # pilot.fullname = rec['y']
+            pilot.gnz_no = rec['gnz_no']
+            pilot.accts_cust_code = rec['accts_cust_code']
+            db.session.add(pilot)
+    db.session.commit()
+    #
+    print("Importing member data into pilots")
+    for m in Member.query.all():
+        p = Pilot.query.filter(Pilot.gnz_no == m.gnz_no).first()
+        if p is not None:
+            p.member = True
+            p.active = m.active
+            p.type = m.type
+            p.surname = m.surname
+            p.firstname = m.firstname
+            p.rank = m.rank
+            p.note = m.note
+            p.dob = m.dob
+            p.phone = m.phone
+            p.mobile = m.mobile
+            p.address_1 = m.address_1
+            p.address_2 = m.address_2
+            p.address_3 = m.address_3
+            p.service = m.service
+            p.roster = m.roster
+            p.email_2 = m.email_2
+            p.phone2 = m.phone2
+            p.mobile2 = m.mobile2
+            p.committee = m.committee
+            p.instructor = m.instructor
+            p.tow_pilot = m.tow_pilot
+            p.oo = m.oo
+            p.duty_pilot = m.duty_pilot
+            p.nok_name = m.nok_name
+            p.nok_rship = m.nok_rship
+            p.nok_phone = m.nok_phone
+            p.nok_mobile = m.nok_mobile
+            p.glider = m.glider
+            p.email_med_warning = m.email_bfr_med
+            p.email_bfr_warning = m.email_bfr_med
+            p.email_mbrfrm_warning = True
+            p.old_member_id = m.id
+            print("{} updated".format(p.fullname))
+    db.session.commit()
+    print("Updating keys")
+    for p in Pilot.query.all():
+        usr = User.query.filter(User.gnz_no == p.gnz_no).first()
+        if usr is not None:
+            p.user_id = usr.id
+    for u in User.query.all():
+        pilot  = Pilot.query.filter(Pilot.gnz_no == u.gnz_no).first()
+        if pilot is not None:
+            u.pilot_id = pilot.id
+    db.session.commit()
+    print("Importing Member Trans")
+    with open('instance/mbrtrans.csv', 'r') as csvf:
+        counter = 0
+        reader = csv.DictReader(csvf,delimiter=',')
+        for rec in reader:
+            thismbr = Pilot.query.filter(Pilot.old_member_id==rec['memberid']).first()
+            if thismbr is not None:
+                newtrans = MemberTrans(thismbr)
+                newtrans.memberid = thismbr.id
+                newtrans.transdate = datetime.datetime.strptime(rec['transdate'],'%Y-%m-%d').date()
+                newtrans.transtype = rec['transtype']
+                newtrans.transsubtype = rec['transsubtype']
+                newtrans.transnotes = rec['transnotes']
+                newtrans.inserted = datetime.datetime.strptime(rec['inserted'], '%Y-%m-%d %H:%M:%S.%f')
+
+                db.session.add(newtrans)
+                counter += 1
+            else:
+                print('Member trans not exported - could not find member.')
+    db.session.commit()
+    print('Setting trial flight customer to uppercase')
+    tf = Pilot.query.filter(Pilot.fullname == 'Trial Flight').first()
+    tf.fullname = 'TRIAL FLIGHT'
+    db.session.commit()
+    print("{} member trans records imported".format(counter))
+
+
+
 @click.command()
 @click.option('--test', default=False, is_flag=True, help='run click test')
 @click.option('--init', default=False, is_flag=True, help='delete all tables, create database and build new tables')
@@ -1105,7 +1249,9 @@ def add_task_and_history(pac_id,ptask_desc,plast_done,plast_done_reading,
 @click.option('--maintinit', default=False, is_flag=True, help='Initialise the maintenance Tables')
 @click.option('--maintload', default=False, is_flag=True, help='Load the maintenance Tables')
 @click.option('--loadroles', default=False, is_flag=True, help='Load role based security')
-def cli(test, init, loadcsv, demodata, loadmbr, updmbr, maintinit,maintload, loadroles):
+@click.option('--personkeys', default=False, is_flag=True, help='Populate Person foreign keys')
+@click.option('--copymbrdata', default=False, is_flag=True, help='Copy Membership data to the pilots table')
+def cli(test, init, loadcsv, demodata, loadmbr, updmbr, maintinit,maintload, loadroles, personkeys, copymbrdata):
     print("Your current working directory should be the parent of the instance folder")
     if test:
         log.info("cli called with --test")
@@ -1134,6 +1280,12 @@ def cli(test, init, loadcsv, demodata, loadmbr, updmbr, maintinit,maintload, loa
     if loadroles:
         log.info("cli called with --loadroles")
         add_role_security()
+    if personkeys:
+        log.info("cli called with --personkeys")
+        populate_person_keys()
+    if copymbrdata:
+        log.info("cli called with --copymbrdata")
+        populate_pilot()
 
 
 if __name__ == '__main__':

@@ -162,7 +162,7 @@ to :*/
 label             { text-align:right;
                     display:inline-block;
                     color: var(--main-fg-colour);
-                    width:30%}
+                    width:20%}
 label.nophone      {
                     display:none;
                     }
@@ -203,6 +203,8 @@ label             { text-align:right;
                     color: var(--main-fg-colour);
                     width:20%
                     }
+
+
 div .cell_date
     {
         display: table-cell;

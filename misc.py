@@ -44,7 +44,7 @@ bp = Blueprint('misc', __name__, url_prefix='/misc')
 @login_required
 def contactlist():
     if request.method == 'GET':
-        list = Member.query.filter(Member.active).order_by(Member.surname)
+        list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname)
         return render_template('misc/contactlist.html', list=list)
 
 @bp.route('/conctactspreadsheet>', methods=['GET', 'POST'])
@@ -100,7 +100,7 @@ def createmshipxlsx():
     #
     #  Add the members Sheet
     #
-    ssdata = Member.query.filter(Member.active).order_by(Member.surname).all()
+    ssdata = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname).all()
     if len(ssdata) == 0:
         return
     ws = workbook.add_worksheet("Members")
@@ -124,7 +124,7 @@ def createmshipxlsx():
             ws.write(row, 3, m.note, border_fmt)
             ws.write(row, 4, m.address_1, border_fmt)
             ws.write(row, 5, m.address_2, border_fmt)
-            ws.write(row, 6, m.email_address, border_fmt)
+            ws.write(row, 6, m.email, border_fmt)
             ws.write(row, 7, m.phone, border_fmt)
             ws.write(row, 8, m.mobile, border_fmt)
             ws.write(row, 9, m.type, border_fmt)

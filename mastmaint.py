@@ -23,6 +23,7 @@ from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 
 from asc.mailer import ascmailer
+from asc.oPerson import *
 import decimal
 
 
@@ -31,10 +32,10 @@ import decimal
 #########################################################################A
 
 class PilotForm(FlaskForm):
-    code = StringField('Code', [Length(min=1, message="The Code must be at least 1 characters long."),
-                                validators.DataRequired(message='You cannot have a blank code'),
-                                ],
-                       description='GNZ ID')
+    # code = StringField('Code', [Length(min=1, message="The Code must be at least 1 characters long."),
+    #                             validators.DataRequired(message='You cannot have a blank code'),
+    #                             ],
+    #                    description='GNZ ID')
     fullname = StringField('Full Name', [validators.DataRequired(message='You cannot have a blank code')],
                            description="Enter the full name - shown on reports and screens")
     email = StringField('Email', [Length(min=6, message=(u'Little short for an email address?')),
@@ -44,16 +45,13 @@ class PilotForm(FlaskForm):
                             render_kw={'size': '50', 'autocomplete': 'dont'})
 
     instructor = BooleanField('Instructor', description='Tick if Instructor')
+    member = BooleanField('Club Member', description='Is a club member')
     towpilot = BooleanField('Tow Pilot', description='Tick if Tow Pilot')
-    username = StringField("User Name"
-                           , description="User id of this web site"
-                           , render_kw={'list': "usernames"})
-    # datejoined = DateField('Date Joined', description='Date Pilot Joined the club')
     bscheme = BooleanField('B Scheme Participant', description='Tick if included in B Scheme')
-    yg_member = BooleanField('Youth Glide Member', description='Tick if pilot is a member of Youth Glide')
     gnz_no = IntegerField('GNZ No', description="Enter the GNZ No")
     accts_cust_code = StringField('Customer Code', description='The Customer code in the accounts system',
                                   render_kw={'class': 'mobile_port_suppress mobile_land_suppress'})
+    user_id = SelectField('User Key', description='User key field')
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
@@ -169,35 +167,37 @@ def pilotmaint(id):
     # if thispilot is None then we will be adding
     if thispilot is None:
         thispilot = Pilot()
+        thispilot.gnz_no = 0
     thisform = PilotForm(obj=thispilot)
-    if thispilot.userid is not None:
-        if thispilot.userid != 0:
-            thisusername = db.session.query(User).filter(User.id == thispilot.userid).first()
-            thisform.username.data = thisusername.name
+    thisform.user_id.choices = [(None, 'No User')]
+    thisform.user_id.choices.extend([(u.id, u.fullname) for u in User.query.order_by(User.fullname).all()])
     # this is the line that does the work
     if thisform.validate_on_submit():
         if thisform.cancel.data:
-            return redirect(url_for('mastmaint.pilotlist'))
-        if thisform.delete.data:
-            db.session.delete(thispilot)
-            db.session.commit()
             return redirect(url_for('mastmaint.pilotlist'))
         # Provided the field names are the same, this function updates all the fields
         # on the table.  If there are any that are different then each field needs to be
         # assigned manually.
         thisform.populate_obj(thispilot)
-        # Check what is in the username field.
-        try:
-            if thisform.username.data is None or len(thisform.username.data) == 0:
-                thispilot.userid = None
-            else:
-                thisuser = db.session.query(User).filter(User.name == thisform.username.data).first()
-                thispilot.userid = thisuser.id
-        except Exception as e:
-            flash("Invalid User id", "error")
-            return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
+        if thisform.delete.data and len(thispilot.transactions) > 0:
+            flash("This person is a member and can only be deleted from membership maintenance", "error")
+            return render_template('mastmaint/pilotmaint.html', form=thisform)
+        if thisform.delete.data:
+            db.session.delete(thispilot)
+            db.session.commit()
+            return redirect(url_for('mastmaint.pilotlist'))
+        names = thispilot.fullname.split(' ')
+        if len(names) == 0:
+            flash("You must provide a name.", "error")
+            return render_template('mastmaint/pilotmaint.html', form=thisform)
+        thispilot.firstname = names[0]
+        thispilot.surname = names[-1]
         if thispilot.id is None:
             db.session.add(thispilot)
+        if thispilot.user_tbl:
+            thispilot.user_tbl.email = thispilot.email
+            thispilot.user_tbl.gnz_no = thispilot.gnz_no
+            thispilot.user_tbl.pilot_id = thispilot.id
         try:
             db.session.commit()
         except Exception as e:
@@ -289,7 +289,7 @@ def userverify():
         UNION
         SELECT id, fullname, 'User id missing from pilots',5,'Warning','users'
         FROM users
-        WHERE id NOT IN (SELECT userid FROM pilots)
+        WHERE id NOT IN (SELECT user_id FROM pilots)
     -- pilots missing a customer code
         UNION
         SELECT id, fullname , 'No Customer code and payer is in the last 90 days',9,'Warning', 'pilots'
@@ -345,27 +345,6 @@ def userverify():
         FROM users t0
         JOIN pilots t1 ON t1.fullname = t0.fullname
         WHERE t0.gnz_no != t1.gnz_no
-    -- What if the names don't match up?
-        union
-        select t0.id, t0.fullname, 'Name on pilots table does not match Members (' || t1.firstname || ' '|| t1.surname || ')',3,'ERROR','pilots'
-        from pilots t0
-        join members t1 on t0.gnz_no == t1.gnz_no
-        where t1.firstname || ' ' || t1.surname != t0.fullname
-    -- email different between users and pilots
-        union
-        SELECT t0.id, t0.fullname, 'User email does not match pilots table',8,'ERROR','users'
-        FROM users t0
-        JOIN pilots t1 ON t1.fullname = t0.fullname
-        WHERE t0.email != t1.email
-            -- pilots who are not members
-        union
-        select t0.id, t0.fullname, 'Pilot has a gnz no that is not in members',2,'ERROR','pilots'
-        from pilots t0
-        where t0.gnz_no not in (select gnz_no from members)
-        and t0.fullname  not like 'ATC%'
-        and t0.fullname not like 'OTHER CLUB%'
-        and t0.fullname not like 'YGNZ%'
-        and t0.fullname not like 'Trial Flight%'
     -- flights with invalid payer
         UNION 
         select t0.id, t0.payer, 'Invalid Payer',2,'ERROR','flights'
@@ -375,13 +354,7 @@ def userverify():
         and t0.payer not in (
         select fullname 
             from pilots s0
-            join members s1 on s0.gnz_no  = s1.gnz_no 
-            UNION 
-            select s2.fullname 
-            from pilots s2
-            where s2.fullname like 'ATC'
-            or s2.fullname like 'Trial Flight'
-            or s2.fullname like 'OTHER CLUB MEMBER'
+            where s0.accts_cust_code != ''
         )
     -- sort
         ORDER BY priority

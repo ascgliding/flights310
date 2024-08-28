@@ -8,7 +8,7 @@ from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
 from asc import db,create_app
-from asc.schema import Pilot, Member, Slot, MemberTrans
+from asc.schema import Pilot,  Slot, MemberTrans
 from sqlalchemy import text as sqltext
 from sqlalchemy import or_, and_
 import os
@@ -27,6 +27,8 @@ import email_validator
 import email_validator
 ##from wtforms.ext.sqlalchemy.orm import model_form
 
+from asc.oPerson import *
+
 # app = Flask(__name__)
 # app = create_app()
 app = current_app
@@ -35,20 +37,23 @@ applog = app.logger
 bp = Blueprint('membership', __name__, url_prefix='/membership')
 
 
-class MemberForm(FlaskForm):
+class PilotForm(FlaskForm):
     id = IntegerField('ID', description='Primary Key')
     active = BooleanField('Active', description="Active members appear on the membership list")
-    gnz_no = IntegerField('NZGA No', [validators.DataRequired(message='You cannot have a blank code')])
+    gnz_no = IntegerField('NZGA No', description='Add the members GNZ no when known.')
     type = RadioField('Member Type', render_kw={'title': 'Select the correct Membership Type'})
-    surname = StringField('Surname', [validators.DataRequired(message='You cannot have a blank Surname')],
-                          description="Members Surname", render_kw={'autocomplete': 'dont'})
-    firstname = StringField('Firstname', [validators.DataRequired(message='You cannot have a blank Firstname')],
-                            description="Members Firstname", render_kw={'autocomplete': 'dont'})
+    fullname = StringField('Fullname', [validators.DataRequired(message='You cannot have a blank name')],
+                          description="Members Name", render_kw={'autocomplete': 'dont','size':'50'})
+    #
+    # surname = StringField('Surname', [validators.DataRequired(message='You cannot have a blank Surname')],
+    #                       description="Members Surname", render_kw={'autocomplete': 'dont'})
+    # firstname = StringField('Firstname', [validators.DataRequired(message='You cannot have a blank Firstname')],
+    #                         description="Members Firstname", render_kw={'autocomplete': 'dont'})
     rank = SelectField('Rank',
                        description="Select Suitable Rank")  # note that the choices are defined when the form is loaded with:
     # thisform.rank.choices = [(r.slot_key, r.slot_desc) for r in Slot.query.filter_by(slot_type = 'RANK')]
-    note = TextAreaField('Note', render_kw={'rows': 5, 'cols': 50})
-    email_address = EmailField('Email Addr', [Email(message='Invalid email address')], description="Email Address",
+    note = TextAreaField('Note', render_kw={'rows': 2, 'cols': 50})
+    email = EmailField('Email Addr', [Email(message='Invalid email address')], description="Email Address",
                                render_kw={'size': '50', 'autocomplete': 'dont'})
     dob = DateField('Date of Birth')
     phone = StringField('Phone', render_kw={'autocomplete': 'dont'})
@@ -67,17 +72,21 @@ class MemberForm(FlaskForm):
                           render_kw={'size': '50', 'autocomplete': 'dont'})
     phone2 = StringField('Phone 2', description="Any second phone number", render_kw={'autocomplete': 'dont'})
     mobile2 = StringField('Mobile 2', description="Add any second emobile number", render_kw={'autocomplete': 'dont'})
-    committee = BooleanField('Committee Member')
-    instructor = BooleanField('Instructor')
-    tow_pilot = BooleanField('Tow Pilot')
-    oo = BooleanField('OO')
-    duty_pilot = BooleanField('Duty Pilot')
+    committee = BooleanField('Committee Member', render_kw={'class': 'intable'})
+    instructor = BooleanField('Instructor', render_kw={'class': 'intable'})
+    tow_pilot = BooleanField('Tow Pilot', render_kw={'class': 'intable'})
+    oo = BooleanField('OO', render_kw={'class': 'intable'})
+    duty_pilot = BooleanField('Duty Pilot', render_kw={'class': 'intable'})
     nok_name = StringField('Next of Kin')
     nok_rship = StringField('Relationship', render_kw={'list': "nok_rship_datalist"})
     nok_phone = StringField('NOK Phone', description='Next of Kin Phone number')
     nok_mobile = StringField('NOK Mobile', description='Next of kin Mobile Number')
-    glider = StringField('Glider', description='Registration of privately owned glider')
-    email_bfr_med = BooleanField('Email BFR and Med Warnings', description='Auto email when BFR''s and Emails are soon to expire')
+    # glider = StringField('Glider', description='Registration of privately owned glider')
+    # email_bfr_med = BooleanField('Email BFR and Med Warnings', description='Auto email when BFR''s and Emails are soon to expire')
+    email_bfr_warning = BooleanField('BFR', description='Auto email when BFR''s  soon to expire', render_kw={'class': 'intable'})
+    email_med_warning = BooleanField('Med', description='Auto email when Medicals are soon to expire', render_kw={'class': 'intable'})
+    email_mbrfrm_warning = BooleanField('Membership Form', description='Auto email when BFR''s and Emails are soon to expire', render_kw={'class': 'intable'})
+    user_id = SelectField('User key',description = "Key to the User Table")
     # transactions = relationship("MemberTrans", backref='memberid')
 
     btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Confirm all Changes")
@@ -90,29 +99,32 @@ class MemberForm(FlaskForm):
     cancel = SubmitField('cancel', id='cancelbtn')
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
-    def validate_email_address(self, email_address):
-        """Email validation."""
-        if len(email_address.data) > 0:
-            sqlstmt = sqltext("""SELECT id
-                            FROM members 
-                             where (email_address = :email and id != :thisid )
-                             or (email_2 = :email and id != :thisid )""")
-            cnt = db.engine.execute(sqlstmt, thisid=self.id.data, email=email_address.data).fetchall()
-            if len(cnt) > 0:
-                raise ValidationError("Email address already in use")
+    # I don't believe it matters if the email address is used more than once.
+    # This may well occur if we have two juniors from the same family and they both use a parents email addres.
 
-
-
-    def validate_email_2(self, email_2):
-        """Email validation."""
-        if len(email_2.data) > 0:
-            sqlstmt = sqltext("""SELECT id
-                            FROM members 
-                             where (email_address = :email and id != :thisid )
-                             or (email_2 = :email and id != :thisid )""")
-            cnt = db.engine.execute(sqlstmt, thisid=self.id.data, email=email_2.data).fetchall()
-            if len(cnt) > 0:
-                raise ValidationError("Email address already in use")
+    # def validate_email_address(self, email_address):
+    #     """Email validation."""
+    #     if len(email_address.data) > 0:
+    #         sqlstmt = sqltext("""SELECT id
+    #                         FROM pilots
+    #                          where (email = :email and id != :thisid )
+    #                          or (email_2 = :email and id != :thisid )""")
+    #         cnt = db.engine.execute(sqlstmt, thisid=self.id.data, email=email_address.data).fetchall()
+    #         if len(cnt) > 0:
+    #             raise ValidationError("Email address already in use")
+    #
+    #
+    #
+    # def validate_email_2(self, email_2):
+    #     """Email validation."""
+    #     if len(email_2.data) > 0:
+    #         sqlstmt = sqltext("""SELECT id
+    #                         FROM members
+    #                          where (email_address = :email and id != :thisid )
+    #                          or (email_2 = :email and id != :thisid )""")
+    #         cnt = db.engine.execute(sqlstmt, thisid=self.id.data, email=email_2.data).fetchall()
+    #         if len(cnt) > 0:
+    #             raise ValidationError("Email address already in use")
 
 
 class TransactionForm(FlaskForm):
@@ -136,9 +148,9 @@ class TransactionForm(FlaskForm):
 def memberlist(active='ACTIVE'):
     if request.method == 'GET':
         if active=='ACTIVE':
-            list = Member.query.filter(Member.active).order_by(Member.surname)
+            list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.fullname)
         else:
-            list = Member.query.order_by(Member.surname)
+            list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname)
         return render_template('membership/memberlist.html', list=list, active=active, today=datetime.date.today(),
                                twomonths=datetime.date.today() - relativedelta(months=-2))
 
@@ -146,11 +158,22 @@ def memberlist(active='ACTIVE'):
 @bp.route('/membermaint/<id>', methods=['GET', 'POST'])
 @login_required
 def membermaint(id):
-    thismem = Member.query.get(id)
+    thismem = Pilot.query.get(id)
     # if thismem is None then we will be adding
     if thismem is None:
-        thismem = Member()
-    thisform = MemberForm(obj=thismem, name='Member Maintenance')
+        thismem = Pilot()
+        thismem.member = True
+        thismem.active = True
+        thismem.type = 'FLYING'
+        thismem.email_mbrfrm_warning = True
+        thismem.email_bfr_warning = True
+        thismem.email_med_warning = True
+        thismem.gnz_no = 0
+    if not thismem.rank:
+        thismem.rank = 'CIV'
+    thisform = PilotForm(obj=thismem, name='Member Maintenance')
+    thisform.user_id.choices = [(None, 'No User')]
+    thisform.user_id.choices.extend([(u.id, u.fullname) for u in User.query.order_by(User.fullname).all()])
     # check the cancel button before anything else.
     # This will avoid all validations.
     if thisform.cancel.data:
@@ -168,12 +191,30 @@ def membermaint(id):
         # on the table.  If there are any that are different then each field needs to be
         # assigned manually.
         thisform.populate_obj(thismem)
-        if thismem.id is None:
-            db.session.add(thismem)
         if thisform.delete.data:
             # Note that there is a cascading delete to remove trans
             db.session.delete(thismem)
+        else:
+            if thismem.id is None:
+                db.session.add(thismem)
+            names = thismem.fullname.split(' ')
+            if len(names) == 0:
+                flash("You must provide and name.", "error")
+                return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
+            thismem.firstname = names[0]
+            thismem.surname = names[-1]
+            thismem.member = True  # if maintaining via this screen then it is definitely a member.
+            if thismem.id is None:
+                db.session.add(thismem)
+            if thismem.user_tbl:
+                thismem.user_tbl.email = thismem.email
+                thismem.user_tbl.gnz_no = thismem.gnz_no
+                thismem.user_tbl.pilot_id = thismem.id
+        user = db.session.get(User,thismem.user_id)
+        if user is not None:
+            user.email = thismem.email
         db.session.commit()
+        # sync = PersonSync(thismem)
         return redirect(url_for('membership.memberlist'))
     return render_template('membership/membermaint.html', form=thisform, nokrs=nok_relationships)
 
@@ -182,7 +223,8 @@ def membermaint(id):
 @login_required
 def translist(id):
     if request.method == 'GET':
-        thismember = Member.query.get(id)
+        # thismember = Pilot.query.get(id)
+        thismember = db.session.get(Pilot,id)
         sqlstmt = sqltext("""SELECT
             t0.id,
             t0.memberid,
@@ -209,7 +251,8 @@ def translist(id):
 @bp.route('/transmaint/<id>/<member>', methods=['GET', 'POST'])
 @login_required
 def transmaint(id, member=None):
-    thisrec = MemberTrans.query.get(id)
+    # thisrec = MemberTrans.query.get(id)
+    thisrec = db.session.query(MemberTrans).get(id)
     # if thismem is None then we will be adding
     if thisrec is None:
         thisrec = MemberTrans(member)
@@ -288,7 +331,7 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     #
     #  Add the members Sheet
     #
-    ssdata = Member.query.filter(Member.active).order_by(Member.surname).all()
+    ssdata = Pilot.query.filter(Pilot.active).order_by(Pilot.surname).all()
     if len(ssdata) == 0:
         return
     ws = workbook.add_worksheet("Members")
@@ -312,7 +355,7 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             ws.write(row, 3, m.note, border_fmt)
             ws.write(row, 4, m.address_1, border_fmt)
             ws.write(row, 5, m.address_2, border_fmt)
-            ws.write(row, 6, m.email_address, border_fmt)
+            ws.write(row, 6, m.email, border_fmt)
             ws.write(row, 7, m.phone, border_fmt)
             ws.write(row, 8, m.mobile, border_fmt)
             ws.write(row, 9, m.type, border_fmt)
@@ -347,15 +390,13 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             ws.write(row,5, "BFR/ICR Due", col_head_fmt)
             ws.write(row,6, "Ratings", col_head_fmt)
             ws.write(row, 7, "Last Mem Form", col_head_fmt)
-            ws.write(row, 8, "Med Note", col_head_fmt)
-            ws.write(row, 9, "BFR Notee", col_head_fmt)
-            ws.write(row,10, "Currency", col_head_fmt)
-            ws.write(row,11, "Hrs 12 Mths", col_head_fmt)
+            ws.write(row,8, "Currency", col_head_fmt)
+            ws.write(row,9, "Hrs 12 Mths", col_head_fmt)
             row += 1
             for m in ssdata:
                 ws.write(row, 0, m.fullname, border_fmt)
                 ws.write(row, 1, m.last_medical, date_fmt)
-                ws.write(row, 2, m.dob, border_fmt)
+                ws.write(row, 2, m.dob, date_fmt)
                 ws.write(row, 3, m.age, border_fmt)
                 ws.write(row, 4, m.medical_due, date_fmt)
                 # this_fmt = date_fmt
@@ -369,8 +410,6 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
                 ws.write(row, 5, m.bfr_due, date_fmt)
                 ws.write(row, 6, m.ratings_string, border_fmt)
                 ws.write(row, 7, m.last_mem_form, date_fmt)
-                ws.write(row, 8, 'med note', border_fmt)
-                ws.write(row, 9, 'bfr note', border_fmt)
                 currency_string = ''
                 if m.currency_dict['last90flts'] != 0:
                     currency_string += str(m.currency_dict['last90flts'])
@@ -380,11 +419,11 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
                 currency_string += str(m.currency_dict['last12flts'])
                 currency_string += "/"
                 currency_string += str(round(m.currency_dict['last12mins'] / 60,1))
-                ws.write(row, 10, currency_string, border_fmt)
-                ws.write(row,11,round(m.currency_dict['last12mins'] / 60,1), border_fmt)
+                ws.write(row, 8, currency_string, border_fmt)
+                ws.write(row,9,round(m.currency_dict['last12mins'] / 60,1), border_fmt)
                 row += 1
             ws.autofit()
-            ws.merge_range("A1:L1", "ASC Curency " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+            ws.merge_range("A1:J1", "ASC Curency " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
             theseicons = []
             # In order to use conditional formatting, the formatting values require the julian number of dates
             # not a python object.  I'm not quite sure why I needed to add two days, but I checked the values
@@ -436,7 +475,7 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
                     t0.transdate,
                     t0.transnotes
                     from membertrans t0
-                    join members t1 on t0.memberid = t1.id 
+                    join pilots t1 on t0.memberid = t1.id 
                     where t0.transtype = 'IR'
                     and t0.transdate >= :startdate
                     order by t0.transdate
@@ -466,7 +505,7 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     if include_currency:
         ws = workbook.add_worksheet("NoK")
         try:
-            ssdata = Member.query.filter(Member.active).order_by(Member.surname).all()
+            ssdata = Pilot.query.filter(Pilot.active).order_by(Pilot.surname).all()
             row = 2
             ws.write(row, 0, "Name", col_head_fmt)
             ws.write(row,1, "Address", col_head_fmt)

@@ -1,3 +1,5 @@
+import urllib.request
+
 import sendgrid
 from flask_sqlalchemy import __version__ as fsqa_version,model
 from flask_login import __version__ as flogin_version
@@ -25,9 +27,13 @@ from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,
 from dateutil.relativedelta import relativedelta
 
 from asc.oMaint import ACMaint
-from asc.oMember import OneMember
+from asc.oPerson import Person
 # from asc.oReadingTools import   ReadingTools
 from  asc.common import *
+
+# accessing a calendar:
+from urllib.request import urlopen
+
 
 import base64
 
@@ -1801,9 +1807,6 @@ class maintenance_test(unittest.TestCase):
         db.session.add(thisrow)
         db.session.commit()
 
-        #  todo:  need to add some tasks to another a/c so that we can differentiate between the taskid
-        #       on the ac and the standard task id.
-
     def test900(self):
         ''' Verify some obect data by now'''
         oMaint = ACMaint('RDW')
@@ -2162,36 +2165,62 @@ class sqlalchemy_read_tests(unittest.TestCase):
 class memberobject(unittest.TestCase):
     # This cannot be used a general test case because the data chagnes
 
-    def test001(self):
-        thismbr = OneMember(17)
-        print(thismbr.fullname)
-        print('BFR Due:{}'.format(thismbr.bfr_due))
-        print('Medical Due:{}'.format(thismbr.medical_due))
-        print('Mobile / Email: {}/{}'.format(thismbr.mobile, thismbr.email_address))
-        print('login id: {}'.format(thismbr.login_id))
-        print('Accts Customer Code: {}'.format(thismbr.customer_code))
-        print(thismbr.currency_dict)
-
-    def test002(self):
-        thismbr = Member.query.filter(Member.surname=='Sly').first()
-        print(thismbr.fullname)
-        print(thismbr.user_rec)
-        print(thismbr.pilot_rec)
-        print('last BFR : {}'.format(thismbr.last_bfr))
-        print('BFR Due:{}'.format(thismbr.bfr_due))
-        print('last Medical : {}'.format(thismbr.last_medical))
-        print('Medical Due:{}'.format(thismbr.medical_due))
-        print(thismbr.currency_dict)
-        print('Age : {}'.format(thismbr.age))
-
-    def test003(self):
-        for m in Member.query.filter(Member.active).order_by(Member.surname).all():
-            print('{}:{}:{}'.format(m.fullname,m.ratings_string,type(m.medical_due)))
-
     def test004(self):
-        me = User.query.get(17)
+        # me = User.query.get(17)
+        #TODO:  replace all instances of XXXX.query.get with :
+        me = db.session.get(User,17)
         print(me.name)
         print(me.roles)
+
+    def test005(self):
+        for u in User.query.all():
+            thisuser = Person(u.fullname)
+            if len(thisuser.verify_list) > 0:
+                print('User:{}'.format(thisuser.fullname))
+                for vf in thisuser.verify_list:
+                    print(vf)
+        for u in Pilot.query.all():
+            thisuser = Person(u.fullname)
+            if len(thisuser.verify_list) > 0:
+                print('Pilot:{}'.format(thisuser.fullname))
+                for vf in thisuser.verify_list:
+                    print(vf)
+        for u in Member.query.filter(Member.active == True):
+            thisuser = Person(u.gnz_no)
+            if len(thisuser.verify_list) > 0:
+                print('Member:{}'.format(u.surname))
+                for vf in thisuser.verify_list:
+                    print(vf)
+
+
+class googlecalendar(unittest.TestCase):
+
+    def test001(self):
+        myurl = "https://calendar.google.com/calendar/ical/kc802pkua73iejv9oho665ae0k%40group.calendar.google.com/private-28220b1eeb53d8a34830f66b4ae92040/basic.ics"
+
+        # method 1 - really some long byte stream
+        # sock = urllib.request.urlopen(myurl)
+        # data = sock.read()
+        # sock.close
+        # print(data)
+
+        # Method 2 - still bytes
+        # with urlopen(myurl) as calendar:
+        #     data =  calendar.read()
+        # print(data)
+
+        with urlopen(myurl) as calendar:
+            for line in calendar:
+                print(line.decode('iso-8859-1'))
+
+
+class mbercopy(unittest.TestCase):
+    def test001(self):
+        with open('instance/mbrtrans.csv', 'r') as csvf:
+            counter = 0
+            reader = csv.DictReader(csvf, delimiter=',')
+            for rec in reader:
+                print("{}:{}".format(rec['transdate'],datetime.datetime.strptime(rec['transdate'],'%Y-%m-%d').date() ))
 
 if __name__ == '__main__':
     print('start of main')
@@ -2203,8 +2232,10 @@ if __name__ == '__main__':
     case6 = unittest.TestLoader().loadTestsFromTestCase(maintenance_time_values)
     case7 = unittest.TestLoader().loadTestsFromTestCase(sqlalchemy_read_tests)
     case8 = unittest.TestLoader().loadTestsFromTestCase(memberobject)
+    case9 = unittest.TestLoader().loadTestsFromTestCase(googlecalendar)
+    case10 = unittest.TestLoader().loadTestsFromTestCase(mbercopy)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case8])
+    thissuite = unittest.TestSuite([case10])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')

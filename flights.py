@@ -9,6 +9,7 @@ from sqlalchemy import func, or_, and_
 import datetime
 from sqlalchemy import text as sqltext
 from sqlalchemy.sql import func, select
+
 # WTForms
 from flask_wtf import FlaskForm
 from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField, BooleanField, RadioField, \
@@ -37,7 +38,6 @@ constDAYDATE = 'daydate'
 constDAYVIEW = 'dayview'
 
 # TODO: Dayend to roll log if empty
-# TODO: purge downloads folder
 # TODO: ARE you sure for flights where either a start/tug down or landed is already recorded and the user presses that button.
 
 class NewDayForm(FlaskForm):
@@ -176,11 +176,6 @@ class NoteForm(FlaskForm):
 
 
 # TODO: Test Error Handling in Production environment.
-
-# @app.before_request
-# def before_request():
-#     applog.debug("In before_request")
-
 
 @bp.route('/daysummary')
 @login_required
@@ -576,24 +571,26 @@ def payment(id):
         flash("Cannot locate flight")
         return redirect(url_for('flights.daysummary'))
     thisform = PaymentForm(obj=thisrec, name='Payment Maintenance')
-    sql = sqltext("""
-            select fullname 
-            from pilots t0
-            join members t1 on t0.gnz_no  = t1.gnz_no 
-            where t1.active = 1
-            UNION 
-            select fullname 
-            from pilots t0
-            where fullname like 'ATC%'
-            or fullname like 'Trial%'
-            or fullname like 'OTHER CLUB%'
-            order by fullname
-             """)
-    pilotlist = [r[0] for r in db.engine.execute(sql).fetchall()]
+    # sql = sqltext("""
+    #         select fullname
+    #         from pilots t0
+    #         where t0.active = 1 and t0.member = 1
+    #         UNION
+    #         select fullname
+    #         from pilots t0
+    #         where fullname like 'ATC%'
+    #         or fullname like 'Trial%'
+    #         or fullname like 'OTHER CLUB%'
+    #         order by fullname
+    #          """)
+    # pilotlist = [r[0] for r in db.engine.execute(sql).fetchall()]
+    pilotlist = []
+    pilotlist.append(None)
+    pilotlist.append('')
+    pilotswithcode = [r.fullname for r in Pilot.query.filter(Pilot.accts_cust_code != '').order_by(Pilot.fullname).all()]
+    pilotlist.extend(pilotswithcode)
     if thisrec.payer is not None and thisrec.payer not in pilotlist:
-        flash("The payer recorded on this flight is invalid.  Please tell the system administrator.","error")
-        applog.error('Invalid payer ({}) recorded on flight {}'.format(thisrec.payer,id))
-        return redirect(url_for('flights.changeflight', id=id))
+        flash("The payer recorded on this flight is invalid.","warning")
     thisform.pilotlist = []
     if pilotlist is not None:
         thisform.payer.choices = pilotlist
@@ -609,6 +606,9 @@ def payment(id):
         # assigned manually.
         try:
             thisform.populate_obj(thisrec)
+            if thisrec.payer is None or thisrec.payer == '':
+                flash('You must select a valid payer', 'error')
+                return render_template('flights/payment.html', form=thisform, pilots=pilotlist)
             if thisrec.id is None:
                 db.session.add(thisrec)
                 applog.info('New payment details Added')
@@ -663,13 +663,14 @@ def calc_charges(id):
             thisrec.glider_charge = 0
         # BIG IF-ELIF that determins the rates
         # Start with trial flights
-        if thisrec.p2.upper() == constTRIAL_FLIGHT_CUST:
+        if 'TRIAL' in thisrec.p2.upper():
             SlotForRate = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key='TRIALFLIGHTPRICE').first()
             if SlotForRate is None:
                 thisrec.tow_charge = 100
             else:
-                thisrec.tow_charge = SlotForRate.slot_data
-            thisrec.payer = thisrec.p2
+                thisrec.tow_charge = Decimal((thisrec.release_height / tug.per_height_basis) * tug.rate_per_height)
+                thisrec.glider_charge = Decimal(SlotForRate.slot_data)  - thisrec.tow_charge
+            thisrec.payer = constTRIAL_FLIGHT_CUST
         # REGN_FOR_TUG_ONLY appears in the Glider Regn field.
         elif thisrec.ac_regn == constREGN_FOR_TUG_ONLY:
             thisrec.glider_charge = 0
@@ -700,12 +701,21 @@ def calc_charges(id):
             # Calculate the glider charge
             thisrec.glider_charge = Decimal(thisrec.glider_mins()) * (thisac.rate_per_hour / 60)
             if thisrec.p2 is not None:
-                payer = Pilot.query.filter_by(fullname=thisrec.p2).first()
+                pic = Pilot.query.filter_by(fullname=thisrec.pic).first()
+                if pic.instructor:
+                    payer = Pilot.query.filter_by(fullname=thisrec.p2).first()
+                else:
+                    payer = pic
             if payer is None:
                 payer = Pilot.query.filter_by(fullname=thisrec.pic).first()
+                if payer.instructor and (thisrec.p2 is not None and thisrec.p2 != ''):
+                    payer = Pilot.query.filter_by(fullname=constOTHER_CLUB_MEMBER).first()
             if payer is not None:
                 if payer.bscheme and thisac.bscheme:
                     thisrec.glider_charge = 0
+            # Final check.....
+            if payer.accts_cust_code is None or payer.accts_cust_code == '':
+                payer = Pilot.query.filter_by(fullname=constOTHER_CLUB_MEMBER).first()
             if payer is not None:
                 thisrec.payer = payer.fullname
         db.session.commit()

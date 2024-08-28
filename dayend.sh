@@ -1,4 +1,4 @@
-!#/bin/bash
+#### - does not work on pythonanywhere: !#/bin/bash
 
 echo "Executing dayend.sh"
 cd /home/ascgliding/asc

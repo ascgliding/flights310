@@ -40,6 +40,23 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 #     return test_url.scheme in ('http', 'https') and \
 #            ref_url.netloc == test_url.netloc
 
+class UserMaintForm(FlaskForm):
+    name = StringField('User Name', description='User Name')
+    fullname = StringField('Full Name', description = 'Full Name')
+    email = EmailField('Email', description = 'Email address',render_kw={'size': '50', 'autocomplete': 'dont'})
+    gnz_no = IntegerField('GNZ No', description = 'GNZ Number')
+    administrator = BooleanField('Administrator', description = 'Tick for person to be system administrator')
+    approved = BooleanField('Approved', description='User is approved to access the system.')
+    pilot_id = SelectField('Pilot Key')
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    password = TextButtonField('Password',
+                                    id="password",
+                                    text='Password',
+                                    help="Change user's password")
+
+
 class RoleMaint(FlaskForm):
     name = StringField('Role', description='The name of the Role')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
@@ -141,6 +158,7 @@ def login():
             try:
                 session.clear()
                 thisuser.authenticated = True
+                thisuser.last_login = datetime.date.today()
                 db.session.commit()
                 login_user(thisuser, remember=True, duration=datetime.timedelta(days=5))
                 app.logger.info('User : {} Logged in'.format(thisuser.fullname or thisuser.name))
@@ -178,6 +196,7 @@ def logout():
 @bp.route('/profile', methods=['GET', 'POST'])
 @fresh_login_required
 def profile():
+    # TODO:  allow user to change email address, phone, mobile and warning opt in.
     if request.method == 'POST':
         if 'pwdbtn' in request.form:
             return redirect(url_for('auth.password'))
@@ -195,6 +214,9 @@ def profile():
         # See note above.
         # else:
          #    current_user.approved = False
+        if User.pilot_tbl:
+            User.pilot_tbl.email = current_user.email
+            User.pilot_tbl.gnz_no = current_user.gnz_no
         db.session.commit()
         return redirect(url_for('index'))
     else:
@@ -241,48 +263,59 @@ def userpassword(id):
 @bp.route('/userlist')
 @fresh_login_required
 def userlist():
-    users = db.session.query(User).all()
+    users = User.query.order_by(User.fullname).all()
     return render_template("auth/userlist.html", users=users)
 
 
 @bp.route('/usermaint/<id>', methods=['GET', 'POST'])
 @fresh_login_required
 def usermaint(id):
-    thisuser = User.query.filter_by(id=id).one_or_none()
-    if request.method == 'POST' and 'cancelbtn' in request.form:
-        return redirect(url_for("auth.userlist"))
-    if request.method == 'POST' and 'pwdbtn' in request.form:
-        return redirect(url_for('auth.userpassword', id=id))
-    if request.method == 'POST' and 'donebtn' in request.form:
-        if thisuser is None:  # then new user
-            # Create one and set the name
-            thisuser = User()
-            thisuser.name = request.form['name']
-            thisuser.set_password(request.form['password'])
-            db.session.add(thisuser)
-        thisuser.fullname = request.form['fullname']
-        thisuser.email = request.form['email']
-        thisuser.gnz_no = request.form['gnz_no']
-        if 'administrator' in request.form:
-            thisuser.administrator = True
-        else:
-            thisuser.administrator = False
-        if 'approved' in request.form:
-            thisuser.approved = True
-        else:
-            thisuser.approved = False
-        db.session.commit()
-        return redirect(url_for("auth.userlist"))
-    if request.method == 'POST' and 'deletebtn' in request.form:
+    thisrec = User.query.filter_by(id=id).one_or_none()
+    if thisrec is None:
+        thisrec = Role()
+    thisform = UserMaintForm(obj=thisrec)
+    thisform.pilot_id.choices = [(None, 'No Pilot')]
+    thisform.pilot_id.choices.extend([(p.id, p.fullname) for p in Pilot.query.order_by(Pilot.fullname).all()])
+    if request.method == 'POST':
+        if 'password' in request.form:
+            return redirect(url_for('auth.userpassword', id=id))
+        if thisform.cancel.data:
+            return redirect(url_for('auth.userlist'))
+        if thisform.delete.data:
+            db.session.delete(thisrec)
+            try:
+                applog.info('DELETE:' + repr(thisrec))
+                db.session.commit()
+            except Exception as e:
+                applog.error(str(e))
+                flash(
+                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "error")
+            return redirect(url_for('auth.userlist'))
+        if not thisform.validate_on_submit():
+            for e in thisform.errors:
+                flash(e, "error")
+                return render_template('auth/usermaint.html', form=thisform)
+        # By this point, we are either adding or updating.
+        thisform.populate_obj(thisrec)
+        # Code based validation:
+        if thisrec.id is None:
+            db.session.add(thisrec)
+        if thisrec.pilot_tbl:
+            thisrec.pilot_tbl.user_id = thisrec.id
+            thisrec.pilot_tbl.email = thisrec.email
+            thisrec.gnz_no = thisrec.gnz_no
+        applog.info('UPDATE:' + repr(thisrec))
         try:
-            db.session.delete(thisuser)
             db.session.commit()
-            return redirect(url_for("auth.userlist"))
-        except Exception as ex:
-            flash(str(ex))
-    return render_template("auth/usermaint.html", user=thisuser)
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+        return redirect(url_for('auth.userlist'))
+    return render_template('auth/usermaint.html', form=thisform)
 
-# Todo:  Add role maintenance (list and edit), assign role to user, View Maintenance (list and edit)
 @bp.route('/rolelist')
 @fresh_login_required
 def rolelist():

@@ -6,46 +6,25 @@
 
 {% block content %}
   <form method="post">
+    {{ form.csrf_token }}
     <fieldset>
       <legend>Maintain User</legend>
       <ul>
-        <li>
-          <label for="name">User Name</label>
-          <input autocapitalize="none" text {{ 'readonly' if user is not none }} name="name" id="name" value="{{ request.form['name'] or user.name }}" >
-        </li>
-        {% if user is none %}
-        <li>
-          <label for=password">Password</label>
-          <input type="password" name="password" id="password">
-        </li>
-        {% endif %}
-        <li>
-          <label for="fullname">Full Name</label>
-          <input type=text name="fullname" id="fullname" value="{{ request.form['fullname'] or user.fullname }}" >
-        </li>
-        <li>
-          <label for="email">Email</label>
-          <input type=text name="email" id="email" value="{{ request.form['email'] or user.email }}" >
-        </li>
-        <li>
-          <label for="gnz_no">GNZ No</label>
-          <input type=number name="gnz_no" id="gnz_no" value="{{ request.form['gnz_no'] or user.gnz_no }}" >
-        </li>
+        <li>{{ render_field(form.name) }}</li>
+        <li>{{ render_field(form.fullname) }}</li>
+        <li>{{ render_field(form.email) }}</li>
+        <li>{{ render_field(form.gnz_no) }}</li>
         {% if current_user.administrator %}
-        <li>
-          <label for="administrator">Administrator</label>
-          <input type="checkbox"  id="administrator" name="administrator" {% if user.administrator  %} checked {% endif %}>
-        </li>
+        <li>{{ render_field(form.administrator) }}</li>
         {% endif %}
-        <li>
-          <label for="approved">Approved</label>
-          <input type="checkbox"  id="approved" name="approved" {% if user.approved  %} checked {% endif %}>
-        </li>
+        <li>{{ render_field(form.approved) }}</li>
+        <li>{{ render_field(form.pilot_id) }}</li>
       </ul>
     </fieldset>
-    <button type="submit" name="donebtn" id="donebtn" title="Save these changes" value="">
-    <button type="submit" id="cancelbtn" name="cancelbtn" title="Cancel this change" value="" formnovalidate></button>
-    <button type="submit" class="textbtn" name="pwdbtn" id="pwdbtn" title="Change Password" value="">Password</button>
-    <button type="submit" name="deletebtn" id="deletebtn" title="Delete This record" value="" onclick='return ConfirmDelete()'>
+    {{ form.btnsubmit() }}
+    {{ form.cancel() }}
+    {{ form.password() }}
+    {{ form.delete() }}
+
   </form>
 {% endblock %}

@@ -7,8 +7,9 @@
 <form method="Post" autocomplete="off">
   {{ form.csrf_token }}
   <fieldset>
-    <legend>{{ form.name }} Member Maintenance</legend>
+    <legend>{{ form.name }} Member Maintenance </legend>
     <ul>
+      <li>{{ render_field(form.fullname) }}</li>
       <li>{{ render_field(form.gnz_no) }}</li>
       <li style="width:95%">
         <table>
@@ -20,17 +21,23 @@
         </table>
       </li>
       <li>
-        {{ render_checkbox(form.active) }}
-        {{ render_checkbox(form.service) }}
+        <div style="display:table;width:100%;border-spacing:10px">
+          <div style="display:table-row">
+            <div style="display:table-cell;width:20%"></div>
+            <div style="display:table-cell">{{ render_checkbox(form.active) }}</div>
+            <div style="display:table-cell">{{ render_checkbox(form.service) }}</div>
+            <div style="display:table-cell">{{ render_checkbox(form.rank) }}</div>
+          </div>
+        </div>
       </li>
-      <li>{{ render_field(form.rank) }}</li>
-      <li>{{ render_field(form.surname) }}</li>
-      <li>{{ render_field(form.firstname) }}</li>
       <li>{{ render_field(form.dob) }}</li>
-      <li>{{ render_field(form.email_address) }}</li>
+      <li>{{ render_field(form.address_1) }}</li>
+      <li>{{ render_field(form.address_2) }}</li>
+      <li>{{ render_field(form.address_3) }}</li>
+      <li>{{ render_field(form.email) }}</li>
       <li>{{ render_field(form.email_2) }}</li>
       <li>
-        <div style="display:table;width:100%;border-spacing:10px">
+        <div style="display:table;width:100%;border-spacing:10px;border:1px solid">
           <div style="display:table-row">
             <div style="display:table-cell">{{ render_field(form.phone) }}</div>
             <div style="display:table-cell">{{ render_field(form.mobile) }}</div>
@@ -41,23 +48,20 @@
           </div>
         </div>
       </li>
-      <li>{{ render_field(form.address_1) }}</li>
-      <li>{{ render_field(form.address_2) }}</li>
-      <li>{{ render_field(form.address_3) }}</li>
       <li>
         <div style="display:inline-block; width:100%">
         <div style="display:inline-table;width:100%;border-spacing:10px;border:1px solid">
           <div style="display:table-row">
-            <div style="display:table-cell;width:30%">{{ render_checkbox(form.committee) }}</div>
-            <div style="display:table-cell;width:30%;text-align:left"> {{ render_checkbox(form.instructor) }}</div>
-            <div style="display:table-cell;width:15%">{{ render_checkbox(form.tow_pilot) }}</div>
-            <div style="display:table-cell;width:15%"> {{ render_checkbox(form.duty_pilot) }}</div>
-            <div style="display:table-cell;width:10%">{{ render_checkbox(form.oo) }}</div>
+            <div style="display:table-cell;">{{ render_checkbox(form.committee) }}</div>
+            <div style="display:table-cell;"> {{ render_checkbox(form.instructor) }}</div>
+            <div style="display:table-cell;">{{ render_checkbox(form.tow_pilot) }}</div>
+            <div style="display:table-cell;"> {{ render_checkbox(form.duty_pilot) }}</div>
+            <div style="display:table-cell;">{{ render_checkbox(form.oo) }}</div>
           </div>
         </div>
           </div>
       </li>
-      <li>{{ render_field(form.roster) }}</li>
+{#      <li>{{ render_field(form.roster) }}</li>  #}
       <li>
         <div style="display:inline-table;width:100%;border-spacing:10px;border:1px solid">
           <div style="display:table-row">
@@ -70,8 +74,18 @@
           </div>
         </div>
       </li>
-      <li>{{ render_field(form.glider) }}</li>
-      <li>{{ render_field(form.email_bfr_med) }}</li>
+{#      <li>{{ render_field(form.glider) }}</li>   #}
+      <li>
+        <div style="display:inline-table;width:100%;border-spacing:10px;border:1px solid">
+          <div style="display:table-row">
+            <div style="display:table-cell;width:fit-content"> Email Warnings:</div>
+            <div style="display:table-cell;width:fit-content"> {{ render_checkbox(form.email_bfr_warning) }}</div>
+            <div style="display:table-cell;width:fit-content"> {{ render_checkbox(form.email_med_warning) }}</div>
+            <div style="display:table-cell;width:fit-content"> {{ render_checkbox(form.email_mbrfrm_warning) }}</div>
+          </div>
+        </div>
+      </li>
+      <li>{{ render_field(form.user_id) }}</li>
       <datalist id="nok_rship_datalist">
         <option value='GrandFather'>
         <option value='GrandMother'>

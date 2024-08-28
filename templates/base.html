@@ -103,10 +103,13 @@ function myLower(cObj)
   {% endif %}
   {% endmacro %}
 
-  {% macro render_checkbox(field) %}
+{% macro render_checkbox(field) %}
+
   <div style="display:inline">
-  {{ field.label }}&nbsp&nbsp:&nbsp&nbsp
-  {{ field(**kwargs)|safe }}
+    <label for="{{ field.name }}" style="width:auto">{{ field.label.text }}</label>:
+    <abbr title="{{ field.description }}">
+    {{ field(**kwargs)|safe }}
+    </abbr>
     </div>
   {% if field.errors %}
   <ul class=errors>
