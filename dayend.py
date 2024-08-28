@@ -191,7 +191,7 @@ def send_med_bfr_to_cfi():
     thatlist = Pilot.query.filter(Pilot.active==True).filter(Pilot.email_bfr_warning==True).order_by(Pilot.surname)
     for m in thatlist:
         if m not in mems:
-            thislist.append(m)
+            thatlist.append(m)
     count = 0
     email_list = [{'name':'Name','medical':'Medical','bfr':'BFR','message':'Message'}]
     email_list = []
@@ -216,7 +216,7 @@ def send_med_bfr_to_cfi():
 
 
 
-def send_stats_to_gnz():
+def send_stats_to_gnz(asat):
     """
     This is the text of the email from Max...
     The usual 6-monthy flight stats are now called for.  As a reminder of what is required (criteria), please see the attachment.
@@ -231,13 +231,101 @@ def send_stats_to_gnz():
         Number of First Solos – please also provide the names of your first-solos so we don’t double-count them!
     :return:
     """
-    pass
+    print('Sending Statistics')
+    # Get the first solos....
+    sql = sqltext('''
+    select distinct t0.flt_date, t0.pic
+        from flights t0
+        join aircraft t1 on t0.ac_regn  = t1.regn 
+        join pilots t2 on t0.pic = t2.fullname
+        where t0.linetype  = 'FL'
+        and t0.flt_date > DATETIME(:asat, '-6 month')
+        -- the pic can't flown as pic before this flight date
+        and t0.pic not in (select s0.pic from flights s0 where s0.pic  = t0.pic and s0.flt_date < t0.flt_date)
+        -- double check the A Badge rating in case it is a member that has started flying after a long break
+        and t0.pic in (
+        select s1.fullname from membertrans s0
+        join pilots s1 on s0.memberid = s1.id
+        where s0.transtype = 'RTG'
+        and s0.transsubtype  = 'AB'
+        and s0.transdate > DATETIME(:asat, '-6 month'))
+    ''')
+    solos = db.engine.execute(sql,asat=asat.strftime('%Y-%m-%d')).fetchall()
+    # get the other stats
+    sql = sqltext('''
+    select 'Number of flights by club gliders' stat,count(*) number
+        from flights t0
+        join aircraft t1 on t0.ac_regn  = t1.regn 
+        where linetype = 'FL'
+        and owner = 'ASC'
+        and flt_date > DATETIME(:asat, '-6 month')
+        union
+        select 'Number of Aerotow Launches', count(*)
+        from flights
+        where linetype = 'FL'
+        and tug_regn != 'SELF LAUNCH'
+        and flt_date > DATETIME(:asat, '-6 month')
+        union
+        select 'Number of Self Launches', count(*)
+        from flights
+        where linetype = 'FL'
+        and tug_regn = 'SELF LAUNCH'
+        and flt_date > DATETIME(:asat, '-6 month')
+        union
+        select 'Number of flights by ATC gliders',count(*)
+        from flights t0
+        join aircraft t1 on t0.ac_regn  = t1.regn 
+        where linetype = 'FL'
+        and owner = 'ATC'
+        and flt_date > DATETIME(:asat, '-6 month')
+        Union
+        select 'Number of flights in club gliders by Juniors',count(*)
+        from flights t0
+        join aircraft t1 on t0.ac_regn  = t1.regn 
+        join pilots pic on pic.fullname = t0.pic 
+        left outer join pilots p2 on p2.fullname = t0.p2
+        where linetype = 'FL'
+        and owner = 'ASC'
+        and flt_date > DATETIME(:asat, '-6 month')
+        and (strftime('%Y',:asat) -  strftime('%Y',pic.dob) < 26
+        or strftime('%Y',:asat) -  strftime('%Y',p2.dob) < 26)
+        UNION 
+        select 'Number of Trial Flights',count(*)
+        from flights t0
+        join aircraft t1 on t0.ac_regn  = t1.regn 
+        where linetype = 'FL'
+        and owner = 'ASC'
+        and flt_date > DATETIME(:asat, '-6 month')
+        and ( upper(t0.payer) = 'TRIAL FLIGHT'
+        or upper(t0.p2) like '%RIAL%')
+    ''')
+    stats = db.engine.execute(sql,asat=asat.strftime('%Y-%m-%d')).fetchall()
+    # now email it
+    msg = ascmailer('Statistics')
+    msg.add_body('<html>For the period {} to {} <br>'.format(asat - relativedelta(months=6), asat))
+    msg.add_body('<br>Here are the first solos<br>')
+    # row one has to be titles
+    msgdict = [x._asdict() for x in solos]
+    msgdict.insert(0, ['Date of First Solo', 'Name'])
+    msg.add_body_list(msgdict)
+    msg.add_body('<br>')
+    msg.add_body('Here are the other statistics')
+    msgdict = [x._asdict() for x in stats]
+    msgdict.insert(0, ['Statistic', 'Count'])
+    msg.add_body_list(msgdict)
+    msg.add_body('No winch Launching or Automobile Launches</html>')
 
+    msg.add_recipient('ray@rayburns.nz')
+    msg.add_recipient('lionelpnz@gmail.com')
+    msg.send()
 
 if __name__ == '__main__':
     with app.app_context():
         # The execution time is 0400.
         log.info("Dayend started")
+        if datetime.date.today().day == 1:
+            send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
+        exit(0)
         # testmailer()
         update_auto_readings()
         send_maintenance_emails()
