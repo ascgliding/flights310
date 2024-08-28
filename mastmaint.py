@@ -356,6 +356,14 @@ def userverify():
             from pilots s0
             where s0.accts_cust_code != ''
         )
+    -- Flights with missing launch method
+        UNION
+        select t0.id, t0.Pic, 'Invalid Launch Method',8,'ERROR','flights'
+        from flights t0
+        where t0.linetype = 'FL'
+        and (t0.tug_regn = ''
+        or t0.tug_regn is null)
+        and t0.flt_date > DATETIME('now', '-3 month')
     -- sort
         ORDER BY priority
             """)
