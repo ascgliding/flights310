@@ -385,20 +385,23 @@ class Pilot(db.Model):
     # yg_member = db.Column(db.Boolean, comment='Set if Pilot is a Youth Glide member', default=True)
     gnz_no = db.Column(db.Integer, comment="GNZ Number")
     accts_cust_code = db.Column(db.String, comment='Customer code in accounting system')
-    member = db.Column(db.Boolean, comment="is or has been a member")
-    active = db.Column(db.Boolean, comment="Active members appear on the membership list")
+    member = db.Column(db.Boolean, comment="is or has been a member",default=True)
+    active = db.Column(db.Boolean, comment="Active members appear on the membership list",default=True)
     dob = db.Column(db.Date)
-    type = db.Column(db.Enum('FLYING', 'JUNIOR', 'VFP BULK', 'SOCIAL'), comment="Membership Type")
-    rank = db.Column(db.String, comment="To be checked against slots")
+    # if the enum is incorrect in anyway, then the queries fail and it is a bitch to fix it.
+    # Easier to the validation in the forms.
+    # type = db.Column(db.Enum('FLYING', 'JUNIOR', 'VFP BULK', 'SOCIAL'), comment="Membership Type", default='FLYING')
+    type = db.Column(db.String, comment="Membership Type", default='FLYING')
+    rank = db.Column(db.String, comment="To be checked against slots", default='CIV')
     note = db.Column(db.Text)
     # Flags:
-    service = db.Column(db.Boolean)
-    roster = db.Column(db.Enum('D', 'T', "I", "IT", 'D', 'N'))
-    committee = db.Column(db.Boolean)
-    oo = db.Column(db.Boolean)
-    duty_pilot = db.Column(db.Boolean)
-    towpilot = db.Column(db.Boolean, comment="Select to include in tow pilot list")
-    instructor = db.Column(db.Boolean, comment="Select to mark as instructor")
+    service = db.Column(db.Boolean, default = False)
+    roster = db.Column(db.Enum('D', 'T', "I", "IT", 'D', 'N'), default="D")
+    committee = db.Column(db.Boolean, default=False)
+    oo = db.Column(db.Boolean, default=False)
+    duty_pilot = db.Column(db.Boolean, default=False)
+    towpilot = db.Column(db.Boolean, comment="Select to include in tow pilot list", default=False)
+    instructor = db.Column(db.Boolean, comment="Select to mark as instructor", default=False)
     email_med_warning = db.Column(db.Boolean, comment='Send warning emails for Medicals', default=True)
     email_bfr_warning = db.Column(db.Boolean, comment='Send warning emails for BFRs', default=True)
     email_mbrfrm_warning = db.Column(db.Boolean, comment='Send warning emails for Membership Forms', default=True)
@@ -595,187 +598,187 @@ class Aircraft(db.Model):
 
 # The member class has been deprecated.
 
-class Member(db.Model):
-    __tablename__ = "members"
-
-    # def updpilotaddr(self):
-    #     self.pilot_tbl.email = self.email_address
-    #
-    #
-    id = db.Column(db.Integer, db.Sequence('member_id_seq'), primary_key=True)
-    active = db.Column(db.Boolean, comment="Active members appear on the membership list")
-    gnz_no = db.Column(db.Integer, unique=True)
-    type = db.Column(db.Enum('FLYING', 'JUNIOR', 'VFP BULK', 'SOCIAL'), comment="Membership Type")
-    surname = db.Column(db.String, comment="Members Surname")
-    firstname = db.Column(db.String, comment="Members Firstname")
-    rank = db.Column(db.String, comment="To be checked against slots")
-    note = db.Column(db.Text)
-    email_address = db.Column(db.String, comment="Email Address")
-    dob = db.Column(db.Date)
-    phone = db.Column(db.String)
-    mobile = db.Column(db.String)
-    address_1 = db.Column(db.String)
-    address_2 = db.Column(db.String)
-    address_3 = db.Column(db.String)
-    service = db.Column(db.Boolean)
-    roster = db.Column(db.Enum('D', 'T', "I", "IT", 'D', 'N'))
-    email_2 = db.Column(db.String)
-    phone2 = db.Column(db.String)
-    mobile2 = db.Column(db.String)
-    committee = db.Column(db.Boolean)
-    instructor = db.Column(db.Boolean)
-    tow_pilot = db.Column(db.Boolean)
-    oo = db.Column(db.Boolean)
-    duty_pilot = db.Column(db.Boolean)
-    nok_name = db.Column(db.String)
-    nok_rship = db.Column(db.String)
-    nok_phone = db.Column(db.String)
-    nok_mobile = db.Column(db.String)
-    glider = db.Column(db.String)
-    email_bfr_med = db.Column(db.Boolean,comment='Send warning emails',default=True)
-
-    # transactions = relationship("MemberTrans", cascade="all,delete-orphan")
-    # pilot_tbl = relationship('Pilot', primaryjoin="Member.gnz_no == Pilot.gnz_no")
-    # user_id = db.Column(db.Integer, comment="If non null then a valid user id")
-    # pilot_id = db.Column(db.Integer, comment='Key to pilot table')
-
-    inserted = db.Column(db.DateTime, default=datetime.datetime.now)
-    updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
-
-    def __repr__(self):
-        return "(" + str(self.id) + ") " + self.firstname + " " + self.surname
-
-    def __str(self):
-        return self.firstname + " " + self.surname
-
-    @property
-    def fullname(self):
-        return self.firstname + ' ' + self.surname
-
-    @property
-    def user_rec(self):
-        thisuser = User.query.filter(User.gnz_no == self.gnz_no).first()
-        if thisuser is None:
-            thisuser = User.query.filter(User.fullname==self.fullname).first()
-        if thisuser is not None:
-            self.__user_id = thisuser.id
-        return thisuser
-
-    @property
-    def pilot_rec(self):
-        thispilot = Pilot.query.filter(Pilot.gnz_no==self.gnz_no).first()
-        if thispilot is None:
-            thispilot = Pilot.query.filter(Pilot.fullname==self.fullname).first()
-        if thispilot is not None:
-            self.__pilot_id = thispilot.id
-        return thispilot
-
-    @property
-    def age(self):
-        age = relativedelta(datetime.date.today(),self.dob)
-        return age.years + round((age.months/12),1)
-
-    @property
-    def last_medical(self):
-        last_medical = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
-            filter(MemberTrans.transtype == 'MD'). \
-            order_by(MemberTrans.transdate.desc()).first()
-        if last_medical is None:
-            return None
-        return last_medical.transdate
-
-
-    @property
-    def medical_due(self):
-        # ONe is required only if QGP and wanting to carry passengers.
-        QGP = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
-            filter(MemberTrans.transtype == 'RTG'). \
-            filter(MemberTrans.transsubtype == 'QGP').first()
-        if QGP is None:
-            return None
-        if self.last_medical is None:
-            return datetime.date.today()
-        if self.age >= 40:
-            return self.last_medical + relativedelta(years=2)
-        else:
-            return self.last_medical + relativedelta(years=5)
-
-    @property
-    def last_bfr(self):
-        bfr = MemberTrans.query.filter(MemberTrans.memberid==self.id). \
-                    filter(MemberTrans.transtype=='BFR').\
-                    order_by(MemberTrans.transdate.desc()).first()
-        icr = MemberTrans.query.filter(MemberTrans.memberid==self.id). \
-                    filter(MemberTrans.transtype=='ICR').\
-                    order_by(MemberTrans.transdate.desc()).first()
-        if bfr is None and icr is None:
-            return None
-        if icr is None:
-            return bfr.transdate
-        if bfr.transdate > icr.transdate:
-            return bfr.transdate
-        else:
-            return icr.transdate
-
-    @property
-    def bfr_due(self):
-        if self.last_bfr is None:
-            return None
-        return self.last_bfr + relativedelta(years=2)
-
-    @property
-    def last_mem_form(self):
-        last_mem_form = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
-            filter(MemberTrans.transtype == 'MF'). \
-            order_by(MemberTrans.transdate.desc()).first()
-        if last_mem_form is None:
-            return None
-        return last_mem_form.transdate
-
-    @property
-    def ratings_string(self):
-        ratings = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
-            filter(MemberTrans.transtype == 'RTG'). \
-            order_by(MemberTrans.transdate.desc()).all()
-        rtglist = (r.transsubtype for r in ratings)
-        return "/".join(rtglist)
-
-
-    @property
-    def currency_dict(self):
-        rtndict = {'totalmins':0,
-                   'totalflts':0,
-                   'last90mins':0,
-                   'last90flts':0,
-                   'last12mins':0,
-                   'last12flts':0,
-                   'instmins':0,
-                   'instflts':0,
-                   'inst12mins':0,
-                   'inst12flts':0}
-        flts = Flight.query.filter((Flight.pic == self.fullname)| (Flight.p2 == self.fullname)).all()
-        for f in flts:
-            rtndict["totalmins"] += f.glider_mins()
-            rtndict["totalflts"] += 1
-            if f.flt_date + relativedelta(days=90) >= datetime.date.today():
-                rtndict["last90mins"] += f.glider_mins()
-                rtndict["last90flts"] += 1
-            if f.flt_date + relativedelta(months=12) >= datetime.date.today():
-                rtndict["last12mins"] += f.glider_mins()
-                rtndict["last12flts"] += 1
-            if self.instructor:
-                thisac = Aircraft.query.filter(Aircraft.regn==f.ac_regn).first()
-                if thisac is not None:
-                    if thisac.seat_count == 2 and f.pic == self.fullname:
-                        rtndict["instmins"] += f.glider_mins()
-                        rtndict["instflts"] += 1
-                        if f.flt_date + relativedelta(months=12) >= datetime.date.today():
-                            rtndict["inst12mins"] += f.glider_mins()
-                            rtndict["inst12flts"] += 1
-        return rtndict
-
-
-
+# class Member(db.Model):
+#     __tablename__ = "members"
+#
+#     # def updpilotaddr(self):
+#     #     self.pilot_tbl.email = self.email_address
+#     #
+#     #
+#     id = db.Column(db.Integer, db.Sequence('member_id_seq'), primary_key=True)
+#     active = db.Column(db.Boolean, comment="Active members appear on the membership list")
+#     gnz_no = db.Column(db.Integer, unique=True)
+#     type = db.Column(db.Enum('FLYING', 'JUNIOR', 'VFP BULK', 'SOCIAL'), comment="Membership Type")
+#     surname = db.Column(db.String, comment="Members Surname")
+#     firstname = db.Column(db.String, comment="Members Firstname")
+#     rank = db.Column(db.String, comment="To be checked against slots")
+#     note = db.Column(db.Text)
+#     email_address = db.Column(db.String, comment="Email Address")
+#     dob = db.Column(db.Date)
+#     phone = db.Column(db.String)
+#     mobile = db.Column(db.String)
+#     address_1 = db.Column(db.String)
+#     address_2 = db.Column(db.String)
+#     address_3 = db.Column(db.String)
+#     service = db.Column(db.Boolean)
+#     roster = db.Column(db.Enum('D', 'T', "I", "IT", 'D', 'N'))
+#     email_2 = db.Column(db.String)
+#     phone2 = db.Column(db.String)
+#     mobile2 = db.Column(db.String)
+#     committee = db.Column(db.Boolean)
+#     instructor = db.Column(db.Boolean)
+#     tow_pilot = db.Column(db.Boolean)
+#     oo = db.Column(db.Boolean)
+#     duty_pilot = db.Column(db.Boolean)
+#     nok_name = db.Column(db.String)
+#     nok_rship = db.Column(db.String)
+#     nok_phone = db.Column(db.String)
+#     nok_mobile = db.Column(db.String)
+#     glider = db.Column(db.String)
+#     email_bfr_med = db.Column(db.Boolean,comment='Send warning emails',default=True)
+#
+#     # transactions = relationship("MemberTrans", cascade="all,delete-orphan")
+#     # pilot_tbl = relationship('Pilot', primaryjoin="Member.gnz_no == Pilot.gnz_no")
+#     # user_id = db.Column(db.Integer, comment="If non null then a valid user id")
+#     # pilot_id = db.Column(db.Integer, comment='Key to pilot table')
+#
+#     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
+#     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
+#
+#     def __repr__(self):
+#         return "(" + str(self.id) + ") " + self.firstname + " " + self.surname
+#
+#     def __str(self):
+#         return self.firstname + " " + self.surname
+#
+#     @property
+#     def fullname(self):
+#         return self.firstname + ' ' + self.surname
+#
+#     @property
+#     def user_rec(self):
+#         thisuser = User.query.filter(User.gnz_no == self.gnz_no).first()
+#         if thisuser is None:
+#             thisuser = User.query.filter(User.fullname==self.fullname).first()
+#         if thisuser is not None:
+#             self.__user_id = thisuser.id
+#         return thisuser
+#
+#     @property
+#     def pilot_rec(self):
+#         thispilot = Pilot.query.filter(Pilot.gnz_no==self.gnz_no).first()
+#         if thispilot is None:
+#             thispilot = Pilot.query.filter(Pilot.fullname==self.fullname).first()
+#         if thispilot is not None:
+#             self.__pilot_id = thispilot.id
+#         return thispilot
+#
+#     @property
+#     def age(self):
+#         age = relativedelta(datetime.date.today(),self.dob)
+#         return age.years + round((age.months/12),1)
+#
+#     @property
+#     def last_medical(self):
+#         last_medical = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+#             filter(MemberTrans.transtype == 'MD'). \
+#             order_by(MemberTrans.transdate.desc()).first()
+#         if last_medical is None:
+#             return None
+#         return last_medical.transdate
+#
+#
+#     @property
+#     def medical_due(self):
+#         # ONe is required only if QGP and wanting to carry passengers.
+#         QGP = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+#             filter(MemberTrans.transtype == 'RTG'). \
+#             filter(MemberTrans.transsubtype == 'QGP').first()
+#         if QGP is None:
+#             return None
+#         if self.last_medical is None:
+#             return datetime.date.today()
+#         if self.age >= 40:
+#             return self.last_medical + relativedelta(years=2)
+#         else:
+#             return self.last_medical + relativedelta(years=5)
+#
+#     @property
+#     def last_bfr(self):
+#         bfr = MemberTrans.query.filter(MemberTrans.memberid==self.id). \
+#                     filter(MemberTrans.transtype=='BFR').\
+#                     order_by(MemberTrans.transdate.desc()).first()
+#         icr = MemberTrans.query.filter(MemberTrans.memberid==self.id). \
+#                     filter(MemberTrans.transtype=='ICR').\
+#                     order_by(MemberTrans.transdate.desc()).first()
+#         if bfr is None and icr is None:
+#             return None
+#         if icr is None:
+#             return bfr.transdate
+#         if bfr.transdate > icr.transdate:
+#             return bfr.transdate
+#         else:
+#             return icr.transdate
+#
+#     @property
+#     def bfr_due(self):
+#         if self.last_bfr is None:
+#             return None
+#         return self.last_bfr + relativedelta(years=2)
+#
+#     @property
+#     def last_mem_form(self):
+#         last_mem_form = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+#             filter(MemberTrans.transtype == 'MF'). \
+#             order_by(MemberTrans.transdate.desc()).first()
+#         if last_mem_form is None:
+#             return None
+#         return last_mem_form.transdate
+#
+#     @property
+#     def ratings_string(self):
+#         ratings = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+#             filter(MemberTrans.transtype == 'RTG'). \
+#             order_by(MemberTrans.transdate.desc()).all()
+#         rtglist = (r.transsubtype for r in ratings)
+#         return "/".join(rtglist)
+#
+#
+#     @property
+#     def currency_dict(self):
+#         rtndict = {'totalmins':0,
+#                    'totalflts':0,
+#                    'last90mins':0,
+#                    'last90flts':0,
+#                    'last12mins':0,
+#                    'last12flts':0,
+#                    'instmins':0,
+#                    'instflts':0,
+#                    'inst12mins':0,
+#                    'inst12flts':0}
+#         flts = Flight.query.filter((Flight.pic == self.fullname)| (Flight.p2 == self.fullname)).all()
+#         for f in flts:
+#             rtndict["totalmins"] += f.glider_mins()
+#             rtndict["totalflts"] += 1
+#             if f.flt_date + relativedelta(days=90) >= datetime.date.today():
+#                 rtndict["last90mins"] += f.glider_mins()
+#                 rtndict["last90flts"] += 1
+#             if f.flt_date + relativedelta(months=12) >= datetime.date.today():
+#                 rtndict["last12mins"] += f.glider_mins()
+#                 rtndict["last12flts"] += 1
+#             if self.instructor:
+#                 thisac = Aircraft.query.filter(Aircraft.regn==f.ac_regn).first()
+#                 if thisac is not None:
+#                     if thisac.seat_count == 2 and f.pic == self.fullname:
+#                         rtndict["instmins"] += f.glider_mins()
+#                         rtndict["instflts"] += 1
+#                         if f.flt_date + relativedelta(months=12) >= datetime.date.today():
+#                             rtndict["inst12mins"] += f.glider_mins()
+#                             rtndict["inst12flts"] += 1
+#         return rtndict
+#
+#
+#
 
 class MemberTrans(db.Model):
     __tablename__ = "membertrans"

@@ -129,7 +129,7 @@ function myLower(cObj)
        </div>
             {% for f in field %}
                <div style="display:table-cell;width:auto">
-                     <label for="{{ f.name }}" style="width:auto">{{ f.label.text }}</label>:{{ f(**kwargs)|safe }}
+                     <label for="{{ f.name }}" style="width:auto" class="{{ field.render_kw['class'] }}">{{ f.label.text }}</label>:{{ f(**kwargs)|safe }}
                </div>
             {% endfor %}
        </div>

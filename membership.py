@@ -41,7 +41,7 @@ class PilotForm(FlaskForm):
     id = IntegerField('ID', description='Primary Key')
     active = BooleanField('Active', description="Active members appear on the membership list")
     gnz_no = IntegerField('NZGA No', description='Add the members GNZ no when known.')
-    type = RadioField('Member Type', render_kw={'title': 'Select the correct Membership Type'})
+    type = RadioField('Member Type', [validators.AnyOf(values=['FLYING','JUNIOR','SOCIAL'])] , render_kw={'title': 'Select the correct Membership Type'} )
     fullname = StringField('Fullname', [validators.DataRequired(message='You cannot have a blank name')],
                           description="Members Name", render_kw={'autocomplete': 'dont','size':'50'})
     #
@@ -148,11 +148,19 @@ class TransactionForm(FlaskForm):
 def memberlist(active='ACTIVE'):
     if request.method == 'GET':
         if active=='ACTIVE':
-            list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.fullname)
+            list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.fullname).all()
         else:
-            list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname)
+            list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname).all()
+        # for l in list:
+        #     if l.type is None or l.type not in ['FLYING', 'JUNIOR', 'SOCIAL', 'VFP BULK']:
+        #         l.type = 'FLYING'
+    try:
         return render_template('membership/memberlist.html', list=list, active=active, today=datetime.date.today(),
-                               twomonths=datetime.date.today() - relativedelta(months=-2))
+                                   twomonths=datetime.date.today() - relativedelta(months=-2))
+    except Exception as e:
+        flash(str(e),"error")
+        return render_template('membership/index.html')
+
 
 
 @bp.route('/membermaint/<id>', methods=['GET', 'POST'])
@@ -171,6 +179,9 @@ def membermaint(id):
         thismem.gnz_no = 0
     if not thismem.rank:
         thismem.rank = 'CIV'
+    if not thismem.type is None or thismem.type not in [ 'FLYING', 'JUNIOR', 'SOCIAL', 'VFP BULK']:
+        thismem.type = 'FLYING'
+
     thisform = PilotForm(obj=thismem, name='Member Maintenance')
     thisform.user_id.choices = [(None, 'No User')]
     thisform.user_id.choices.extend([(u.id, u.fullname) for u in User.query.order_by(User.fullname).all()])
@@ -217,11 +228,6 @@ def membermaint(id):
         db.session.commit()
         # sync = PersonSync(thismem)
         return redirect(url_for('membership.memberlist'))
-    else:
-        print('no validate')
-        print(thisform.form_errors)
-        for e in thisform.form_errors:
-            applog.error('Error in form:{}'.format(e))
     return render_template('membership/membermaint.html', form=thisform, nokrs=nok_relationships)
 
 
