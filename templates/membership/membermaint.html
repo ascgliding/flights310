@@ -5,21 +5,21 @@
 {% endblock %}
 {% block content %}
 <form method="Post" autocomplete="off">
+  {{ form.hidden_tag() }}
   {{ form.csrf_token }}
   <fieldset>
-    <legend>{{ form.name }} Member Maintenance </legend>
+    <legend>{{ form.name }} Member Maintenance ( {{form.id.data}} )</legend>
+    {% if form.errors %}
+    <ul class="errors">
+    {% for error in form.errors %}
+        <li>{{ error }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
     <ul>
       <li>{{ render_field(form.fullname) }}</li>
       <li>{{ render_field(form.gnz_no) }}</li>
-      <li style="width:95%">
-        <table>
-          <tr>
-            {% for r in form.type %}
-            <td width="20%">{{ r.label(style="width:70%") }} : {{ r }}</td>
-            {% endfor %}
-          </tr>
-        </table>
-      </li>
+      <li>{{ render_radio(form.type) }}</li>
       <li>
         <div style="display:table;width:100%;border-spacing:10px">
           <div style="display:table-row">
@@ -61,7 +61,6 @@
         </div>
           </div>
       </li>
-{#      <li>{{ render_field(form.roster) }}</li>  #}
       <li>
         <div style="display:inline-table;width:100%;border-spacing:10px;border:1px solid">
           <div style="display:table-row">

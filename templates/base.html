@@ -120,6 +120,30 @@ function myLower(cObj)
   {% endif %}
   {% endmacro %}
 
+{% macro render_radio(field) %}
+
+   <div style="display:table;width:100%;border-spacing:10px;border:1px solid">
+     <div style="display:table-row">
+       <div style="display:table-cell;width:auto">
+         {{ field.label }}:
+       </div>
+            {% for f in field %}
+               <div style="display:table-cell;width:auto">
+                     <label for="{{ f.name }}" style="width:auto">{{ f.label.text }}</label>:{{ f(**kwargs)|safe }}
+               </div>
+            {% endfor %}
+       </div>
+    </div>
+  {% if field.errors %}
+  <ul class=errors>
+    {% for error in field.errors %}
+    <li style="margin-left:5%; color:red; font-size:60%;">{{ error }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endmacro %}
+
+
   <!-- This is absolutely critical if you want the site to work on a mobile device -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">

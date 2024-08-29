@@ -62,12 +62,12 @@ class PilotForm(FlaskForm):
     address_2 = StringField('Address 2')
     address_3 = StringField('Address 3')
     service = BooleanField('Service', description='Tick if a current service member')
-    roster = SelectField('Roster', description='Which rosters?', choices=[('I', 'Instructor'),
-                                                                          ('T', 'TowPilot'),
-                                                                          ('IT', 'Both Instructor and Tow Pilot'),
-                                                                          ('N', 'No Roster'),
-                                                                          ('D', 'Duty Pilot')]
-                         )
+    # roster = SelectField('Roster', description='Which rosters?', choices=[('I', 'Instructor'),
+    #                                                                       ('T', 'TowPilot'),
+    #                                                                       ('IT', 'Both Instructor and Tow Pilot'),
+    #                                                                       ('N', 'No Roster'),
+    #                                                                       ('D', 'Duty Pilot')]
+    #                      )
     email_2 = StringField('Email 2', description="Add any send email address",
                           render_kw={'size': '50', 'autocomplete': 'dont'})
     phone2 = StringField('Phone 2', description="Any second phone number", render_kw={'autocomplete': 'dont'})
@@ -200,7 +200,7 @@ def membermaint(id):
             names = thismem.fullname.split(' ')
             if len(names) == 0:
                 flash("You must provide and name.", "error")
-                return render_template('mastmaint/pilotmaint.html', form=thisform, usernames=usernames)
+                return render_template('mastmaint/pilotmaint.html', form=thisform)
             thismem.firstname = names[0]
             thismem.surname = names[-1]
             thismem.member = True  # if maintaining via this screen then it is definitely a member.
@@ -208,7 +208,8 @@ def membermaint(id):
                 db.session.add(thismem)
             if thismem.user_tbl:
                 thismem.user_tbl.email = thismem.email
-                thismem.user_tbl.gnz_no = thismem.gnz_no
+                if thismem.gnz_no != 0:
+                    thismem.user_tbl.gnz_no = thismem.gnz_no
                 thismem.user_tbl.pilot_id = thismem.id
         user = db.session.get(User,thismem.user_id)
         if user is not None:
@@ -216,6 +217,11 @@ def membermaint(id):
         db.session.commit()
         # sync = PersonSync(thismem)
         return redirect(url_for('membership.memberlist'))
+    else:
+        print('no validate')
+        print(thisform.form_errors)
+        for e in thisform.form_errors:
+            applog.error('Error in form:{}'.format(e))
     return render_template('membership/membermaint.html', form=thisform, nokrs=nok_relationships)
 
 
