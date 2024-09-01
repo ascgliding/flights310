@@ -51,11 +51,11 @@ def logbook():
         else:
             enddate = datetime.date.today()
             session['enddate'] = enddate.strftime("%Y-%m-%d")
-        thisuser = db.session.query(Pilot).filter(Pilot.userid == current_user.id).first()
+        thisuser = db.session.query(Pilot).filter(Pilot.user_id == current_user.id).first()
         if thisuser is None:
             flash("Your userid is not associated with a pilot.  Sorry about that...")
             return render_template("index.html")
-        if thisuser.userid is None:
+        if thisuser.user_id is None:
             flash("Your userid is not associated with a pilot.  Sorry about that...")
             return render_template("index.html")
         # Glider Flights
@@ -85,7 +85,7 @@ def logbook():
                 case when t0.payer != t2.fullname then 1 else t0.paid end paid
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
                 WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
                 and ((t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -133,7 +133,7 @@ def logbook():
                 t0.paid
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.tug_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
                 WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
                 and ((t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -169,7 +169,7 @@ def logbook():
                 coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0) towmins
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
                 WHERE upper(t2.fullname) = t0.tow_pilot
                 and (t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -195,7 +195,7 @@ def logbook():
                 sum(coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0)) towmins
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
                 WHERE upper(t2.fullname) = t0.tow_pilot
                 and (t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -211,12 +211,12 @@ def logbook():
                           towmins=db.Integer
                           )
 
-        flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
         slot = db.session.query(Slot).filter_by(slot_key='LASTPAIDUPDATE').first()
-        tugonlyflights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
-        tows = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        tugonlyflights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
+        tows = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
         print(tows)
-        towsummary = db.engine.execute(tow_summary, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        towsummary = db.engine.execute(tow_summary, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
         return render_template('logbook/logbook.html', list=flights, tugonly=tugonlyflights,
                                 tows=tows, towsummary=towsummary,
                                startdate=startdate, enddate=enddate,
@@ -264,7 +264,7 @@ def export():
     else:
         enddate = datetime.date.today()
         session['enddate'] = startdate.strftime("%Y-%m-%d")
-    thisuser = db.session.query(Pilot).filter(Pilot.userid == current_user.id).first()
+    thisuser = db.session.query(Pilot).filter(Pilot.user_id == current_user.id).first()
     if thisuser is None:
         flash("Your userid is not associated with a pilot.  Sorry about that...")
         render_template("index.html")
@@ -315,7 +315,7 @@ def add_glider_flights_worksheet(workbook,startdate,enddate,thisuser):
             t0.paid
             FROM flights t0
             LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-            LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+            LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
             WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
             and t0.flt_date >= :startdate
             and t0.flt_date <= :enddate 
@@ -336,7 +336,7 @@ def add_glider_flights_worksheet(workbook,startdate,enddate,thisuser):
                       due = SqliteDecimal(10, 2),
                       paid = db.Boolean
                     )
-    flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+    flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
     # don't add the worksheet if there are no glider flights...
     if len(flights) == 0:
         return
@@ -413,7 +413,7 @@ def add_tows_worksheet(workbook, startdate, enddate, thisuser):
                 coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0) towmins
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
                 WHERE upper(t2.fullname) = t0.tow_pilot
                 and (t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -431,7 +431,7 @@ def add_tows_worksheet(workbook, startdate, enddate, thisuser):
                           landed=db.Time,
                           towmins=db.Integer
                           )
-        flights = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+        flights = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
         if len(flights) == 0:
             return
         row = 0
@@ -513,7 +513,7 @@ def add_tugonly_workksheet(workbook, startdate, enddate, thisuser):
             t0.paid
             FROM flights t0
             LEFT OUTER JOIN aircraft t1 ON t0.tug_regn = t1.regn
-            LEFT OUTER JOIN pilots t2 ON t2.userid = :pilot
+            LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
             WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
             and ((t0.flt_date >= :startdate
                 and t0.flt_date <= :enddate)
@@ -535,7 +535,7 @@ def add_tugonly_workksheet(workbook, startdate, enddate, thisuser):
                               due=SqliteDecimal(10, 2),
                               paid=db.Boolean
                               )
-    flights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.userid).fetchall()
+    flights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
     if len(flights) == 0:
         return
     row = 0
