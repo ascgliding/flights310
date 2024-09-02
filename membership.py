@@ -27,7 +27,6 @@ import email_validator
 import email_validator
 ##from wtforms.ext.sqlalchemy.orm import model_form
 
-from asc.oPerson import *
 
 # app = Flask(__name__)
 # app = create_app()

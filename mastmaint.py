@@ -23,7 +23,6 @@ from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 
 from asc.mailer import ascmailer
-from asc.oPerson import *
 import decimal
 
 
