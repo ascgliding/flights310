@@ -8,7 +8,7 @@ from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
 from asc import db,create_app
-from asc.schema import Pilot,  Slot, MemberTrans
+from asc.schema import Pilot,  Slot, MemberTrans, User
 from sqlalchemy import text as sqltext
 from sqlalchemy import or_, and_
 import os
