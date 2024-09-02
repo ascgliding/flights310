@@ -492,11 +492,13 @@ if __name__ == '__main__':
     with app.app_context():
         # The execution time is 0400.
         log.info("Dayend started")
-        if datetime.date.today().weekday() in [4,5,6]:  # Friday is 4.
+        # send updates on Fridays:
+        if datetime.date.today().weekday() in [4]:  # Friday is 4.
             sdate = datetime.date.today()
             edate = sdate + relativedelta(days=7)
             log.info("Sending Event Emails")
             processcalendar(sdate, edate)
+        # Send statistics on the first of the month
         if datetime.date.today().day == 1:
             log.info("Sending Statistic Emails")
             send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
@@ -510,7 +512,7 @@ if __name__ == '__main__':
             log.info("Database Emailed during Dayend")
             send_db()
         # send me medical and BFR data on Friday Mornings.
-        if datetime.datetime.today().weekday() in [1, 4]:
+        if datetime.datetime.today().weekday() in [4]:
             log.info("Sending Medical and BFR details")
             send_med_bfr_to_cfi()
         print("it ran")
