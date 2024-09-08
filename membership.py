@@ -224,6 +224,7 @@ def membermaint(id):
         user = db.session.get(User,thismem.user_id)
         if user is not None:
             user.email = thismem.email
+            user.gnz_no = thismem.gnz_no
         db.session.commit()
         # sync = PersonSync(thismem)
         return redirect(url_for('membership.memberlist'))
