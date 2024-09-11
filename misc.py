@@ -36,6 +36,7 @@ import email_validator
 # app = create_app()
 app = current_app
 applog = app.logger
+from asc.common import *
 
 bp = Blueprint('misc', __name__, url_prefix='/misc')
 
@@ -46,6 +47,82 @@ def contactlist():
     if request.method == 'GET':
         list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname)
         return render_template('misc/contactlist.html', list=list)
+
+@bp.route('/instrcontactlist', methods=['GET', 'POST'])
+@login_required
+def instrcontactlist():
+    if request.method == 'GET':
+        list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname)
+        return render_template('misc/instrcontactlist.html', list=list)
+
+@bp.route('/currencydtl/<id>', methods=['GET', 'POST'])
+@login_required
+def currencydtl(id):
+    if request.method == 'GET':
+        thispilot = db.session.get(Pilot,id)
+        if thispilot is None:
+            flash('Could not access Pilot currency')
+            return render_template('misc/instrcontactlist.html', list=list)
+        if not current_user.is_member_of('INSTRUCTOR') and current_user.id != thispilot.user_id:
+            flash('You can only access your own details')
+            return render_template('index.html')
+        currency = currency_dict(id)
+        # below is for barometer
+        return render_template('misc/currencydtl.html', list=currency, pilot=thispilot )
+
+
+@bp.route('/barometer/<pilot_id>', methods=['GET', 'POST'])
+@bp.route('/barometer', methods=['GET', 'POST'])
+@login_required
+def barometer(pilot_id=None):
+    if pilot_id is None:
+        pilot_id = current_user.pilot_id
+    if current_user.pilot_id is None:
+        flash('Your userid is not associated with a pilot.  Ask the sysadmin',"error")
+        return render_template('index.html')
+    if current_user.pilot_id != pilot_id and not current_user.is_member_of('INSTRUCTOR'):
+        flash('You can only view your own barometer',"error")
+        return render_template('index.html')
+    #
+    if request.method == 'GET':
+        thispilot = db.session.get(Pilot,pilot_id)
+        if thispilot is None:
+            flash('Could not access Pilot currency')
+            return render_template('misc/instrcontactlist.html', list=list)
+        currency = currency_dict(pilot_id)
+        # below is for barometer
+        msg = None
+        gliderflights = [x for x in currency if x['summary_type'] == 'Glider Flights']
+        if len(gliderflights) > 0:
+            last12_launches = gliderflights[0]['last12_launches']
+            last12_hrs = gliderflights[0]['last12_hrs']
+        else:
+            last12_launches = 0
+            last12_hrs = 0
+        # make them percentages.....
+        if last12_hrs > 32:
+            if thispilot.currency_barometer < 100:
+                msg = 'Hours are off scale (' + str(last12_hrs) + ')'
+            last12_hrs = 1
+        elif last12_hrs <= 0:
+            last12_hrs = 0
+        else:
+            last12_hrs /= 32
+        if last12_launches > 41:
+            if thispilot.currency_barometer < 100:
+                if msg is None:
+                    msg = 'Launches are off scale (' + str(last12_launches) + ')'
+                else:
+                    msg += 'Launches are off scale (' + str(last12_launches) + ')'
+            last12_launches = 1
+        elif last12_launches <= 0:
+            last12_launches = 0
+        else:
+            last12_launches /= 41
+        # but the graph is "upside down...." so subtract from 1
+        last12_hrs = 1 - last12_hrs
+        last12_launches =  1 - last12_launches
+        return render_template('misc/barometer.html', pilot=thispilot, last12_launches=last12_launches, last12_hrs=last12_hrs,msg=msg )
 
 @bp.route('/conctactspreadsheet>', methods=['GET', 'POST'])
 @login_required

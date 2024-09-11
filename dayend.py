@@ -191,11 +191,11 @@ def send_db():
 
 
 def send_med_bfr_to_cfi():
-    mems = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_med_warning == True).order_by(Pilot.surname)
-    thatlist = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_bfr_warning == True).order_by(Pilot.surname)
+    mems = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_med_warning == True).order_by(Pilot.surname).all()
+    thatlist = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_bfr_warning == True).order_by(Pilot.surname).all()
     for m in thatlist:
         if m not in mems:
-            thatlist.append(m)
+            mems.append(m)
     count = 0
     email_list = [{'name': 'Name', 'medical': 'Medical', 'bfr': 'BFR', 'message': 'Message'}]
     for m in mems:
@@ -492,6 +492,10 @@ if __name__ == '__main__':
     with app.app_context():
         # The execution time is 0400.
         log.info("Dayend started")
+        # print("starting in test")
+        # send_med_bfr_to_cfi()
+        # print("finished med and bfr")
+        # exit()
         # send updates on Fridays:
         if datetime.date.today().weekday() in [4]:  # Friday is 4.
             sdate = datetime.date.today()

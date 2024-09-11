@@ -1,5 +1,8 @@
 from asc.schema import *
 from asc.oMaint import *
+from sqlalchemy import text as sqltext
+from sqlalchemy.sql import select
+
 
 # Named constants
 constREGN_FOR_TUG_ONLY = 'TUG ONLY'
@@ -307,6 +310,138 @@ def user_agent_os_match(uastring,matchstring):
     # If we get to here then it wasn't found
     return False
 
+def currency_dict(pilotid):
+    """
+    Returns a dictionary of currency by type
+    :param pilotid: The id for a record on the pilot table
+    :return: A list of dictionaries.  If not empty then it is has the following keys:
+        summary_type - the type of currency e.g. Solo, Instructing, PIC, p2
+        total_launches - total launches
+        total_hrs - Total hrs
+        last90 - last 90 days launches
+        last90hrs - last 90 days hours
+        last12 - last 12 months launches
+        last12Hrs - last 12 months hours
+    """
+    rtndict = []
+    thispilot = db.session.get(Pilot,pilotid)
+    if thispilot is None:
+        return rtndict
+    sql = sqltext(
+        '''
+    select 'Glider Flights' summary_type, count(*) 'total_launches', 
+        round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) total_hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90_launches,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90_hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12_launches,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12_hrs
+        from flights t0 
+        where linetype = 'FL'
+        and ac_regn != 'TUG ONLY'
+        and (pic = :name or p2 = :name)
+    union
+        select 'Solo', count(*) 'Launches', 
+        round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) totalhrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12hrs
+        from flights t0 
+        where linetype = 'FL'
+        and ac_regn != 'TUG ONLY'
+        and pic = :name
+        and (t0.p2 = '' or t0.p2 is null)
+    union
+        select 'PIC', count(*) 'Launches', 
+        round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) totalhrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12hrs
+        from flights t0 
+        where linetype = 'FL'
+        and ac_regn != 'TUG ONLY'
+        and pic = :name 
+    union
+        select 'P2', count(*) 'Launches', 
+        round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) totalhrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12hrs
+        from flights t0 
+        where linetype = 'FL'
+        and ac_regn != 'TUG ONLY'
+        and p2 = :name 
+    union
+        select 'Instructing', count(*) 'Launches', 
+        round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) totalhrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12hrs
+        from flights t0 
+        join pilots t1 on t0.pic = t1.fullname 
+        where linetype = 'FL'
+        and ac_regn != 'TUG ONLY'
+        and pic = :name 
+        and  t1.instructor = 1
+    union
+        select 'Private Tug Flying', count(*) 'Launches', 
+        round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) totalhrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12hrs
+        from flights t0 
+        where linetype = 'FL'
+        and ac_regn = 'TUG ONLY'
+        and pic = :name 
+    -- when editing keep this one last becasue the time calc is tug down, not landed
+    union
+        select 'Total tows', count(*) 'Launches', 
+        round(sum(coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1) totalhrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 1 else 0 end) last90,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 90 then 
+            coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last90hrs,
+        sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 1 else 0 end) last12,
+        round(sum(case when 	julianday('now','localtime') - julianday(flt_date) < 365 then 
+            coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0) 
+            else 0 end) / 60,1) last12hrs
+        from flights t0 
+        where linetype = 'FL'
+        and julianday('now','localtime') - julianday(flt_date) < 365.25
+        and tow_pilot = upper(:name) 
+        and ac_regn != 'TUG ONLY'
+            '''
+    )
+    results = db.engine.execute(sql, name = thispilot.fullname).fetchall()
+    return [x._asdict() for x in results if x[1] > 0]
 
 
 

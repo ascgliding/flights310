@@ -160,20 +160,24 @@ function myLower(cObj)
       <span><button id="menubtn" ></button></span>
       <div class="dropdown-content">
         {% if current_user is defined and current_user.is_authenticated %}
-        <p><a href="{{ url_for('flights.daysummary') }}">Flights</a></p>
-        <p><a href="{{ url_for('logbook.logbook') }}">Logbook</a></p>
-        <p><a href="{{ url_for('auth.profile') }}">Profile</a></p>
-        <p><a href="{{ url_for('auth.logout') }}">Log Out</a></p>
-        <p><a href="{{ url_for('misc.contactlist',active='ACTIVE') }}">Members</a></p>
-        {% if 'regn' in session %}
-          <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
-        {% endif %}
-        <div class="nophxone">
-          <p><a href="{{ url_for('mastmaint.index') }}">Maintenance</a></p>
-        </div>
+          <p><a href="{{ url_for('flights.daysummary') }}">Flights</a></p>
+          <p><a href="{{ url_for('logbook.logbook') }}">Logbook</a></p>
+          <p><a href="{{ url_for('auth.profile') }}">Profile</a></p>
+          <p><a href="{{ url_for('auth.logout') }}">Log Out</a></p>
+          {% if current_user.is_member_of("INSTRUCTOR") %}
+            <p><a href="{{ url_for('misc.instrcontactlist',active='ACTIVE') }}">Members</a></p>
+          {% else %}
+            <p><a href="{{ url_for('misc.contactlist',active='ACTIVE') }}">Members</a></p>
+          {% endif %}
+          {% if 'regn' in session %}
+            <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
+          {% endif %}
+          <div class="nophxone">
+            <p><a href="{{ url_for('mastmaint.index') }}">Maintenance</a></p>
+          </div>
         {% else %}
-        <p><a href="{{ url_for('auth.register') }}">Register</a></p>
-        <p><a href="{{ url_for('auth.login') }}">Log In</a></p>
+          <p><a href="{{ url_for('auth.register') }}">Register</a></p>
+          <p><a href="{{ url_for('auth.login') }}">Log In</a></p>
         {% endif %}
       </div>
     </div>

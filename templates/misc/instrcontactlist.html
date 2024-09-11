@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Contact List{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+          <a class="action mobile_port_suppress mobile_land_suppress" href="{{ url_for('misc.contactspreadsheet') }}" ,
+           title="Download Spreadsheet ">
+          <button class="textbtn">Download</button>
+          </a>
+      </div>
+  </div>
+  <div>
+  Names are colour coded in accordance with the GNZ currency barometer.
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Name</div>
+      <div class="heading mobile_port_suppress " >GNZ</div>
+      <div class="heading mobile_port_suppress " >Email</div>
+      <div class="heading mobile_port_suppress" >Phone</div>
+      <div class="heading mobile_land_suppress" >Mobile</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      {% if l.currency_barometer <= 33 %}
+      <a href="{{ url_for('misc.barometer', pilot_id=l.id) }}" style="color:white"><div class="cell" align="left" style="background-color:red">{{l.fullname}} </div></a>
+      {% elif l.currency_barometer <= 66 %}
+       <a href="{{ url_for('misc.barometer', pilot_id=l.id) }}" style="color:black"><div class="cell" align="left" style="background-color:yellow">{{l.fullname}} </div></a>
+      {% else %}
+       <a href="{{ url_for('misc.barometer', pilot_id=l.id) }}" style="color:white"><div class="cell" align="left" style="background-color:green">{{l.fullname}} </div></a>
+      {% endif %}
+      <div class="cell mobile_port_suppress " align="right">{{ l.gnz_no }}</div>
+      <div class="cell mobile_port_suppress " align="left"><a href="mailto:{{l.email}}">{{ l.email }}</a></div>
+      <div class="cell mobile_port_suppress " align="left"><a href="tel:{{+l.phone}}">{{ l.phone }}</a></div>
+      <div class="cell mobile_land_suppress" align="left"><a href="tel:{{+l.mobile}}">{{ l.mobile }}</a></div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}

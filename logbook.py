@@ -220,7 +220,8 @@ def logbook():
         return render_template('logbook/logbook.html', list=flights, tugonly=tugonlyflights,
                                 tows=tows, towsummary=towsummary,
                                startdate=startdate, enddate=enddate,
-                               lastupdate=slot.slot_data)
+                               lastupdate=slot.slot_data,
+                               pilot=thisuser)
     if request.method == "POST":
         return url_for("logbook.logbook",sdate=None,edate=None)
 

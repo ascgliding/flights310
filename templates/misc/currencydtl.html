@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}{{ pilot.fullname }} Currency {% endblock %}</h1>
+    </div>
+  </div>
+  Data is hours/launches.  <br>
+</div>
+{% endblock %}
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Type</div>
+      <div class="heading " >90 Days</div>
+      <div class="heading" >12 months</div>
+      <div class="heading mobile_port_suppress" >Total</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell" align="left" >{{l.summary_type}} </div>
+      <div class="cell " align="right">{{l.last90_hrs }} / {{ l.last90_launches }} </div>
+      <div class="cell  " align="right">{{l.last12_hrs }} / {{ l.last12_launches }}</div>
+      <div class="cell mobile_port_suppress " align="right"> {{l.total_hrs }} / {{ l.total_launches }}</div>
+    </div>
+{% endfor %}
+
+
+{% endblock %}

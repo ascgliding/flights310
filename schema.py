@@ -201,6 +201,21 @@ class User(db.Model):
         """)
         return [n[0] for n in db.engine.execute(sql, userid=self.id).all()]
 
+    def is_member_of(self,prole):
+        sql = sqltext("""
+        select t1.name
+            from user_roles t0
+            join roles t1 on t1.id = t0.role_id
+            join users t2 on t2.id = t0.user_id  
+            where t2.id = :userid
+            and t1.name = :role
+        """)
+        check = db.engine.execute(sql, userid=self.id, role=prole).all()
+        if len(check) == 0:
+            return False
+        else:
+            return True
+
     def get_id(self):
         """Return the id of a user to satisfy Flask-Login's requirements."""
         # return str(self.id)
@@ -538,6 +553,46 @@ class Pilot(db.Model):
                             rtndict["inst12flts"] += 1
         return rtndict
 
+    @property
+    def currency_barometer(self):
+        """
+        This routine is based on the standard currency barometer that is put out by GNZ.
+        It can be found at "C:Users\rayb\Google Drive delete this\Members\Documents\Currency Barometer.PDF"
+        This routines calculates how far up the middle line a given pilot lands.
+        Essentially the middle line poisition is the AVERAGE of the hours line and the launches line.
+        The Hours line ends at 32 and the launches line ends at 41.
+        Taking an example of a pilot with 25 hours and 12 launches:
+        The pilot is 25/32 up the hours line (78.125%)
+        and they are 12/41 up the launches line (29.268%).
+        The line between the hours and lanuches side crosses the middle exactly half way between the upper
+        and lower limits on each side.  So we could - look at the difference (78-29 = 49) and half that (24)
+        then add that to the lowest one (or subtract from the highest) 29+24 = 53%.  Therefore the
+        position they cross the centre line is just a little over half way.
+
+        An easier way is just to average the two : (78+29)/2 = 53.
+
+        So the final formula is (x/32 + y/41) / 2.
+
+        The barometer colours are red below 33% and yellow below 66%
+
+        :param pilot_id: The id of the pilot we are interested in
+        :return: The distance up the middle expressed as a percentage
+
+        """
+        sql = sqltext(
+            '''
+            select  count(*) 'total_launches', 
+                coalesce(round(sum(coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0)) / 60,1),0) total_hrs
+                from flights t0 
+                where linetype = 'FL'
+                and ac_regn != 'TUG ONLY'
+                and julianday('now','localtime') - julianday(t0.flt_date) < 365 
+                and (pic = :name or p2 = :name)
+            ''')
+        results = db.engine.execute(sql, name=self.fullname).first()
+        if results is None:
+            return 0
+        return round(((results[0] / 41 + results[1] / 32) / 2) * 100, 0)
 
 class Slot(db.Model):
     __tablename__ = "slots"
