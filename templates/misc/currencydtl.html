@@ -26,7 +26,41 @@
       <div class="cell  " align="right">{{l.last12_hrs }} / {{ l.last12_launches }}</div>
       <div class="cell mobile_port_suppress " align="right"> {{l.total_hrs }} / {{ l.total_launches }}</div>
     </div>
-{% endfor %}
+  {% endfor %}
+      <br>
+    <div class="table">
+      {% if pilot.medical_due %}
+      <div class="row">
+        <div class="cell">Medical due </div>
+        <div class="cell" {{ "style=""color:red""" if pilot.medical_due < today }}>{{ pilot.medical_due.strftime("%d-%b-%Y") }}</div>
+      </div>
+      {% endif %}
+      {% if pilot.bfr_due %}
+      <div class="row">
+        <div class="cell">BFR due</div>
+        <div class="cell"  {{ "style=""color:red""" if pilot.bfr_due < today }} >{{ pilot.bfr_due.strftime("%d-%b-%Y") }}</div>
+      </div>
+      {% endif %}
+    </div>
+    <br>
+    <h4>Last Flights</h4>
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Date</div>
+      <div class="heading " >Regn</div>
+      <div class="heading mobile_port_suppress" >PIC</div>
+      <div class="heading mobile_port_suppress" >P2</div>
+      <div class="heading " >Mins</div>
+    </div>
+  {% for l in last20 %}
+    <div class="row">
+      <div class="cell" align="left" >{{l.flt_date.strftime("%d-%m-%y")}} </div>
+      <div class="cell " align="left">{{l.ac_regn }}</div>
+      <div class="cell mobile_port_suppress " align="left">{{l.pic }}</div>
+      <div class="cell mobile_port_suppress " align="left">{{l.p2 }}</div>
+      <div class="cell  " align="right"> {{'%3d' % (l.mins or 0) }}  </div>
+    </div>
+  {% endfor %}
 
 
 {% endblock %}

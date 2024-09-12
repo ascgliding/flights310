@@ -67,8 +67,20 @@ def currencydtl(id):
             flash('You can only access your own details')
             return render_template('index.html')
         currency = currency_dict(id)
+        sql = sqltext('''
+        select flt_date, ac_regn, pic, p2,
+                    round(((julianday(t0.landed) - julianday(t0.takeoff)) * 1440),0) mins
+            from flights t0
+            where linetype = 'FL'
+            and ac_regn <> 'TUG ONLY'
+            and (p2=:name or pic=:name)
+            order by flt_date desc
+            limit 10
+        ''')
+        sql = sql.columns(flt_date=db.Date)
+        last20 = db.engine.execute(sql, name = thispilot.fullname).fetchall()
         # below is for barometer
-        return render_template('misc/currencydtl.html', list=currency, pilot=thispilot )
+        return render_template('misc/currencydtl.html', list=currency, pilot=thispilot, last20=last20, today=datetime.date.today() )
 
 
 @bp.route('/barometer/<pilot_id>', methods=['GET', 'POST'])
