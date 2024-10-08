@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath(".."))
 # from decimal import Decimal
 from asc import db, create_app
 from asc.mailer import ascmailer
+from asc.oMetservice import MetService
 # # In order to trap errors from the engine
 # import sqlalchemy.exc
 # from sqlalchemy import text as sqltext, func
@@ -219,6 +220,7 @@ def send_med_bfr_to_cfi():
         msg.send()
 
 
+
 def send_stats_to_gnz(asat):
     """
     This is the text of the email from Max...
@@ -347,12 +349,12 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
         log.info('Event email being sent to {}'.format(instructor.fullname))
         msg = ascmailer('Events for this coming weekend')
         msg.add_body('<html>')
-        msg.add_body('Events for {}'.format(thisdate))
+        msg.add_body('Events for {}'.format(thisdate.strftime('%A, %d %B')))
         msg.add_body('<br>')
         if instructor is None:
             print('Date with no instructor {}'.format(thisdate))
         else:
-            msg.add_body('Should have been emailed to {}'.format(instructor.email))
+            # msg.add_body('Should have been emailed to {}'.format(instructor.email))
             msg.add_body('<br>')
             if tp:
                 msg.add_body('Tow Pilot is {}'.format(tp.fullname))
@@ -371,6 +373,7 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
             msg.add_body('You will need to contact effected individuals or groups if flying is cancelled for any reason.')
             msg.add_body('<br>')
             msg.add_body('<br>')
+            msg.add_recipient(instructor.email)
             msg.add_recipient('ray@rayburns.nz')
             msg.add_body('</html>')
             msg.send()
@@ -386,23 +389,26 @@ def update_roster(rdate, instr, tp, dp):
     :return:
     """
     thisroster = Roster.query.filter(Roster.roster_date == rdate).first()
-    if not thisroster:
-        newroster = Roster(roster_date=rdate)
-        if instr is not None:
-            newroster.roster_inst=instr.fullname,
-        if tp is not None:
-            newroster.roster_tp=tp.fullname
-        if dp is not None:
-            newroster.roster_dp=dp.fullname
-        db.session.add(newroster)
-    else:
-        if instr is not None:
-            thisroster.roster_inst = instr.fullname
-        if tp is not None:
-            thisroster.roster_tp = tp.fullname
-        if dp is not None:
-            thisroster.roster_dp = dp.fullname
-    db.session.commit()
+    try:
+        if not thisroster:
+            newroster = Roster(roster_date=rdate)
+            if instr is not None:
+                newroster.roster_inst=instr.fullname
+            if tp is not None:
+                newroster.roster_tp=tp.fullname
+            if dp is not None:
+                newroster.roster_dp=dp.fullname
+            db.session.add(newroster)
+        else:
+            if instr is not None:
+                thisroster.roster_inst = instr.fullname
+            if tp is not None:
+                thisroster.roster_tp = tp.fullname
+            if dp is not None:
+                thisroster.roster_dp = dp.fullname
+        db.session.commit()
+    except Exception as e:
+        log.error('Failed to Add new row to roster:{}'.format(str(e)))
 
 
 def geteventlist(file, startdate, enddate,prefix=None):
@@ -473,6 +479,9 @@ def processcalendar(startdate, enddate):
         thismatch = re.search("(^INS:)(.*)(TP:)(.*)(DP:)(.*)", event.name)
         if thismatch:
             # print(event.begin.to('local'), event.name, thismatch.group(2))
+            # print(event.name)
+            # print(thismatch.group(2))
+            # print(thismatch.group(4))
             thisinstr = getpilot(thismatch.group(2))
             thistp = getpilot(thismatch.group(4))
             thisdp = getpilot(thismatch.group(6))
@@ -487,6 +496,15 @@ def processcalendar(startdate, enddate):
         # here is what we do with it.
         send_instr_email(lastdate, dayevents, thisinstr, thistp, thisdp)
 
+def get_metforecast(long,lat):
+    apikey = Slot.query.filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'METSERVICEKEY').first()
+    thiswx = MetService()
+    if apikey is not None:
+        # thiswx.ApiKey="EkwAkjmmhG58Ur6Tu1ntjU"
+        thiswx.ApiKey = apikey.slot_data
+    wxfile = '../instance/wx.json'
+    thiswx.get_current(long, lat, savefilename=wxfile, reading_count=12)
+
 
 if __name__ == '__main__':
     with app.app_context():
@@ -495,6 +513,11 @@ if __name__ == '__main__':
         # print("starting in test")
         # send_med_bfr_to_cfi()
         # print("finished med and bfr")
+        # sdate = datetime.date(2024,10,4)
+        # edate = sdate + relativedelta(days=7)
+        # processcalendar(sdate, edate)
+        # exit()
+        # get_metforecast(174.6131,-36.7928)
         # exit()
         # send updates on Fridays:
         if datetime.date.today().weekday() in [4]:  # Friday is 4.
@@ -509,8 +532,9 @@ if __name__ == '__main__':
         # testmailer()
         log.info("Updating Readings")
         update_auto_readings()
-        log.info("Sending Maintenance Emails")
-        send_maintenance_emails()
+        if datetime.date.today().weekday() in [0]:  # 0 is Monday
+            log.info("Sending Maintenance Emails")
+            send_maintenance_emails()
         # send me the database on Saturdays and Sundays.
         if datetime.datetime.today().weekday() in [6, 0]:
             log.info("Database Emailed during Dayend")

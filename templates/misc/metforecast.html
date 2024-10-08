@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+<!--  <div style="display:table-row">-->
+<!--    <div style="display:table-cell">-->
+<!--      <h1>{% block title %}Weather {% endblock %}</h1>-->
+<!--    </div>-->
+<!--  </div>-->
+  {% if msg  %}
+  <div>
+    {{ msg }}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+<!--    <legend>{{ form.name }} Weather</legend>-->
+      {{ render_field(form.measure) }}
+  <br/>
+  <svg id="chart0" class="c3chart"></svg>
+  </fieldset>
+  </form>
+
+<script>
+    var chart0 = c3.generate({
+        bindto: '#chart0',
+        {{ chart0data|safe }}
+        })
+</script>
+
+{% endblock %}

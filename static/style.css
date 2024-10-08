@@ -146,6 +146,12 @@ div .cell_date
     {
         display: none;
     }
+
+svg.c3chart
+    {
+        min-height:400px;
+        width:95%
+    }
 /* Notphone is a shorthand for both mobile_port_suppress and mobile_land_suppress */
 .notphone
     { display: none;}
@@ -186,6 +192,12 @@ div .cell_date
 .mobile_land_suppress
     { display: none;}
 
+svg.c3chart
+    {
+        min-height:200px;
+        width:95%
+    }
+
 }
 
 /* -----  apply only to non-phone devices  -----*/
@@ -221,6 +233,13 @@ div .cell_phone_date
 
 .full_screen_suppress
     { display: none;}
+
+svg.c3chart
+    {
+        min-height:500px;
+        width:95%
+    }
+
 
 }
 

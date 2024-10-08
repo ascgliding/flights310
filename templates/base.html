@@ -88,6 +88,12 @@ function myLower(cObj)
 
 </script>
 
+<!-- Charting scripts -->
+<script type=text/javascript src="{{  url_for('static', filename='jquery-3.2.0.min.js') }}"></script>
+<script src="{{ url_for('static',   filename='c3/c3.min.js')}}"></script>
+<script src="http://d3js.org/d3.v5.min.js" charset="utf-8"></script>
+<link href="{{ url_for('static',   filename='c3/c3.css')}}" rel="stylesheet"/>
+
 {% macro render_field(field) %}
 
 {# field.label #}
@@ -162,8 +168,8 @@ function myLower(cObj)
         {% if current_user is defined and current_user.is_authenticated %}
           <p><a href="{{ url_for('flights.daysummary') }}">Flights</a></p>
           <p><a href="{{ url_for('logbook.logbook') }}">Logbook</a></p>
+          <p><a href="{{ url_for('misc.metforecast') }}">Weather</a></p>
           <p><a href="{{ url_for('auth.profile') }}">Profile</a></p>
-          <p><a href="{{ url_for('auth.logout') }}">Log Out</a></p>
           {% if current_user.is_member_of("INSTRUCTOR") %}
             <p><a href="{{ url_for('misc.instrcontactlist',active='ACTIVE') }}">Members</a></p>
           {% else %}
@@ -179,6 +185,7 @@ function myLower(cObj)
           <p><a href="{{ url_for('auth.register') }}">Register</a></p>
           <p><a href="{{ url_for('auth.login') }}">Log In</a></p>
         {% endif %}
+        <p><a href="{{ url_for('auth.logout') }}">Log Out</a></p>
       </div>
     </div>
   </nav>

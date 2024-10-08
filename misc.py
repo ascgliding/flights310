@@ -37,9 +37,17 @@ import email_validator
 app = current_app
 applog = app.logger
 from asc.common import *
+from asc.oMetservice import MetService
+from asc.ochart import Chart
+
+from flask_wtf import FlaskForm
+from wtforms import  SelectField
+
 
 bp = Blueprint('misc', __name__, url_prefix='/misc')
 
+class MetChartForm(FlaskForm):
+    measure = SelectField('Measure', description='Measure', render_kw={"onchange": 'this.form.submit()'})
 
 @bp.route('/contactlist', methods=['GET', 'POST'])
 @login_required
@@ -135,6 +143,53 @@ def barometer(pilot_id=None):
         last12_hrs = 1 - last12_hrs
         last12_launches =  1 - last12_launches
         return render_template('misc/barometer.html', pilot=thispilot, last12_launches=last12_launches, last12_hrs=last12_hrs,msg=msg )
+
+@bp.route('/metforecast', methods=['GET', 'POST'])
+@login_required
+def metforecast():
+    wxfile = os.path.join(app.instance_path,'wx.json')
+    thiswx = MetService()
+    try:
+        if os.path.isfile(wxfile):
+            thiswx.get_current_file(wxfile)
+        else:
+            thiswx.get_current(174.6131, -36.7928, savefilename=wxfile, reading_count=12)  # Whenuapai
+    except Exception as e:
+        flash(str(e))
+        return render_template('index.html')
+    thischart = Chart('Met Service Forecast')
+    thisform = MetChartForm()
+    # get the first forecast time
+    determinationdate = thiswx.ForecastTimeLocal[0]
+    thisform.measure.choices = [thiswx.human_name(m) for m in thiswx.CurrentValues.keys()]
+    # if request.method == 'GET':
+    #     print("first in {}".format(thisform.measure.data))
+    #     for i,v in enumerate(thiswx.qnh):
+    #         thischart.AddDataPoint('QNH',i,v)
+    #         thischart.SetCategoryValue(i,thiswx.ForecastTimeLocal[i].strftime('%d %H:%M'))
+    # if request.method == 'POST':
+    #     print(thisform.measure.data)
+    #     for i,v in enumerate(thiswx.CurrentValues[thisform.measure.data]):
+    #         thischart.AddDataPoint(thisform.measure.data,i,v)
+    #         thischart.SetCategoryValue(i,thiswx.ForecastTimeLocal[i].strftime('%d %H:%M'))
+    # build chart for selected measure
+    if thisform.measure.data is None:
+        # use the first one:
+        selected_measure = next(iter(thiswx.CurrentValues.keys()))
+    else:
+        selected_measure = thiswx.api_name(thisform.measure.data)
+    print(selected_measure)
+    thischart.SetAxisLabel("y",thiswx.uom(selected_measure))
+    thischart.SetAxisLabel("x","Time")
+    #thischart.SetAxisTickRotate("x",270)
+    thischart.SetAxisTickCulling("x",True)
+    thischart.SetSeriesShowDataPoint("data",False)
+    thischart.HideLegend=True
+    for i, v in enumerate(thiswx.CurrentValues[selected_measure]):
+        thischart.AddDataPoint("data", i, v)
+        thischart.SetCategoryValue(i, thiswx.ForecastTimeLocal[i].strftime('%H:00'))
+    thischart.SetSeriesChartType("data","spline")
+    return render_template('misc/metforecast.html', form=thisform, chart0data=thischart.ChartJson)
 
 @bp.route('/conctactspreadsheet>', methods=['GET', 'POST'])
 @login_required

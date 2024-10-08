@@ -16,6 +16,7 @@ import sys
 from decimal import Decimal
 from asc import db, create_app
 from asc.mailer import ascmailer
+from asc.oMetservice import MetService
 #from csv import DictWriter,DictReader
 import csv
 # In order to trap errors from the engine
@@ -27,7 +28,6 @@ from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,
 from dateutil.relativedelta import relativedelta
 
 from asc.oMaint import ACMaint
-from asc.oPerson import Person
 # from asc.oReadingTools import   ReadingTools
 from  asc.common import *
 
@@ -48,6 +48,11 @@ def dict_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
+
+
+
+
+
 
 
 class TestTbl(db.Model):
@@ -2162,65 +2167,58 @@ class sqlalchemy_read_tests(unittest.TestCase):
         for f in list:
             print(f[0])
 
-class memberobject(unittest.TestCase):
-    # This cannot be used a general test case because the data chagnes
-
-    def test004(self):
-        # me = User.query.get(17)
-        #TODO:  replace all instances of XXXX.query.get with :
-        me = db.session.get(User,17)
-        print(me.name)
-        print(me.roles)
-
-    def test005(self):
-        for u in User.query.all():
-            thisuser = Person(u.fullname)
-            if len(thisuser.verify_list) > 0:
-                print('User:{}'.format(thisuser.fullname))
-                for vf in thisuser.verify_list:
-                    print(vf)
-        for u in Pilot.query.all():
-            thisuser = Person(u.fullname)
-            if len(thisuser.verify_list) > 0:
-                print('Pilot:{}'.format(thisuser.fullname))
-                for vf in thisuser.verify_list:
-                    print(vf)
-        for u in Member.query.filter(Member.active == True):
-            thisuser = Person(u.gnz_no)
-            if len(thisuser.verify_list) > 0:
-                print('Member:{}'.format(u.surname))
-                for vf in thisuser.verify_list:
-                    print(vf)
-
-
 class googlecalendar(unittest.TestCase):
 
+
+
+
+
     def test001(self):
-        myurl = "https://calendar.google.com/calendar/ical/kc802pkua73iejv9oho665ae0k%40group.calendar.google.com/private-28220b1eeb53d8a34830f66b4ae92040/basic.ics"
+        sdate = datetime.date(2024,9,5)
+        edate = sdate + relativedelta(days=10)
+        processcalendar(sdate,edate)
 
-        # method 1 - really some long byte stream
-        # sock = urllib.request.urlopen(myurl)
-        # data = sock.read()
-        # sock.close
-        # print(data)
-
-        # Method 2 - still bytes
-        # with urlopen(myurl) as calendar:
-        #     data =  calendar.read()
-        # print(data)
-
-        with urlopen(myurl) as calendar:
-            for line in calendar:
-                print(line.decode('iso-8859-1'))
-
-
-class mbercopy(unittest.TestCase):
+class adhoc(unittest.TestCase):
     def test001(self):
-        with open('instance/mbrtrans.csv', 'r') as csvf:
-            counter = 0
-            reader = csv.DictReader(csvf, delimiter=',')
-            for rec in reader:
-                print("{}:{}".format(rec['transdate'],datetime.datetime.strptime(rec['transdate'],'%Y-%m-%d').date() ))
+        __available_variables = [
+            "air.humidity.at-2m",
+            "air.temperature.at-2m",
+            "air.pressure.at-sea-level",
+            "air.visibility",
+            "atmosphere.convective.potential.energy",
+            "cloud.base.height",
+            "cloud.cover",
+            "precipitation.rate",
+            "wind.direction.at-10m",
+            "wind.direction.at-100m",
+            "wind.speed.at-10m",
+            "wind.speed.at-100m",
+            "wind.speed.gust.at-10m"]
+
+        thiswx = MetService(["air.pressure.at-sea-level","precipitation.rate"])
+        thiswx = MetService(__available_variables)
+        apikey = Slot.query.filter(Slot.slot_type=='SYSTEM').filter(Slot.slot_key=='METSERVICEKEY').first()
+        if apikey is not None:
+            # thiswx.ApiKey="EkwAkjmmhG58Ur6Tu1ntjU"
+            thiswx.ApiKey = apikey.slot_data
+
+        wxfile = os.path.join(app.instance_path, 'wx.json')
+        thiswx = MetService()
+        if os.path.isfile(wxfile):
+            thiswx.get_current_file(wxfile)
+        else:
+            thiswx.get_current(174.6131, -36.7928, savefilename=wxfile, reading_count=12)  # Whenuapai
+        print(thiswx.CurrentValues.keys())
+        print(thiswx.ForecastTimeUtc)
+        print(thiswx.ForecastTimeLocal)
+        print(thiswx.qnh)
+        print(thiswx.precipitation_rate)
+        print(thiswx.cape)
+        print(thiswx.cloud_base)
+        print(thiswx.wind_speed)
+
+
+
 
 if __name__ == '__main__':
     print('start of main')
@@ -2231,9 +2229,8 @@ if __name__ == '__main__':
     case5 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test_ac_obj)
     case6 = unittest.TestLoader().loadTestsFromTestCase(maintenance_time_values)
     case7 = unittest.TestLoader().loadTestsFromTestCase(sqlalchemy_read_tests)
-    case8 = unittest.TestLoader().loadTestsFromTestCase(memberobject)
     case9 = unittest.TestLoader().loadTestsFromTestCase(googlecalendar)
-    case10 = unittest.TestLoader().loadTestsFromTestCase(mbercopy)
+    case10 = unittest.TestLoader().loadTestsFromTestCase(adhoc)
     # thissuite = unittest.TestSuite([case1])
     thissuite = unittest.TestSuite([case10])
 
