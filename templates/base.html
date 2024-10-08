@@ -168,7 +168,9 @@ function myLower(cObj)
         {% if current_user is defined and current_user.is_authenticated %}
           <p><a href="{{ url_for('flights.daysummary') }}">Flights</a></p>
           <p><a href="{{ url_for('logbook.logbook') }}">Logbook</a></p>
-          <p><a href="{{ url_for('misc.metforecast') }}">Weather</a></p>
+          {% if current_user.name == 'rayb' %}
+            <p><a href="{{ url_for('misc.metforecast') }}">Weather</a></p>
+          {% endif %}
           <p><a href="{{ url_for('auth.profile') }}">Profile</a></p>
           {% if current_user.is_member_of("INSTRUCTOR") %}
             <p><a href="{{ url_for('misc.instrcontactlist',active='ACTIVE') }}">Members</a></p>
