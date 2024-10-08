@@ -402,7 +402,7 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             ws.write(row,5, "BFR/ICR Due", col_head_fmt)
             ws.write(row,6, "Ratings", col_head_fmt)
             ws.write(row, 7, "Last Mem Form", col_head_fmt)
-            ws.write(row,8, "Currency", col_head_fmt)
+            ws.write(row,8, "Currency Flts/Hrs 90d:12Mth", col_head_fmt)
             ws.write(row,9, "Hrs 12 Mths", col_head_fmt)
             row += 1
             for m in ssdata:
