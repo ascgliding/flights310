@@ -344,25 +344,24 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
     :param instructor: A Pilot object for the instructor
     :return:
     """
-    if len(dayevents) != 0:
-        # here is what we do with it.
-        log.info('Event email being sent to {}'.format(instructor.fullname))
-        msg = ascmailer('Events for this coming weekend')
-        msg.add_body('<html>')
-        msg.add_body('Events for {}'.format(thisdate.strftime('%A, %d %B')))
+    log.info('Event email being sent to {}'.format(instructor.fullname))
+    msg = ascmailer('Events for this coming weekend')
+    msg.add_body('<html>')
+    msg.add_body('Events for {}'.format(thisdate.strftime('%A, %d %B')))
+    msg.add_body('<br>')
+    if instructor is None:
+        print('Date with no instructor {}'.format(thisdate))
+    else:
+        # msg.add_body('Should have been emailed to {}'.format(instructor.email))
         msg.add_body('<br>')
-        if instructor is None:
-            print('Date with no instructor {}'.format(thisdate))
-        else:
-            # msg.add_body('Should have been emailed to {}'.format(instructor.email))
+        if tp:
+            msg.add_body('Tow Pilot is {}'.format(tp.fullname))
             msg.add_body('<br>')
-            if tp:
-                msg.add_body('Tow Pilot is {}'.format(tp.fullname))
-                msg.add_body('<br>')
-            if dp:
-                msg.add_body('Duty Pilot is {}'.format(dp.fullname))
-                msg.add_body('<br>')
+        if dp:
+            msg.add_body('Duty Pilot is {}'.format(dp.fullname))
             msg.add_body('<br>')
+        msg.add_body('<br>')
+        if len(dayevents) > 0:
             msg.add_body('<B>Events to be aware of:</B>')
             msg.add_body('<br>')
             for de in dayevents:
@@ -372,11 +371,11 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
             msg.add_body('Please check the club calendar for extra details including contact numbers.')
             msg.add_body('You will need to contact effected individuals or groups if flying is cancelled for any reason.')
             msg.add_body('<br>')
-            msg.add_body('<br>')
-            msg.add_recipient(instructor.email)
-            msg.add_recipient('ray@rayburns.nz')
-            msg.add_body('</html>')
-            msg.send()
+        msg.add_body('<br>')
+        # msg.add_recipient(instructor.email)
+        msg.add_recipient('ray@rayburns.nz')
+        msg.add_body('</html>')
+        msg.send()
 
 
 def update_roster(rdate, instr, tp, dp):
@@ -424,6 +423,7 @@ def geteventlist(file, startdate, enddate,prefix=None):
     for e in thiscal.timeline.included(arrow.get(startdate), arrow.get(enddate)):
         if prefix is not None:
             e.name = prefix + e.name
+        log.info("added {} to eventlist".format(e.name))
         rtnlist.append(e)
     return rtnlist
 
@@ -432,6 +432,7 @@ def processcalendar(startdate, enddate):
     # print(icalendar.__version__)
 
     print('processing roster between {} and {}'.format(startdate, enddate))
+    log.info('processing roster between {} and {}'.format(startdate, enddate))
 
     # ray - private
     myurl = "https://calendar.google.com/calendar/ical/kc802pkua73iejv9oho665ae0k%40group.calendar.google.com/private-28220b1eeb53d8a34830f66b4ae92040/basic.ics"
@@ -466,10 +467,10 @@ def processcalendar(startdate, enddate):
     # for e in eventlist:
     #     print("{} : {}".format(e.begin.to('local'), e.name))
     for event in eventlist:  # thiscal.timeline.included(arrow.get(startdate),arrow.get(enddate)):
-        # print('Processing {} on {}'.format(event.name, event.begin.to('local').date()))
+        log.info('Processing {} on {}'.format(event.name, event.begin.to('local').date()))
         # build a  list of all items on this date....
         if lastdate is None or event.begin.to('local').date() != lastdate:
-            if date_has_roster and len(dayevents) != 0:
+            if date_has_roster: # and len(dayevents) != 0:
                 send_instr_email(lastdate, dayevents, thisinstr, thistp, thisdp)
             # now get ready for the next day
             dayevents = []
@@ -483,6 +484,7 @@ def processcalendar(startdate, enddate):
             # print(thismatch.group(2))
             # print(thismatch.group(4))
             thisinstr = getpilot(thismatch.group(2))
+            log.info(f'Found Instructor for day: {thisinstr.fullname}')
             thistp = getpilot(thismatch.group(4))
             thisdp = getpilot(thismatch.group(6))
             date_has_roster = True
@@ -492,12 +494,13 @@ def processcalendar(startdate, enddate):
             dayevents.append(event)
         lastdate = event.begin.to('local').date()
     # End of loop - do last record
-    if len(dayevents) != 0 and date_has_roster:
+    # if len(dayevents) != 0 and date_has_roster:
+    if date_has_roster:
         # here is what we do with it.
         send_instr_email(lastdate, dayevents, thisinstr, thistp, thisdp)
 
 def get_metforecast(long,lat):
-    apikey = Slot.query.filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'METSERVICEKEY').first()
+    apikey = Slot.query.filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'METSERVICEAPIKEY').first()
     thiswx = MetService()
     if apikey is not None:
         # thiswx.ApiKey="EkwAkjmmhG58Ur6Tu1ntjU"
@@ -513,10 +516,10 @@ if __name__ == '__main__':
         # print("starting in test")
         # send_med_bfr_to_cfi()
         # print("finished med and bfr")
-        # sdate = datetime.date(2024,10,4)
-        # edate = sdate + relativedelta(days=7)
-        # processcalendar(sdate, edate)
-        # exit()
+        sdate = datetime.date(2024,10,11)
+        edate = sdate + relativedelta(days=7)
+        processcalendar(sdate, edate)
+        exit()
         # get_metforecast(174.6131,-36.7928)
         # exit()
         # send updates on Fridays:
