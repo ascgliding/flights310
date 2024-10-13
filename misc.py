@@ -163,6 +163,7 @@ def metrefresh():
         thisform.location.choices=[]
         for l in locations:
             thisform.location.choices.append((l.slot_key,l.slot_desc))
+        thisform.location.data = 'NZWP'
         return render_template('misc/metrefresh.html', form=thisform)
     else:
         if thisform.btnsubmit.data:
