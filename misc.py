@@ -41,13 +41,21 @@ from asc.oMetservice import MetService
 from asc.ochart import Chart
 
 from flask_wtf import FlaskForm
-from wtforms import  SelectField
-
-
+from wtforms import  SelectField, FloatField
+from asc.wtforms_ext import TextButtonField,MatButtonField
+from geopy import distance
 bp = Blueprint('misc', __name__, url_prefix='/misc')
 
-class MetChartForm(FlaskForm):
+class MetForecastForm(FlaskForm):
     measure = SelectField('Measure', description='Measure', render_kw={"onchange": 'this.form.submit()'})
+    btnrefresh = TextButtonField('Refresh', id="refrshbtn", text='Refresh', help="Refresh data from the metservice")
+
+class MetRefreshForm(FlaskForm):
+    location = SelectField('Location', description='Location') # , choices=[('NZWP', 'Whenuapai'), ('NZMA','Matamata')])
+    latitude = FloatField('Latitude', description='Latitude')
+    longitude = FloatField('Longitude', description='Longitude')
+    btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Confirm all Changes")
+
 
 @bp.route('/contactlist', methods=['GET', 'POST'])
 @login_required
@@ -144,34 +152,127 @@ def barometer(pilot_id=None):
         last12_launches =  1 - last12_launches
         return render_template('misc/barometer.html', pilot=thispilot, last12_launches=last12_launches, last12_hrs=last12_hrs,msg=msg )
 
+@bp.route('/metrefresh', methods=['GET', 'POST'])
+@login_required
+def metrefresh():
+    # The user gets to here either because there is no json file on disk,
+    # or they have the authority to replace it.
+    thisform = MetRefreshForm()
+    if request.method == 'GET':
+        locations=Slot.query.filter(Slot.slot_type=='NAMEDLOCATION')
+        thisform.location.choices=[]
+        for l in locations:
+            thisform.location.choices.append((l.slot_key,l.slot_desc))
+        return render_template('misc/metrefresh.html', form=thisform)
+    else:
+        if thisform.btnsubmit.data:
+            # All that is required here to determine whether to delete the file
+            # or not.  If the user has got to this point then it is safe to assume
+            # They have the authorisation to refresh the data.
+            wxfile = os.path.join(app.instance_path,'wx.json')
+            thiswx = MetService()
+            apikey = Slot.query.filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'METSERVICEAPIKEY').first()
+            if apikey is not None:
+                thiswx.ApiKey = apikey.slot_data
+            try:
+                if os.path.isfile(wxfile):
+                    thiswx.get_current_file(wxfile)
+                    # Now check the data.  Are we close?
+                    thislocrow = Slot.query.filter(Slot.slot_type == 'NAMEDLOCATION').filter(Slot.slot_key==thisform.location.data).first()
+                    thisloclat=float(thislocrow.slot_data.split('/')[0])
+                    thisloclong=float(thislocrow.slot_data.split('/')[1])
+                    thisdistance = distance.distance(
+                        (thisloclat, thisloclong),
+                        (thiswx.latitude, thiswx.longitude)
+                    ).kilometers
+                    # Weather data can only be refreshed if a) there is no wx.json (deleted overnight) b) the location is different or c) it is more than 18 hours old.
+                    # print(f'location:{thislocrow.slot_desc}, lat={thisloclat} long={thisloclong}, wlat = {thiswx.latitude}, wlong={thiswx.longitude} km= {thisdistance}')
+                    if thisdistance > 10: # further than 10km away
+                        # refresh
+                        thiswx.get_current(thisloclong,thisloclat,savefilename=wxfile, reading_count=12)
+                        flash('Data Refreshed')
+                        app.logger.info('MetService API Called and Data refreshed')
+                    else:
+                        durationdifference = datetime.datetime.now(datetime.timezone.utc) - thiswx.ForecastTimeLocal[0]
+                        # print(f'Time difference in seconds {durationdifference.total_seconds()}'
+                        if durationdifference.total_seconds() / 3600 > 18:  # only refresh if older than 18 hours.
+                            thiswx.get_current(thisloclong, thisloclat, savefilename=wxfile, reading_count=12)
+                            flash('Data Refreshed')
+                            app.logger.info('MetService API Called and Data refreshed')
+                else:
+                    thislocrow = Slot.query.filter(Slot.slot_type == 'NAMEDLOCATION').filter(Slot.slot_key==thisform.location.data).first()
+                    thisloclat=float(thislocrow.slot_data.split('/')[0])
+                    thisloclong=float(thislocrow.slot_data.split('/')[1])
+                    thiswx.get_current(thisloclong, thisloclat, savefilename=wxfile, reading_count=12)  # Whenuapai
+            except Exception as e:
+                flash(str(e))
+                return render_template('index.html')
+        return redirect(url_for('misc.metforecast'))
+    # else:
+    #     if thisform.validate_on_submit():
+
+
 @bp.route('/metforecast', methods=['GET', 'POST'])
 @login_required
 def metforecast():
+    import requests
+
+
+    # response from co-pilot to : write me some python code to get the weather forecast from metocean
+    # def get_weather_forecast(api_key, location):
+    #     url = f'https://api.metocean.com/v1/forecast?location={location}&apikey={api_key}'
+    #     response = requests.get(url)
+    #
+    #     if response.status_code == 200:
+    #         forecast = response.json()
+    #         return forecast
+    #     else:
+    #         return f"Error: {response.status_code}"
+    #
+    # # Example usage
+    # api_key = 'your_api_key_here'
+    # location = 'Auckland,NZ'
+    # forecast = get_weather_forecast(api_key, location)
+    # print(forecast)
+    thisform = MetForecastForm()
+    if thisform.btnrefresh.data:
+        print('button ressed')
+        return redirect(url_for('misc.metrefresh'))
+    # if request.method == 'GET':
+    apikey = Slot.query.filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'METSERVICEAPIKEY').first()
+
     wxfile = os.path.join(app.instance_path,'wx.json')
     thiswx = MetService()
+    if apikey is not None:
+        thiswx.ApiKey = apikey.slot_data
     try:
         if os.path.isfile(wxfile):
             thiswx.get_current_file(wxfile)
         else:
             thiswx.get_current(174.6131, -36.7928, savefilename=wxfile, reading_count=12)  # Whenuapai
+            app.logger.info('MetService API Called and Data refreshed')
     except Exception as e:
         flash(str(e))
         return render_template('index.html')
-    thischart = Chart('Met Service Forecast')
-    thisform = MetChartForm()
+    # At this stage we have either refreshed the data or read from the file.
+    # Find the nearest point to the named location data
+    locations = Slot.query.filter(Slot.slot_type == 'NAMEDLOCATION').all()
+    closestdistance = 99999999
+    closestname = ''
+    for l in locations:
+        thisloclat = float(l.slot_data.split('/')[0])
+        thisloclong = float(l.slot_data.split('/')[1])
+        thisdistance = distance.distance(
+            (thisloclat, thisloclong),
+            (thiswx.latitude, thiswx.longitude)
+        ).kilometers
+        if thisdistance < closestdistance:
+            closestdistance = thisdistance
+            closestname = l.slot_desc
+    thischart = Chart(f'Met Service Forecast for {closestname} on {thiswx.ForecastTimeLocal[0].date()}')
     # get the first forecast time
     determinationdate = thiswx.ForecastTimeLocal[0]
     thisform.measure.choices = [thiswx.human_name(m) for m in thiswx.CurrentValues.keys()]
-    # if request.method == 'GET':
-    #     print("first in {}".format(thisform.measure.data))
-    #     for i,v in enumerate(thiswx.qnh):
-    #         thischart.AddDataPoint('QNH',i,v)
-    #         thischart.SetCategoryValue(i,thiswx.ForecastTimeLocal[i].strftime('%d %H:%M'))
-    # if request.method == 'POST':
-    #     print(thisform.measure.data)
-    #     for i,v in enumerate(thiswx.CurrentValues[thisform.measure.data]):
-    #         thischart.AddDataPoint(thisform.measure.data,i,v)
-    #         thischart.SetCategoryValue(i,thiswx.ForecastTimeLocal[i].strftime('%d %H:%M'))
     # build chart for selected measure
     if thisform.measure.data is None:
         # use the first one:

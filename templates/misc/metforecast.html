@@ -20,18 +20,20 @@
 <form method="Post">
   {{ form.csrf_token }}
   <fieldset>
-<!--    <legend>{{ form.name }} Weather</legend>-->
-      {{ render_field(form.measure) }}
-  <br/>
-  <svg id="chart0" class="c3chart"></svg>
+    <svg id="chart0" class="c3chart"></svg>
+    {{ render_field(form.measure) }}
   </fieldset>
+  {% if current_user.name == 'rayb' %}
+      {{ form.btnrefresh() }}
+  {% endif %}
   </form>
 
 <script>
     var chart0 = c3.generate({
         bindto: '#chart0',
         {{ chart0data|safe }}
-        })
+        });
+    chart.resize()
 </script>
 
 {% endblock %}
