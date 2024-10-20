@@ -272,7 +272,7 @@ def userlist():
 def usermaint(id):
     thisrec = User.query.filter_by(id=id).one_or_none()
     if thisrec is None:
-        thisrec = Role()
+        thisrec = User()
     thisform = UserMaintForm(obj=thisrec)
     thisform.pilot_id.choices = [(None, 'No Pilot')]
     thisform.pilot_id.choices.extend([(p.id, p.fullname) for p in Pilot.query.order_by(Pilot.fullname).all()])
@@ -303,8 +303,14 @@ def usermaint(id):
             db.session.add(thisrec)
         if thisrec.pilot_tbl:
             thisrec.pilot_tbl.user_id = thisrec.id
-            thisrec.pilot_tbl.email = thisrec.email
-            thisrec.gnz_no = thisrec.gnz_no
+            if thisrec.email != '':
+                thisrec.pilot_tbl.email = thisrec.email
+            else:
+                thisrec.email = thisrec.pilot_tbl.email
+            if thisrec.gnz_no == 0:
+                thisrec.gnz_no = thisrec.pilot_tbl.gnz_no
+            else:
+                thisrec.pilot_tbl.gnz_no = thisrec.gnz_no
         applog.info('UPDATE:' + repr(thisrec))
         try:
             db.session.commit()

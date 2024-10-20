@@ -46,7 +46,7 @@
     <div class="row">
       <div class="cell"><a href="{{ url_for('membership.membermaint', id=l['id']) }}">{{ l.id }}</a></div>
       <div class="cell" align="left">{{l.fullname}} </div>
-      <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.email_address }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress" align="left">{{ l.email }}</div>
       {% if l.bfr_due and l.bfr_due <= today  %}
         <div class="cell" style="background-color:red;color:white" align="left">{{ l.bfr_due|reformatstddate or '' }}</div>
       {% else %}
