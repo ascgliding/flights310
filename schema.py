@@ -353,6 +353,10 @@ class Flight(db.Model):
                 raise SchemaError('The Glider Regn must start with a "G". Do you mean TUG ONLY?')
         return value.strip().upper()
 
+    @db.validates('pic','p2')
+    def strip_trailing(self,key,value):
+        return value.strip()
+
     @db.validates('linetype')
     def validate_type(self, key, value):
         # this is better than a check contraint because if we want ot change it we do not need to rebuild the table
