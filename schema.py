@@ -518,7 +518,7 @@ class Pilot(db.Model):
             filter(MemberTrans.transtype == 'RTG'). \
             order_by(MemberTrans.transdate.desc()).all()
         rtglist = (r.transsubtype for r in ratings)
-        return "/".join(rtglist)
+        return " ".join(rtglist)
 
     @property
     def currency_dict(self):

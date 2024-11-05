@@ -335,8 +335,10 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     col_head_fmt = workbook.add_format({'border': 1, 'text_wrap': 1,
                                         'bold': 1})
     border_fmt = workbook.add_format({'border': 1, 'text_wrap': 1})
+    border_fmt.set_align('top')
     # title_merge_format = workbook.add_format({'align': 'center', 'border': 1})
     date_fmt = workbook.add_format(dict(datedict, **borderdict))
+    date_fmt.set_align('top')
     dollar_fmt = workbook.add_format(dict(dollardict, **borderdict))
     time_fmt = workbook.add_format(dict(timedict, **borderdict))
     hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
@@ -347,6 +349,12 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     if len(ssdata) == 0:
         return
     ws = workbook.add_worksheet("Members")
+    ws.set_landscape()
+    ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+    ws.set_footer('&L&A&CPage &P of &N')
+    ws.fit_to_pages(1, 0)  # fit all columns on page
+    ws.repeat_rows(2)
+    ws.set_paper('A4')
     try:
         row = 2
         ws.write(row, 0, "Surname", col_head_fmt)
@@ -392,6 +400,12 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     #
     if include_currency:
         ws = workbook.add_worksheet("Currency")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(2)
+        ws.set_paper('A4')
         try:
             row = 2
             ws.write(row, 0, "Name", col_head_fmt)
@@ -435,7 +449,10 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
                 ws.write(row,9,round(m.currency_dict['last12mins'] / 60,1), border_fmt)
                 row += 1
             ws.autofit()
-            ws.merge_range("A1:J1", "ASC Curency " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+            ws.set_column(4,5,12)  # dates with traffic lights
+            ws.set_column(6,6,20)  # Ratings
+            ws.set_column(8,8,20)  # Currency
+            ws.merge_range("A1:J1", "ASC Currency " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
             theseicons = []
             # In order to use conditional formatting, the formatting values require the julian number of dates
             # not a python object.  I'm not quite sure why I needed to add two days, but I checked the values
@@ -479,6 +496,12 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
         #
         if include_incident:
             ws = workbook.add_worksheet("Incidents")
+            ws.set_landscape()
+            ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+            ws.set_footer('&L&A&CPage &P of &N')
+            ws.fit_to_pages(1,0)  # fit all columns on page
+            ws.repeat_rows(2)
+            ws.set_paper('A4')
             try:
                 sql = sqltext("""
                     select 
@@ -514,9 +537,15 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     #
     #  NOK Spreadsheet
     #
-    if include_currency:
+    if include_nok:
         ws = workbook.add_worksheet("NoK")
         try:
+            ws.set_landscape()
+            ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+            ws.set_footer('&L&A&CPage &P of &N')
+            ws.fit_to_pages(1,0)  # fit all columns on page
+            ws.repeat_rows(2)
+            ws.set_paper('A4')
             ssdata = Pilot.query.filter(Pilot.active).order_by(Pilot.surname).all()
             row = 2
             ws.write(row, 0, "Name", col_head_fmt)
