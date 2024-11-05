@@ -64,6 +64,8 @@ def getdefaults():
         thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTOWIE").first()
         if thisslot is not None:
             thisdict['towie'] = thisslot.slot_data
+        if ac == constREGN_FOR_TUG_ONLY:
+            thisdict['towie'] = None
     else:
         # convert that data into a standard dictionary.
         thisdict = sqlalchemy2json(thisac)

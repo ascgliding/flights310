@@ -324,7 +324,7 @@ def changeflight(id):
     if thisrec is None:
         thisrec = Flight()
         thisrec.flt_date = db.session.query(func.max(Flight.flt_date).label("maxdate")).scalar()
-        lastflt = db.session.query(Flight).filter(Flight.linetype == 'FL').order_by(Flight.id.desc()).first()
+        lastflt = db.session.query(Flight).filter(Flight.linetype == 'FL').filter(Flight.tug_regn != constTOW_FOR_SELF_LAUNCH).order_by(Flight.id.desc()).first()
         # Determine the TUG:
         if lastflt is not None:
             thisrec.tow_pilot = lastflt.tow_pilot
@@ -431,8 +431,10 @@ def changeflight(id):
                         thisrec.tug_down = thisrec.landed
                     elif thisrec.tug_down != None and thisrec.landed == None:
                         thisrec.landed = thisrec.tug_down
+                if thisrec.ac_regn == constTOW_FOR_SELF_LAUNCH or thisrec.ac_regn == constREGN_FOR_WINCH:
+                    thisrec.tow_pilot = None
                 applog.info('Flight {} changed'.format(id))
-            if thisrec.tug_regn != constTOW_FOR_SELF_LAUNCH and thisrec.ac_regn != constREGN_FOR_TUG_ONLY:
+            if thisrec.tug_regn != constTOW_FOR_SELF_LAUNCH and thisrec.tug_regn != constREGN_FOR_WINCH and thisrec.ac_regn != constREGN_FOR_TUG_ONLY:
                 addupdslot('DEFAULT','LASTTOWIE',thisrec.tow_pilot)
                 addupdslot('DEFAULT','LASTTUG',thisrec.tug_regn)
             applog.debug('Just before commit: towie is {}'.format(thisrec.tow_pilot))
@@ -446,7 +448,6 @@ def changeflight(id):
             return render_template('flights/changeflight.html', form=thisform, pilots=pilotlist, ac=acregnlist, towielist=towielist)
         return redirect(url_for('flights.daysheet', date=thisrec.flt_date.strftime('%Y-%m-%d')))
     # Else must be display new/existing flight
-    applog.debug('About to render changefligt at b with id {}'.format(thisform.id.data))
     return render_template('flights/changeflight.html', form=thisform, pilots=pilotlist, ac=acregnlist, towielist=towielist, towregnlist=towregnlist)
 
 # NOTELINE is a line of type NT that is NOT a flight!

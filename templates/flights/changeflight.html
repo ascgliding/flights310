@@ -53,7 +53,7 @@ function setdefaults(ac,flt_date) {
               }
             // set the default tow pilot and regn to the last one used
             // Removed this on 22 Jan 23.  Default is set in python code.
-            // document.getElementById('tow_pilot').value = thisac[0].towie;
+            document.getElementById('tow_pilot').value = thisac[0].towie;
             // document.getElementById('tug_regn').value = thisac[0].tug;
             if (thisac[0].default_launch == 'SELF LAUNCH') {
               document.getElementById('tug_regn').value = thisac[0].default_launch;
