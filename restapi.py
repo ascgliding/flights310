@@ -56,6 +56,7 @@ def getdefaults():
     # Get the ac details to determine seat count, default launch method and default pilot
     thisdict = {}
     thisac = Aircraft.query.filter_by(regn=ac).first()
+    lastflt = Flight.query.filter_by(Flight.flt_date<=thisdate).filter_by(Flight.linetype=='FL').last()
     # unknown Ac
     if thisac is None:
         thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTUG").first()
@@ -79,6 +80,8 @@ def getdefaults():
         thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTOWIE").first()
         if thisslot is not None:
             thisdict['towie'] = thisslot.slot_data
+    if lastflt is not None:
+        thisdict['towie'] == lastflt.tow_pilot
     return jsonify(thisdict,[],True)
 
 @bp.route('/setscreendim')
