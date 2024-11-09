@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<style>
+@media (max-width: 550px) {
+   .big-container {
+       display: none;
+   }
+}
+@media (min-width: 550px) {
+   .small-container {
+       display: none;
+   }
+}
+/* Responsive iFrame */
+.responsive-iframe-container {
+   position: relative;
+   padding-bottom: 56.25%;
+   padding-top: 30px;
+   height: 0;
+   overflow: hidden;
+}
+.responsive-iframe-container iframe,
+.responsive-iframe-container object,
+.responsive-iframe-container embed {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+}
+</style>
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Calendar{% endblock %}</h1>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="responsive-iframe-container big-container">
+<iframe src="https://calendar.google.com/calendar/embed?height=400&wkst=7&ctz=Pacific%2FAuckland&showPrint=0&title=ASC%20Gliding&mode=AGENDA&src=YXNjZ2xpZGluZ0BnbWFpbC5jb20&src=cGVnYXN1cy5mbHlpbmcudHJ1c3RAZ21haWwuY29t&color=%237CB342&color=%23D50000"
+        style="border-width:0;"  width="100%" height="650"  frameborder="0" scrolling="no">
+</iframe>
+</div>
+<div class="responsive-iframe-container small-container" style="padding-bottom:156%">
+<iframe src="https://calendar.google.com/calendar/embed?height=800&wkst=7&ctz=Pacific%2FAuckland&showPrint=0&title=ASC%20Gliding&mode=AGENDA&src=YXNjZ2xpZGluZ0BnbWFpbC5jb20&src=cGVnYXN1cy5mbHlpbmcudHJ1c3RAZ21haWwuY29t&color=%237CB342&color=%23D50000"
+        style="border-width:0;"  width="100" height="800"  frameborder="0" scrolling="no">
+</iframe>
+</div>
+{% endblock %}

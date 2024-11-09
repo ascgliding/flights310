@@ -293,6 +293,10 @@ def metforecast():
     thischart.SetSeriesChartType("data","spline")
     return render_template('misc/metforecast.html', form=thisform, chart0data=thischart.ChartJson)
 
+@bp.route('/calendar', methods=['GET', 'POST'])
+def calendar():
+    return render_template('misc/calendar.html')
+
 @bp.route('/conctactspreadsheet>', methods=['GET', 'POST'])
 @login_required
 def contactspreadsheet():
