@@ -355,7 +355,8 @@ class Flight(db.Model):
 
     @db.validates('pic','p2')
     def strip_trailing(self,key,value):
-        return value.strip()
+        if value is not None:
+            return value.strip()
 
     @db.validates('linetype')
     def validate_type(self, key, value):
