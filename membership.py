@@ -178,7 +178,8 @@ def membermaint(id):
         thismem.gnz_no = 0
     if not thismem.rank:
         thismem.rank = 'CIV'
-    if not thismem.type is None or thismem.type not in [ 'FLYING', 'JUNIOR', 'SOCIAL', 'VFP BULK']:
+    if thismem.type is None or thismem.type not in [ 'FLYING', 'JUNIOR', 'SOCIAL', 'VFP BULK']:
+        print(f'{thismem.fullname} : {thismem.type}')
         thismem.type = 'FLYING'
 
     thisform = PilotForm(obj=thismem, name='Member Maintenance')
