@@ -377,10 +377,19 @@ class ACTaskComplete(FlaskForm):
     task_id = IntegerField('task Id', description='not displayed')
     history_date = DateField('Completion Date', description='The date the task was completed',
                              default=datetime.date.today())
-    task_description = TextAreaField('Task Description', description='Add any relevant Notes')
+    task_description = TextAreaField('Task Description', description='Add any relevant Notes', render_kw={'rows': '8'})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
 
+class ACTaskHistoryMaint(FlaskForm):
+    name = "Task history Edit"
+    id = IntegerField('Ac MaintHistory', description='not displayed')
+    history_date = DateField('Completion Date', description='The date the task was completed',
+                             default=datetime.date.today())
+    task_description = TextAreaField('Task Description', description='Add any relevant Notes', render_kw={'rows': '8'})
+    btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
+    cancel = SubmitField('cancel', id='cancelbtn')
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
 class ACImportReading(FlaskForm):
     name = "Import Readings from Flight Details"
@@ -1302,7 +1311,6 @@ def achistorylist(task):
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', thiac=None))
-    print("achistorylist {}".format(task))
     if int(task) == 0:
         list = db.session.query(ACMaintHistory).filter(ACMaintHistory.ac_id == thisac.id) \
             .order_by(ACMaintHistory.history_date.desc()).all()
@@ -1311,6 +1319,54 @@ def achistorylist(task):
             .filter(ACMaintHistory.task_id == task) \
             .order_by(ACMaintHistory.history_date.desc()).all()
     return render_template("plantmaint/achistorylist.html", list=list, ac=thisac)
+
+@bp.route('/actaskhistorymaint/<acmainthistory_id>', methods=['GET', 'POST'])
+@login_required
+def actaskhistorymaint(acmainthistory_id):
+    '''
+    Edit a single history record.
+    :param acmainthistory_id:
+    :return:
+    '''
+    # TODO: Add code to support changing / displaying the meter reading.
+    try:
+        thisac = maintpagecheck()
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('plantmaint.index', thiac=None))
+    thisrec = db.session.query(ACMaintHistory).filter(ACMaintHistory.id == acmainthistory_id).first()
+    # if acmeter is None:
+    #     flash('History record id invalid', 'error')
+    #     return render_template('plantmaint/index.html', ac=thisac)
+    thisform = ACTaskHistoryMaint(obj=thisrec)
+    if request.method == 'POST':
+        if thisform.cancel.data:
+            return redirect(url_for('plantmaint.achistorylist', task=0))
+        if thisform.delete.data:
+            db.session.delete(thisrec)
+            try:
+                applog.info('DELETE:' + repr(thisrec))
+                db.session.commit()
+            except Exception as e:
+                applog.error(str(e))
+                flash(
+                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "error")
+            return redirect(url_for('plantmaint.achistorylist', task=0))
+        # if we get to here then we are in update mode.
+        thisform.populate_obj(thisrec)
+        applog.info('UPDATE:' + repr(thisrec))
+        try:
+            db.session.commit()
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+        return redirect(url_for('plantmaint.achistorylist', task=0))
+    # This bit is what happens for the "GET"
+    return render_template('plantmaint/actaskhistorymaint.html', form=thisform, ac=thisac    )
+
 
 
 @bp.route('/acimportreading/<acmeters_id>', methods=['GET', 'POST'])
