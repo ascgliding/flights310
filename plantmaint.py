@@ -1566,11 +1566,11 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
     task_based_columns = []
     for m in meter_based_tasks:
         task_based_columns.append(build_lifed_item_dict(thisac, m))
-    for i in task_based_columns:
-        print(i["description"])
-        print("---------------------------------------")
-        for r in i["readinglist"]:
-            print(r)
+    # for i in task_based_columns:
+    #     print(i["description"])
+    #     print("---------------------------------------")
+    #     for r in i["readinglist"]:
+    #         print(r)
 
     sql = sqltext("""
     select 
@@ -1603,9 +1603,15 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
                                 "downloads/" + thisac.regn + "_LOGBOOK" + ".xlsx")
         workbook = xlsxwriter.Workbook(filename)
         ws = workbook.add_worksheet("Meter Readings")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(2)
+        ws.set_paper('A4')
         borderdict = {'border': 1}
         noborderdict = {'border': 0}
-        datedict = {'num_format': 'dd-mmm-yy'}
+        datedict = {'num_format': 'dd-mmm-yy', 'align':'Top'}
         timedict = {'num_format': 'h:mm'}
         dollardict = {'num_format': '$#, ##0.00'}
         merge_format = workbook.add_format(
@@ -1619,12 +1625,13 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
                 "font_size": 14
             }
         )
-        border_fmt = workbook.add_format({'border': 1, 'text_wrap': 1})
+        border_fmt = workbook.add_format({'border': 1, 'text_wrap': True})
         # merge_format = workbook.add_format({'align': 'center', 'border': 1})
         date_format = workbook.add_format(dict(datedict, **noborderdict))
         dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
         time_fmt = workbook.add_format(dict(timedict, **noborderdict))
         hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
+        history_fmt = workbook.add_format({'align':'Top', 'text_wrap': True})
         row = 3
         ws.write(row, 0, "Date", border_fmt)
         nextcol = 1
@@ -1690,6 +1697,12 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         # History
         #
         ws = workbook.add_worksheet("History")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(2)
+        ws.set_paper('A4')
         sql = sqltext("""
             select
             t0.history_date,
@@ -1723,11 +1736,12 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
                 if h.entry_uom == 'Hours:Minutes':
                     ws.write(row, 1, round(h.meter_reading / (24 * 60), 2), hrsmins_fmt)
                 elif h.entry_uom == 'Decimal Hours':
-                    ws.write(row, 1, round(h.meter_reading / 60, 2))
+                    ws.write(row, 1, round(h.meter_reading / 60, 2), history_fmt)
                 else:
-                    ws.write(row, 1, h.meter_reading)
-            ws.write(row, 2, h.description)
-            ws.write(row, 3, h.task_description)
+                    ws.write(row, 1, h.meter_reading, history_fmt)
+            ws.write_string(row, 2, h.description, history_fmt)
+            #
+            ws.write(row, 3, h.task_description, history_fmt)
             row += 1
         ws.autofit()
         # Add Headings
@@ -1739,3 +1753,5 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         raise
     workbook.close()
     return filename
+
+

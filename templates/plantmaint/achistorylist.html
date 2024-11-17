@@ -26,7 +26,7 @@
     <div class="row">
       <div class="cell" align="left"><a href="{{ url_for('plantmaint.actaskhistorymaint', acmainthistory_id=l.id) }}">{{ l.id }}</a></div>
       <div class="cell" align="left" style="column-width:350px;">{{ l.history_date }}</div>
-      <div class="cell" align="left" style="white-space:pre-line;column-width:300px" >{{ l.task_description }}</div>
+      <div class="cell" align="left" style="white-space:pre-line;column-width:500px" >{{ l.task_description }}</div>
       {% if l.actask_rec.std_task_rec.std_meter_rec is not none %}
           <div class="cell  mobile_port_suppress " align="left">{{ l.actask_rec.std_task_rec.std_meter_rec.meter_name }}</div>
           <div class="cell mobile_port_suppress" align="right">{{ l.formatted_meter_reading }}</div>
