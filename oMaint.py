@@ -284,7 +284,7 @@ class ACMaint:
                 return AttributeError('Quantum be an integer. Got {}'.format(type(pquantum)))
             if not isinstance(pstartdate,datetime.date):
                 return AttributeError('Reference date must be a date.  Got {}'.format(
-                    type(preference_date)))
+                    type(pstartdate)))
             #
             if pbasis == 'Days':
                 return pstartdate + relativedelta(days=pquantum)

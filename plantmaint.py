@@ -1596,103 +1596,104 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
     readings = db.engine.execute(sql, ac_id=thisac.id, start=pstart, end=pend).fetchall()
     installed_meters = db.session.query(ACMeters).filter(ACMeters.ac_id == thisac.id).all()
     row = 0
-    if len(readings) == 0:
-        raise ValueError("No Meter Readings in this range")
+    # if len(readings) == 0:
+    #     raise ValueError("No Meter Readings in this range")
     try:
         filename = os.path.join(app.instance_path,
                                 "downloads/" + thisac.regn + "_LOGBOOK" + ".xlsx")
         workbook = xlsxwriter.Workbook(filename)
-        ws = workbook.add_worksheet("Meter Readings")
-        ws.set_landscape()
-        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
-        ws.set_footer('&L&A&CPage &P of &N')
-        ws.fit_to_pages(1, 0)  # fit all columns on page
-        ws.repeat_rows(2)
-        ws.set_paper('A4')
-        borderdict = {'border': 1}
-        noborderdict = {'border': 0}
-        datedict = {'num_format': 'dd-mmm-yy', 'align':'Top'}
-        timedict = {'num_format': 'h:mm'}
-        dollardict = {'num_format': '$#, ##0.00'}
-        merge_format = workbook.add_format(
-            {
-                "bold": 1,
-                "border": 1,
-                "align": "center",
-                "valign": "vcenter",
-                # "fg_color": "blue",
-                "font_color": "#377ba8",
-                "font_size": 14
-            }
-        )
-        border_fmt = workbook.add_format({'border': 1, 'text_wrap': True})
-        # merge_format = workbook.add_format({'align': 'center', 'border': 1})
-        date_format = workbook.add_format(dict(datedict, **noborderdict))
-        dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
-        time_fmt = workbook.add_format(dict(timedict, **noborderdict))
-        hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
-        history_fmt = workbook.add_format({'align':'Top', 'text_wrap': True})
-        row = 3
-        ws.write(row, 0, "Date", border_fmt)
-        nextcol = 1
-        metercol = []
-        for i in installed_meters:
-            ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading', border_fmt)
-            ws.write(row, nextcol + 1, i.std_meter_rec.meter_name + ' Change', border_fmt)
-            metercol.append({"col": nextcol, "meter_name": i.std_meter_rec.meter_name})
-            nextcol += 2
-        notecol = (len(metercol) * 2) + 1
-        ws.write(row, nextcol, "Note", border_fmt)
-        nextcol += 1
-        for i in task_based_columns:
-            i["col"] = nextcol
-            ws.write(row, nextcol, i["title"] + 'Reading', border_fmt)
-            ws.write(row, nextcol + 1, i["title"] + ' Change', border_fmt)
-            nextcol += 2
-        row += 2
-        last_row_reading_date = datetime.date(1900, 1, 1)
-        for r in readings:
-            if r.reading_date != last_row_reading_date:
-                # new line in logbook
-                row += 1
-                ws.write(row, 0, r.reading_date, date_format)
-                last_row_reading_date = r.reading_date
-            # find which column to add this record
-            mcol = [c for c in metercol if c["meter_name"] == r.meter_name][0]
-            if mcol is not None:
-                if r.entry_uom == 'Hours:Minutes':
-                    if p_hrs_mins_as_string:
-                        ws.write(row, mcol["col"], mins2hrsmins(r.meter_reading))
-                        ws.write(row, mcol["col"] + 1, mins2hrsmins(r.meter_delta))
+        if len(readings) > 0:
+            ws = workbook.add_worksheet("Meter Readings")
+            ws.set_landscape()
+            ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+            ws.set_footer('&L&A&CPage &P of &N')
+            ws.fit_to_pages(1, 0)  # fit all columns on page
+            ws.repeat_rows(2)
+            ws.set_paper('A4')
+            borderdict = {'border': 1}
+            noborderdict = {'border': 0}
+            datedict = {'num_format': 'dd-mmm-yy', 'align':'Top'}
+            timedict = {'num_format': 'h:mm'}
+            dollardict = {'num_format': '$#, ##0.00'}
+            merge_format = workbook.add_format(
+                {
+                    "bold": 1,
+                    "border": 1,
+                    "align": "center",
+                    "valign": "vcenter",
+                    # "fg_color": "blue",
+                    "font_color": "#377ba8",
+                    "font_size": 14
+                }
+            )
+            border_fmt = workbook.add_format({'border': 1, 'text_wrap': True})
+            # merge_format = workbook.add_format({'align': 'center', 'border': 1})
+            date_format = workbook.add_format(dict(datedict, **noborderdict))
+            dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
+            time_fmt = workbook.add_format(dict(timedict, **noborderdict))
+            hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
+            history_fmt = workbook.add_format({'align':'Top', 'text_wrap': True})
+            row = 3
+            ws.write(row, 0, "Date", border_fmt)
+            nextcol = 1
+            metercol = []
+            for i in installed_meters:
+                ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading', border_fmt)
+                ws.write(row, nextcol + 1, i.std_meter_rec.meter_name + ' Change', border_fmt)
+                metercol.append({"col": nextcol, "meter_name": i.std_meter_rec.meter_name})
+                nextcol += 2
+            notecol = (len(metercol) * 2) + 1
+            ws.write(row, nextcol, "Note", border_fmt)
+            nextcol += 1
+            for i in task_based_columns:
+                i["col"] = nextcol
+                ws.write(row, nextcol, i["title"] + 'Reading', border_fmt)
+                ws.write(row, nextcol + 1, i["title"] + ' Change', border_fmt)
+                nextcol += 2
+            row += 2
+            last_row_reading_date = datetime.date(1900, 1, 1)
+            for r in readings:
+                if r.reading_date != last_row_reading_date:
+                    # new line in logbook
+                    row += 1
+                    ws.write(row, 0, r.reading_date, date_format)
+                    last_row_reading_date = r.reading_date
+                # find which column to add this record
+                mcol = [c for c in metercol if c["meter_name"] == r.meter_name][0]
+                if mcol is not None:
+                    if r.entry_uom == 'Hours:Minutes':
+                        if p_hrs_mins_as_string:
+                            ws.write(row, mcol["col"], mins2hrsmins(r.meter_reading))
+                            ws.write(row, mcol["col"] + 1, mins2hrsmins(r.meter_delta))
+                        else:
+                            ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
+                            # in excel this has to be a decimal of one day.  There are 24*60 minutes
+                            # in a day
+                            ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
+                    elif r.entry_uom == 'Decimal Hours':
+                        ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
+                        ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))
                     else:
-                        ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
-                        # in excel this has to be a decimal of one day.  There are 24*60 minutes
-                        # in a day
-                        ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
-                elif r.entry_uom == 'Decimal Hours':
-                    ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
-                    ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))
-                else:
-                    ws.write(row, mcol["col"], r.meter_reading)
-                    ws.write(row, mcol["col"] + 1, r.meter_delta)
-            # Now find the meter_based_tasks columns
-            for tbc in task_based_columns:
-                delta,reading = get_readings(tbc,r.reading_date)
-                ws.write(row, tbc["col"], reading)
-                ws.write(row, tbc["col"] + 1, delta)
-            ws.write(row, notecol, r.note)
-        # col widths
-        ws.autofit()
-        # autfit overrides
-        # ws.set_column(0, 0, 12)
-        col = 1
-        for i in range(len(installed_meters)):
-            ws.set_column(col, col, 12)
-            ws.set_column(col + 1, col + 1, 12)
-            col += 2
-        # Put in the title last so that the autofit works nicely
-        row = 1
-        ws.merge_range("A1:H1", "Aircraft Meter Readings for " + thisac.regn, merge_format)
+                        ws.write(row, mcol["col"], r.meter_reading)
+                        ws.write(row, mcol["col"] + 1, r.meter_delta)
+                # Now find the meter_based_tasks columns
+                for tbc in task_based_columns:
+                    delta,reading = get_readings(tbc,r.reading_date)
+                    ws.write(row, tbc["col"], reading)
+                    ws.write(row, tbc["col"] + 1, delta)
+                ws.write(row, notecol, r.note)
+            # col widths
+            ws.autofit()
+            # autfit overrides
+            # ws.set_column(0, 0, 12)
+            col = 1
+            for i in range(len(installed_meters)):
+                ws.set_column(col, col, 12)
+                ws.set_column(col + 1, col + 1, 12)
+                col += 2
+            # Put in the title last so that the autofit works nicely
+            row = 1
+            ws.merge_range("A1:H1", "Aircraft Meter Readings for " + thisac.regn, merge_format)
         #
         # History
         #
@@ -1747,6 +1748,33 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         # Add Headings
         row = 1
         ws.merge_range("A1:D1", "Aircraft History for " + thisac.regn, merge_format)
+        #
+        # Upcoming Tasks
+        #
+        ws = workbook.add_worksheet("Upcoming")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(2)
+        ws.set_paper('A4')
+        maintobj  = ACMaint(thisac.id)
+        row = 3
+        ws.write(row, 0, "Due Date", border_fmt)
+        ws.write(row, 1, "Task", border_fmt)
+        ws.write(row, 2, "Recurrence", border_fmt)
+        row += 1
+        for t in maintobj.tasks:
+            ws.write(row,0,t.next_due_date,history_fmt)
+            ws.write(row,1,t.description,history_fmt)
+            ws.write(row,2,t.recurrence_description,history_fmt)
+            row += 1
+        ws.autofit()
+        # Add Headings
+        row = 1
+        ws.merge_range("A1:C1", "Aircraft Upcoming Tasks " + thisac.regn, merge_format)
+
+
     except Exception as e:
         applog.error("An error ocurred during spreadsheet create:{}".format(str(e)))
         applog.debug("Row was:{}".format(row))
