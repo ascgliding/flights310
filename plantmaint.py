@@ -1765,7 +1765,7 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         ws.write(row, 2, "Recurrence", border_fmt)
         row += 1
         for t in maintobj.tasks:
-            ws.write(row,0,t.next_due_date,history_fmt)
+            ws.write(row,0,t.next_due_date,date_format)
             ws.write(row,1,t.description,history_fmt)
             ws.write(row,2,t.recurrence_description,history_fmt)
             row += 1
