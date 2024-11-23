@@ -56,7 +56,10 @@ def getdefaults():
     # Get the ac details to determine seat count, default launch method and default pilot
     thisdict = {}
     thisac = Aircraft.query.filter_by(regn=ac).first()
-    lastflt = Flight.query.filter_by(Flight.flt_date<=thisdate).filter_by(Flight.linetype=='FL').last()
+    print(thisac.regn)
+    print(thisdate)
+    print(constTOW_FOR_SELF_LAUNCH)
+    lastflt = Flight.query.filter(Flight.flt_date <= thisdate).filter(Flight.linetype == 'FL').filter(Flight.tug_regn != constTOW_FOR_SELF_LAUNCH).order_by(Flight.id.desc()).first()
     # unknown Ac
     if thisac is None:
         thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTUG").first()
@@ -69,19 +72,21 @@ def getdefaults():
             thisdict['towie'] = None
     else:
         # convert that data into a standard dictionary.
+        # We return the a/c as well because that's how it knows the nuber of seats, default pilot and so on.
         thisdict = sqlalchemy2json(thisac)
         # add the default launch method.
         if thisac.default_launch != None:
             thisdict['tug'] = thisac.default_launch
             thisdict['towie'] = None
-        thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTUG").first()
-        if thisslot is not None:
-            thisdict['tug'] = thisslot.slot_data
-        thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTOWIE").first()
-        if thisslot is not None:
-            thisdict['towie'] = thisslot.slot_data
+        if thisac.default_launch != constTOW_FOR_SELF_LAUNCH:
+            thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTUG").first()
+            if thisslot is not None:
+                thisdict['tug'] = thisslot.slot_data
+            thisslot = Slot.query.filter_by(slot_type='DEFAULT').filter_by(slot_key="LASTTOWIE").first()
+            if thisslot is not None:
+                thisdict['towie'] = thisslot.slot_data
     if lastflt is not None:
-        thisdict['towie'] == lastflt.tow_pilot
+        thisdict['towie'] = lastflt.tow_pilot
     return jsonify(thisdict,[],True)
 
 @bp.route('/setscreendim')
