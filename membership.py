@@ -557,6 +557,10 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             row += 1
             for m in ssdata:
                 ws.write(row, 0, m.fullname, border_fmt)
+                if m.address_1 is None:
+                    m.address_1 = ''
+                if m.address_2 is None:
+                    m.address_2 = ''
                 ws.write(row, 1, m.address_1 +',' + m.address_2, date_fmt)
                 ws.write(row, 2, m.nok_name, border_fmt)
                 ws.write(row, 3, m.nok_rship, border_fmt)
