@@ -148,6 +148,11 @@ class User(db.Model):
     def __str(self):
         return self.fullname
 
+    @db.validates('name')
+    def convert_lower(self, key, value):
+        if key == 'name':
+            return value.strip().lower()
+
     def __init__(self, name=None):
         self.name = name
         self.fullname = None
