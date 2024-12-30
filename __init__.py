@@ -26,7 +26,7 @@ if sys.platform != 'win32':
 # import asc.schema
 
 def handle_internalservererror(e):
-    return render_template("errors/err500.html")
+    return render_template("errors/err500.html", error=str(e))
 
 class UserIDFilter(logging.Filter):
     """
