@@ -138,7 +138,7 @@ def create_app(test_config=None):
     app.logger.info("pythonpath (in create_app __init__.py)_ is {}".format(os.environ['PYTHONPATH']))
     app.logger.info("ASC Create Complete")
 
-    # Error Hanlding
+    # Error Hanlding - note must be done after the blueprints
     app.register_error_handler(500,handle_internalservererror)
 
     return app
