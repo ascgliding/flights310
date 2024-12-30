@@ -11,7 +11,7 @@ from flask import Flask, session, g, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy import __version__ as fsqa_version
 from flask import __version__ as flask_version
-from flask import Flask
+from flask import Flask, render_template
 from flask_wtf import __version__ as flaskwtf_version
 from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
@@ -25,7 +25,8 @@ if sys.platform != 'win32':
 # from asc.import * will not work - it will get hung up with the circular reference to db.
 # import asc.schema
 
-
+def handle_internalservererror(e):
+    return render_template("errors/err500.html")
 
 class UserIDFilter(logging.Filter):
     """
@@ -136,6 +137,9 @@ def create_app(test_config=None):
     app.logger.info("app instance path (in create_app __init__.py)_ is {}".format(app.instance_path))
     app.logger.info("pythonpath (in create_app __init__.py)_ is {}".format(os.environ['PYTHONPATH']))
     app.logger.info("ASC Create Complete")
+
+    # Error Hanlding
+    app.register_error_handler(500,handle_internalservererror)
 
     return app
 
