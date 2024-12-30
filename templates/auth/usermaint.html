@@ -8,9 +8,8 @@
   <form method="post">
     {{ form.csrf_token }}
     <fieldset>
-      <legend>Maintain User</legend>
+      <legend>Maintain User : {{form.name.data}}</legend>
       <ul>
-        <li>{{ render_field(form.name) }}</li>
         <li>{{ render_field(form.fullname) }}</li>
         <li>{{ render_field(form.email) }}</li>
         <li>{{ render_field(form.gnz_no) }}</li>

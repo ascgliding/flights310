@@ -41,8 +41,8 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 #            ref_url.netloc == test_url.netloc
 
 class UserMaintForm(FlaskForm):
-    name = StringField('User Name', description='User Name')
-    fullname = StringField('Full Name', description = 'Full Name')
+    name = StringField('User Name', description='User Name',render_kw={'data-lpignore':True,'autocomplete':False})
+    fullname = StringField('Full Name', description = 'Full Name', render_kw={'autofocus':True})
     email = EmailField('Email', description = 'Email address',render_kw={'size': '50', 'autocomplete': 'dont'})
     gnz_no = IntegerField('GNZ No', description = 'GNZ Number')
     administrator = BooleanField('Administrator', description = 'Tick for person to be system administrator')
