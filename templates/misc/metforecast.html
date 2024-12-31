@@ -23,9 +23,7 @@
     <svg id="chart0" class="c3chart"></svg>
     {{ render_field(form.measure) }}
   </fieldset>
-  {% if current_user.name == 'rayb' %}
-      {{ form.btnrefresh() }}
-  {% endif %}
+    {{ form.btnrefresh() }}
   </form>
 
 <script>
