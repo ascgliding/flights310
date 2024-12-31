@@ -20,6 +20,7 @@ class Config(object):
     LOGFILE='asc.log'
     LOGCLEAR=True
     LOGLEVEL='INFO'
+    SESSION_PERMANENT=False
 
 
 class development(Config):

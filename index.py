@@ -5,6 +5,7 @@ from werkzeug.exceptions import abort
 from flask_login import current_user
 from asc.schema import *
 from sqlalchemy import text as sqltext
+from datetime import timedelta
 
 # app = Flask(__name__)
 # from asc import create_app
@@ -24,6 +25,8 @@ def before_request():
     # print('Current User Name {}'.format(current_user.name))
     # m= Member.query.filter(Member.gnz_no==current_user.gnz_no).first()
     # print('Member Name {}'.format(m.fullname))
+
+    app.permanent_session_lifetime=timedelta(minutes=3)
 
     # ensure that the login screen can never have any security restrictions.
     if request.path in [ '/auth/login', '/auth/logout', '/auth/profile' ]:
