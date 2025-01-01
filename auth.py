@@ -1,5 +1,6 @@
 import functools
 import datetime
+import os
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for, Flask, jsonify, make_response, abort
@@ -160,7 +161,11 @@ def login():
                 thisuser.authenticated = True
                 thisuser.last_login = datetime.date.today()
                 db.session.commit()
-                login_user(thisuser, remember=True, duration=datetime.timedelta(days=5))
+                # login_user(thisuser, remember=True, duration=datetime.timedelta(days=5))
+                if os.environ.get('CONFIG', default='development') == 'development':
+                    login_user(thisuser, remember=True, duration=datetime.timedelta(days=5))
+                else:
+                    login_user(thisuser, remember=True, duration=datetime.timedelta(hours=8))
                 app.logger.info('User : {} Logged in'.format(thisuser.fullname or thisuser.name))
                 app.logger.info("User Agent:{}".format(request.user_agent.string))
                 # when this page has been called due to a fresh login required function then it has a "next" parameter

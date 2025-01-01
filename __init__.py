@@ -15,6 +15,7 @@ from flask import Flask, render_template
 from flask_wtf import __version__ as flaskwtf_version
 from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
+
 # import asc.jingafilters
 
 
@@ -217,6 +218,7 @@ def establish_login_extension(app):
     login_manager.login_view = "auth.login"
     login_manager.refresh_view = "auth.login"
     login_manager.needs_refresh_message = u'You must re-fresh your login to access this page'
+
     from asc.schema import User
 
     @login_manager.user_loader

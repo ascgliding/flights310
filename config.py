@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 import flask
 from flask import Flask, current_app
@@ -21,7 +22,10 @@ class Config(object):
     LOGCLEAR=True
     LOGLEVEL='INFO'
     SESSION_PERMANENT=False
-
+    SESSION_COOKIE_HTTPONLY=True
+    SESSION_REFRESH_EACH_REQUEST=True
+    SESSION_COOKIE_SECURE=True
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=3)
 
 class development(Config):
     # Note that this config assumes windows.

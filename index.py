@@ -1,11 +1,13 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app
+    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app,session
 )
+# from flask_session import Session
 from werkzeug.exceptions import abort
 from flask_login import current_user
 from asc.schema import *
 from sqlalchemy import text as sqltext
 from datetime import timedelta
+
 
 # app = Flask(__name__)
 # from asc import create_app
@@ -26,7 +28,8 @@ def before_request():
     # m= Member.query.filter(Member.gnz_no==current_user.gnz_no).first()
     # print('Member Name {}'.format(m.fullname))
 
-    app.permanent_session_lifetime=timedelta(minutes=3)
+    # there is stuff on the internet that talks about putting session timeout suff
+    # here.  Really, it is in auth.py login funciton.  It the duration parameter of the login user function.
 
     # ensure that the login screen can never have any security restrictions.
     if request.path in [ '/auth/login', '/auth/logout', '/auth/profile' ]:
