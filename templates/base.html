@@ -149,6 +149,45 @@ function myLower(cObj)
   {% endif %}
   {% endmacro %}
 
+{% macro render_pagination(pagination, endpoint) %}
+    <hr/>
+    <div class="mobile_port_suppress mobile_land_suppress">
+        <div class="page-items">
+            Rows {{ pagination.first }} - {{ pagination.last }} of {{ pagination.total }}
+        </div>
+    </div>
+    <div class="mobile_port_suppress">
+        <div class=pagination>
+            <span>Pages:</span>
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                        <a class=onepage href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+                    {% else %}
+                        <span class=selectedpage>{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                        <span class=ellipsis> … </span>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="full_screen_suppress mobile_land_suppress">
+        <div class="pagination">
+            {% for page in pagination.iter_pages(1,2,2,1) %}
+                {% if page %}
+                    {% if page != pagination.page %}
+                        <a class=onepage href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+                    {% else %}
+                        <span class=selectedpage>{{ page }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class=ellipsis> … </span>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% endmacro %}
 
   <!-- This is absolutely critical if you want the site to work on a mobile device -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />

@@ -590,3 +590,33 @@ select {
 .pagemenucol {
     flex: 50%;
     }
+
+/* pagination */
+.page-items {   align-items:center;
+                display:flex;
+                justify-content:center;
+                color:var(--main-fg-colour);
+}
+.ellipsis   {   display:flex;
+}
+.pagination {   display:flex;
+                align-items:center;
+                justify-content:center;
+                padding:20px;
+}
+.onepage    {   border: 2px solid rgb(95 97 110);
+                border-radius: 0.5em;
+                padding: 2px;
+                width: 2em;
+                margin:0 5px;
+                text-align:center;}
+
+.selectedpage { border: 2px solid rgb(95 97 110);
+                border-radius: 0.5em;
+                padding: 2px;
+                width: 2em;
+                margin:0 5px;
+                text-align:center;
+                background:var(--main-fg-colour);
+                color:var(--main-bg-colour);
+                }

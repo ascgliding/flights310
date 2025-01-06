@@ -20,6 +20,7 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 from asc.wtforms_ext import MatButtonField, TextButtonField
 from decimal import *
 from asc.common import *
+from asc.oPaginateRawSql import PaginateRawSql
 
 try:
     # app = Flask(__name__)
@@ -178,28 +179,21 @@ class NoteForm(FlaskForm):
 # TODO: Test Error Handling in Production environment.
 
 @bp.route('/daysummary')
+@bp.route('/daysummary/<int:page>')
 @login_required
-def daysummary():
-    # TODO: Add paging
+def daysummary(page=1):
     sql = sqltext("""
     SELECT
         flt_date,
-        count(*) movements,
+        sum(case when linetype='FL' then 1 else 0 end) movements,
         max(id) last_id
         FROM flights 
         GROUP BY flt_date
-        ORDER BY flt_date desc 
+        ORDER BY flt_date desc
         """)
-    sql = sql.columns(flt_date=db.Date)
-    app.logger.info("Main Page accessed")
-    try:
-        summary = db.engine.execute(sql).fetchall()
-        return render_template('flights/daysummary.html', summary=summary)
-    except Exception as e:
-        flash("An error occurred: {}".format(e))
-        app.logger.info("An error occurred: {}".format(e))
-        # return e
-        abort(404, e)
+    sql = sql.columns(flt_date=db.Date, movements=db.Integer)
+    paginatedlist = PaginateRawSql(db.session.connection(), sql, page=page, per_page=15)
+    return render_template('flights/daysummary.html', summary=paginatedlist)
 
 @bp.route('/newday', methods=['GET','POST'])
 @login_required

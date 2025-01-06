@@ -31,6 +31,8 @@ from asc.oMaint import ACMaint
 # from asc.oReadingTools import   ReadingTools
 from  asc.common import *
 
+import os
+
 # accessing a calendar:
 from urllib.request import urlopen
 
@@ -2232,7 +2234,7 @@ if __name__ == '__main__':
     case9 = unittest.TestLoader().loadTestsFromTestCase(googlecalendar)
     case10 = unittest.TestLoader().loadTestsFromTestCase(adhoc)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case10])
+    thissuite = unittest.TestSuite([case7])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')

@@ -29,5 +29,15 @@
   </div>
   {% endfor %}
 </div>
+</hr>
+{#
+{% if prev is not none %}
+    <a class='materialbtn' href="{{ url_for('flights.daysummary',page=0) }}" id="firstbtn"></a>
+    <a class='materialbtn' href="{{ url_for('flights.daysummary',page=prev) }}" id="prevbtn"></a>
+{% endif %}
+<a class='materialbtn' href="{{ url_for('flights.daysummary',page=next) }}" id="nextbtn"></a>
+#}
+{{ render_pagination(summary,"flights.daysummary") }}
+
 
 {% endblock %}
