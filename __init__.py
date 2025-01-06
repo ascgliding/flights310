@@ -29,6 +29,9 @@ if sys.platform != 'win32':
 def handle_internalservererror(e):
     return render_template("errors/err500.html", error=str(e))
 
+def handle_404(e):
+    return render_template("errors/err404.html", error=str(e))
+
 class UserIDFilter(logging.Filter):
     """
     This is a filter which injects contextual information into the log.
@@ -141,6 +144,7 @@ def create_app(test_config=None):
 
     # Error Hanlding - note must be done after the blueprints
     app.register_error_handler(500,handle_internalservererror)
+    app.register_error_handler(404,handle_404)
 
     return app
 
