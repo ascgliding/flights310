@@ -19,7 +19,7 @@
   <div class="row">
     <div class="heading">Date</div>
     <div class="heading" align="right">Movements</div>
-    <div class="heading" align="right">Last Id</div>
+    <div class="heading mobile_port_suppress mobile_land_suppress" align="right">Last Id</div>
   </div>
   {% for s in summary %}
   <div class="row">
@@ -30,13 +30,6 @@
   {% endfor %}
 </div>
 </hr>
-{#
-{% if prev is not none %}
-    <a class='materialbtn' href="{{ url_for('flights.daysummary',page=0) }}" id="firstbtn"></a>
-    <a class='materialbtn' href="{{ url_for('flights.daysummary',page=prev) }}" id="prevbtn"></a>
-{% endif %}
-<a class='materialbtn' href="{{ url_for('flights.daysummary',page=next) }}" id="nextbtn"></a>
-#}
 {{ render_pagination(summary,"flights.daysummary") }}
 
 
