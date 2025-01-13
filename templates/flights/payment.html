@@ -35,7 +35,7 @@
   </fieldset>
 
   <div style="display:table-cell; text-align: right;">
-    {{ form.btnsubmit() }}
+    {{ form.btnsubmit(onClick="this.form.submit(); this.disabled=true; " ) }}
     {{ form.cancel() }}
     {{ form.calc() }}
 <!--  Delete function removed 22 Jan 23    xx form.delete() xx-->

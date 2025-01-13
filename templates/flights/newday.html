@@ -37,6 +37,6 @@
     {% endfor %}
     </datalist>
   </fieldset>
-  <button type="submit" class="donebtn" name="donebtn" id="donebtn" title="Press to accept" value=""></button>
+  <button type="submit" class="donebtn" name="donebtn" id="donebtn" title="Press to accept" value="" onClick="this.form.submit(); this.disabled=true; " ></button>
 </form>
 {% endblock %}

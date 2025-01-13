@@ -117,7 +117,7 @@ function acchange(ac) {
     </datalist>
   </fieldset>
   <div style="display:table-cell; text-align: right;">
-    {{ form.btnsubmit() }}
+    {{ form.btnsubmit(onClick="this.form.submit(); this.disabled=true; " ) }}
     {{ form.cancel(onclick="goBack()") }}
     <button class="materialbtn" type="button", id="takeoffbtn" name="takeoffbtn" title="Set takeoff time to now" value="takeoffbtn" onclick="resettime('takeoff');">flight_takeoff</button>
     <button class="materialbtn" style="color:yellow;background-color: var(--main-fg-colour);", type="button", id="tug_downbtn" name="tug_downbtn" title="Set Tug Down time to now" value="tug_downbtn" onclick="resettime('tug_down');">flight_land</button>

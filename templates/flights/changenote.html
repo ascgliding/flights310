@@ -14,7 +14,7 @@
         <li>{{ render_field(form.general_note)  }}</li>
     </fieldset>
     <div style="display:table-cell; text-align: right;">
-        {{ form.btnsubmit() }}
+        {{ form.btnsubmit(onClick="this.form.submit(); this.disabled=true; " ) }}
         {{ form.cancel(onclick="goBack()") }}
         {{ form.delete() }}
     </div>
