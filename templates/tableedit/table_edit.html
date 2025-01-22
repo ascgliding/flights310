@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method=post autocomplete="off">
+    {{ form.csrf_token }}
+    <fieldset>
+        <legend>{{ form.name }}</legend>
+        <ul>
+            {% for field in form %}
+                {% if not field in [ form.csrf_token, form.cancel, form.delete, form.btnsubmit] %}
+                    <li> {{ render_field(field) }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+        {% if skipped  %}
+            Fields skipped due data type:{{ skipped }}
+        {% endif %}
+    </fieldset>
+    {{ form.btnsubmit() }}
+    {{ form.cancel(formnovalidate=true) }}
+    {{ form.delete() }}
+</form>
+
+
+
+{% endblock %}

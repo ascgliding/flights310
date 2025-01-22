@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="wrapper" >
+    <h2>Database Tables</h2>
+    <h3>You really need to know what you are doing with this page.</h3>
+    <h4>If you are unsure... get out of here ... you can wreak havoc.</h4>
+    <div>Here is a list of tables.  Select one to modify.</div>
+    <div id="floatleft" class="lhs">
+        <table class=entries>
+            <tr>
+                <th width="5%">table name</th>
+            </tr>
+            {% for entry in list %}
+                <tr>
+                    <td ><a href="{{ url_for('tableedit.table_rows',tablename=entry) }}">{{ entry }}</a></td>
+                    <td>{{entry}}</td>
+                </tr>
+            {% else %}
+                <div class="flash">Unbelievable. No entries here so far</div>
+            {% endfor %}
+        </table>
+    </div> <!-- end of float left -->
+</div>
+{% endblock %}

@@ -240,8 +240,11 @@ class Role(db.Model):
     id = db.Column(db.Integer(),db.Sequence('role_id_seq'), primary_key=True)
     name = db.Column(db.String(50), unique=True)
 
-    def __repr__(self):
+    def __str__(self):
         return "Role:" + self.name
+
+    def __repr__(self):
+        return "Role:(" + str(id) +")"  + self.name
 
 # Define the UserRoles association table
 class UserRoles(db.Model):
@@ -251,6 +254,12 @@ class UserRoles(db.Model):
     user_rec = relationship("User")
     role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
     role_rec = relationship("Role")
+
+    def __str__(self):
+        return self.user_rec.name + "/" + self.role_rec.name
+
+    def __repr__(self):
+        return "UserRole:(" + str(id) +")"  + self.user_rec.name + "/" + self.role_rec.name
 
 class ViewSecurity(db.Model):
     __tablename__ = 'viewsecurity'
@@ -263,6 +272,11 @@ class ViewSecurity(db.Model):
     # any role can be used - the role will be ignored.
     security_exempt = db.Column(db.Boolean, comment='If True then this view is exempt from all security')
 
+    def __str__(self):
+        return self.viewname + "/" + self.role_rec.name
+
+    def __repr__(self):
+        return "ViewSecurity:(" + str(id) +")"  + self.viewname + "/" + self.role_rec.name
 
 
 
@@ -397,14 +411,14 @@ class Pilot(db.Model):
     firstname = db.Column(db.String, comment="Members Firstname")
     # Contact details:
     email = db.Column(db.String, comment='Users email address')
-    email_2 = db.Column(db.String)
-    phone = db.Column(db.String)
-    phone2 = db.Column(db.String)
-    mobile = db.Column(db.String)
-    mobile2 = db.Column(db.String)
-    address_1 = db.Column(db.String)
-    address_2 = db.Column(db.String)
-    address_3 = db.Column(db.String)
+    email_2 = db.Column(db.String, comment='Second Email')
+    phone = db.Column(db.String, comment='Phone number (possibly home)')
+    phone2 = db.Column(db.String, comment='Secondary Phone')
+    mobile = db.Column(db.String, comment='Mobile')
+    mobile2 = db.Column(db.String, comment='Secondary Mobile')
+    address_1 = db.Column(db.String, comment='Address line 1')
+    address_2 = db.Column(db.String, comment='Address line 2')
+    address_3 = db.Column(db.String, comment='Address line 3')
     # member_id = db.Column(db.Integer, comment='Key to member table')
     bscheme = db.Column(db.Boolean, comment='Set if Pilot participates in B Scheme', default=True)
     # yg_member = db.Column(db.Boolean, comment='Set if Pilot is a Youth Glide member', default=True)
@@ -417,26 +431,26 @@ class Pilot(db.Model):
     # Easier to the validation in the forms.
     # type = db.Column(db.Enum('FLYING', 'JUNIOR', 'VFP BULK', 'SOCIAL'), comment="Membership Type", default='FLYING')
     type = db.Column(db.String, comment="Membership Type", default='FLYING')
-    rank = db.Column(db.String, comment="To be checked against slots", default='CIV')
-    note = db.Column(db.Text)
+    rank = db.Column(db.String, comment="Rank (validated in slots)", default='CIV')
+    note = db.Column(db.Text, comment='Generic Note')
     # Flags:
-    service = db.Column(db.Boolean, default = False)
-    roster = db.Column(db.Enum('D', 'T', "I", "IT", 'D', 'N'), default="D")
-    committee = db.Column(db.Boolean, default=False)
-    oo = db.Column(db.Boolean, default=False)
-    duty_pilot = db.Column(db.Boolean, default=False)
+    service = db.Column(db.Boolean, default = False, comment='Service Member')
+    roster = db.Column(db.Enum('D', 'T', "I", "IT", 'D', 'N'), default="D", comment='Roster Type')
+    committee = db.Column(db.Boolean, default=False, comment='Committee Member')
+    oo = db.Column(db.Boolean, default=False, comment='Official Observer')
+    duty_pilot = db.Column(db.Boolean, default=False, comment='Duty Pilot')
     towpilot = db.Column(db.Boolean, comment="Select to include in tow pilot list", default=False)
     instructor = db.Column(db.Boolean, comment="Select to mark as instructor", default=False)
     email_med_warning = db.Column(db.Boolean, comment='Send warning emails for Medicals', default=True)
     email_bfr_warning = db.Column(db.Boolean, comment='Send warning emails for BFRs', default=True)
     email_mbrfrm_warning = db.Column(db.Boolean, comment='Send warning emails for Membership Forms', default=True)
     # next of Kin details
-    nok_name = db.Column(db.String)
-    nok_rship = db.Column(db.String)
-    nok_phone = db.Column(db.String)
-    nok_mobile = db.Column(db.String)
-    glider = db.Column(db.String)
-    old_member_id = db.Column(db.Integer)
+    nok_name = db.Column(db.String, comment="Next of Kin Name")
+    nok_rship = db.Column(db.String, comment='Next of kin Relationship')
+    nok_phone = db.Column(db.String, comment='Next of kin Phone')
+    nok_mobile = db.Column(db.String, comment="Next of kin Mobile")
+    glider = db.Column(db.String, comment='Glider Regn')
+    old_member_id = db.Column(db.Integer, comment='Old Member id - not used')
     user_id = db.Column(db.Integer, ForeignKey("users.id"), comment="If non null then a valid user id" )
     user_tbl = relationship('User', backref='User.id', primaryjoin="Pilot.user_id == User.id")
     transactions = relationship("MemberTrans", cascade="all,delete-orphan")
@@ -631,15 +645,15 @@ class Aircraft(db.Model):
 
     launch = db.Column(db.Boolean, comment='Set if Regn is a launch method', default=False)
     # each of the following rates are calculated and the TOTAL returned
-    rate_per_hour = db.Column(SqliteDecimal(10, 2), nullable=False, default=0)
+    rate_per_hour = db.Column(SqliteDecimal(10, 2), nullable=False, default=0, comment='Hourly charge rate')
     #  flat_rate_per_launch could be used for winch launches
-    flat_charge_per_launch = db.Column(SqliteDecimal(10, 2), nullable=False, default=0)
+    flat_charge_per_launch = db.Column(SqliteDecimal(10, 2), nullable=False, default=0, comment='Flat charge per launch (winch?)')
     # rate for height based charging
-    rate_per_height = db.Column(SqliteDecimal(10, 2), nullable=False, default=0)
+    rate_per_height = db.Column(SqliteDecimal(10, 2), nullable=False, default=0, comment='Charge per height')
     # height used for rate based charging
-    per_height_basis = db.Column(SqliteDecimal(10, 2), nullable=False, default=0)
+    per_height_basis = db.Column(SqliteDecimal(10, 2), nullable=False, default=0, comment='The amount of height the charge is based on.')
     # Tug only per hour
-    rate_per_hour_tug_only = db.Column(SqliteDecimal(10, 2), nullable=False, default=0)
+    rate_per_hour_tug_only = db.Column(SqliteDecimal(10, 2), nullable=False, default=0, comment='Hourly rate for tug flights')
     bscheme = db.Column(db.Boolean, comment='Set if a/c participates in B Scheme', default=True)
     default_launch = db.Column(db.String, comment="Default Launch Method")
     default_pilot = db.Column(db.String, comment="Default Pilot")
@@ -852,9 +866,9 @@ class MemberTrans(db.Model):
     memberid = db.Column(db.Integer, ForeignKey('pilots.id'), comment="Must match member id")
     transdate = db.Column(db.Date, comment="Effect Date of Transaction")
     transtype = db.Column(db.Enum('IR', 'MF', 'DCG', 'MD', 'ICR', 'RTG', 'BFR', 'NOT'),
-                          comment="to match against slots")
-    transsubtype = db.Column(db.String, comment="to match against slots")
-    transnotes = db.Column(db.Text)
+                          comment="Transaction type (see slots)")
+    transsubtype = db.Column(db.String, comment="Transaction subtype (see slots)")
+    transnotes = db.Column(db.Text, comment='Transaction Notes')
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
@@ -997,7 +1011,7 @@ class ACMeters(db.Model):
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
 
     def __str__(self):
-        return str(self.std_meter_rec.meter_name)
+        return str(self.aircraft_rec.regn +"/" + self.std_meter_rec.meter_name)
 
     def __repr__(self):
         return "(" + str(self.id) + ") "+ self.aircraft_rec.regn + "/" \
@@ -1056,7 +1070,7 @@ class ACTasks(db.Model):
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
 
     def __str__(self):
-        return str(self.std_task_rec)  # which will return the __str__ of that record.
+        return str(self.aircraft_rec.regn) + '/' + str(self.std_task_rec.task_description[0:60])  # which will return the __str__ of that record.
 
     def __repr__(self):
         return "(" + str(self.id) + ") "+ self.aircraft_rec.regn + "/" \
@@ -1194,7 +1208,7 @@ class ACMaintHistory(db.Model):
     updated = db.Column(db.DateTime, onupdate=datetime.datetime.now)
 
     def __str__(self):
-        return task_description[1:60]
+        return self.task_description[0:60]
 
     def __repr__(self):
         # return "(" + str(self.id) + ") " + (self.aircraft_rec.regn or 'None') + "/" \
@@ -1235,7 +1249,7 @@ class ACMaintUser(db.Model):
                             comment='Level of detail allowed')
 
     def __str__(self):
-        return user_rec.name
+        return self.user_rec.name + "/" + self.aircraft_rec.regn
 
     def __repr__(self):
         return "(" + str(self.id or 0) + ") "+ str(self.user_rec or self.user_id) + "/" \

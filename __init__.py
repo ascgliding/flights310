@@ -337,6 +337,10 @@ def resgister_blueprints(app):
             from . import misc
             app_for_log = 'misc'
             app.register_blueprint(misc.bp)
+            # Register the database table editor
+            from . import tableedit
+            app_for_log = 'tabledit'
+            app.register_blueprint(tableedit.bp)
             #
             app.logger.info("All blueprints successfully registered")
     except Exception as e:

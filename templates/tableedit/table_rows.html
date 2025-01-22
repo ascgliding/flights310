@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ table }}</h2>
+<a href="{{ url_for('tableedit.table_edit', tablename=table) }}" id="addbtn" style="text-decoration:none" title="Add"></a>
+<form method=post class=add-entry>
+    <table class=entries>
+        <tr>
+            <th width="60px">id</th>
+            <th width="250px">Description</th>
+        </tr>
+
+        {% for entry in list %}
+            <tr>
+                <td><a href="{{ url_for('tableedit.table_edit', tablename=table, rowid=entry[0]) }}">{{ entry[0] }}</a></td>
+                <td>{{ entry[1] }}</td>
+            </tr>
+        {% else %}
+            <div class="flash">Unbelievable.  No entries here so far</div>
+        {% endfor %}
+    </table>
+    <!-- Note that we ccannot use the stanard render_pageination macro becuase
+        we need to pass the table name as well as the page when selecting a page -->
+      <hr/>
+  <div class="page-items">
+    Rows {{ rows.first }} - {{ rows.last }} of {{ rows.total }}
+  </div>
+  <div class=pagination>
+    Pages:
+    {% for page in rows.iter_pages() %}
+      {% if page %}
+        {% if page != rows.page %}
+          <a class=onepage href="{{ url_for('tableedit.table_rows', tablename=table, page=page) }}">{{ page }}</a>
+        {% else %}
+          <span class=selectedpage>{{ page }}</span>
+        {% endif %}
+      {% else %}
+        <span class=ellipsis> … </span>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+</form>
+{% endblock %}
