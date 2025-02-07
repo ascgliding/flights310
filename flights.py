@@ -274,7 +274,7 @@ def daysheet(date):
         thisset = db.session.query(Flight).filter(Flight.flt_date == thisdate).all()
         title  = "All Flights " + thisdate.strftime("%a %d %b")
     # see if it is possible to record tug down with one button.
-    launched = db.session.query(Flight).filter(Flight.linetype == 'FL').filter(Flight.flt_date == thisdate).filter(Flight.takeoff != None).filter(Flight.tug_down == None).all()
+    launched = db.session.query(Flight).filter(Flight.linetype == 'FL').filter(Flight.flt_date == thisdate).filter(Flight.takeoff != None).filter(Flight.tug_down == None).filter(Flight.tug_regn != constREGN_FOR_WINCH).all()
     current_glider_under_tow = ''
     id_of_towed_aircraft = 0
     count_of_towed_aircraft = 0
@@ -339,22 +339,25 @@ def changeflight(id):
     if thisform.cancel.data:
         return redirect(url_for('flights.daysheet', date=thisrec.flt_date.strftime('%Y-%m-%d')))
     # Pilot list
-    # Populate the choices list for pilots and
+    # Populate the choices list for pilots
     sql = sqltext("""
           select pic
           from flights
           where flt_date > :date
           and pic <> ''
           and linetype = 'FL'
+          and pic not like 'ATC%'
           union
           select p2
           from flights
           where flt_date > :date
           and p2 <> ''
           and linetype = 'FL'
+          and p2 not like 'ATC%'
           union
           select fullname
           from pilots
+          where fullname not like 'ATC%'
           """)
     if thisrec.flt_date is not None:
         activepilotdate = thisrec.flt_date - datetime.timedelta(days=180)
