@@ -338,6 +338,7 @@ def userverify():
         WHERE payer NOT IN (SELECT fullname FROM pilots)
         and payer != ''
         AND julianday('now') - julianday(flt_date) < 30
+        and payment_note not in ('No Pmt Required')
     -- GNZ no different between users and pilots
         union
         SELECT t0.id, t0.fullname, 'User gnz_no does not match pilots table',8,'ERROR','users'
@@ -355,6 +356,7 @@ def userverify():
             from pilots s0
             where s0.accts_cust_code != ''
         )
+        and payment_note not in ('No Pmt Required')
     -- Flights with missing launch method
         UNION
         select t0.id, t0.Pic, 'Invalid Launch Method',8,'ERROR','flights'
