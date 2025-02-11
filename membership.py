@@ -354,8 +354,8 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
     ws.set_footer('&L&A&CPage &P of &N')
     ws.fit_to_pages(1, 0)  # fit all columns on page
-    ws.repeat_rows(2)
-    ws.set_paper('A4')
+    ws.repeat_rows(0,2)
+    ws.set_paper(9)
     try:
         row = 2
         ws.write(row, 0, "Surname", col_head_fmt)
@@ -405,8 +405,8 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
         ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
         ws.set_footer('&L&A&CPage &P of &N')
         ws.fit_to_pages(1, 0)  # fit all columns on page
-        ws.repeat_rows(2)
-        ws.set_paper('A4')
+        ws.repeat_rows(0,2)
+        ws.set_paper(9)  # A4
         try:
             row = 2
             ws.write(row, 0, "Name", col_head_fmt)
@@ -501,8 +501,8 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
             ws.set_footer('&L&A&CPage &P of &N')
             ws.fit_to_pages(1,0)  # fit all columns on page
-            ws.repeat_rows(2)
-            ws.set_paper('A4')
+            ws.repeat_rows(0,2)
+            ws.set_paper(9)
             try:
                 sql = sqltext("""
                     select 
@@ -529,6 +529,7 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
                     ws.write(row, 2, ir.transnotes , border_fmt)
                     row += 1
                 ws.autofit()
+                ws.set_column(2,2,100)
                 ws.merge_range("A1:C1", "12 Month Incident Summary " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
 
             except Exception as e:
@@ -545,8 +546,8 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
             ws.set_footer('&L&A&CPage &P of &N')
             ws.fit_to_pages(1,0)  # fit all columns on page
-            ws.repeat_rows(2)
-            ws.set_paper('A4')
+            ws.repeat_rows(0,2)
+            ws.set_paper(9)
             ssdata = Pilot.query.filter(Pilot.active).order_by(Pilot.surname).all()
             row = 2
             ws.write(row, 0, "Name", col_head_fmt)
@@ -578,4 +579,5 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
 
     workbook.close()
     return filename
+
 

@@ -1609,7 +1609,7 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
             ws.set_footer('&L&A&CPage &P of &N')
             ws.fit_to_pages(1, 0)  # fit all columns on page
             ws.repeat_rows(2)
-            ws.set_paper('A4')
+            ws.set_paper(9)
             borderdict = {'border': 1}
             noborderdict = {'border': 0}
             datedict = {'num_format': 'dd-mmm-yy', 'align':'Top'}
@@ -1702,8 +1702,8 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
         ws.set_footer('&L&A&CPage &P of &N')
         ws.fit_to_pages(1, 0)  # fit all columns on page
-        ws.repeat_rows(2)
-        ws.set_paper('A4')
+        ws.repeat_rows(3)
+        ws.set_paper(9) # A4
         sql = sqltext("""
             select
             t0.history_date,
@@ -1757,7 +1757,7 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         ws.set_footer('&L&A&CPage &P of &N')
         ws.fit_to_pages(1, 0)  # fit all columns on page
         ws.repeat_rows(2)
-        ws.set_paper('A4')
+        ws.set_paper(9)
         maintobj  = ACMaint(thisac.id)
         row = 3
         ws.write(row, 0, "Due Date", border_fmt)
