@@ -284,6 +284,7 @@ def userverify():
         'users' tbl
         FROM users
         WHERE approved = 0
+        and fullname in (select s0.fullname from pilots s0 where s0.active is not null and s0.active)
     -- users not showing up in pilots file
         UNION
         SELECT id, fullname, 'User id missing from pilots',5,'Warning','users'
@@ -300,11 +301,13 @@ def userverify():
         SELECT id, fullname, 'No GNZ Code',8,'Warning','pilots'
         FROM pilots
         WHERE (gnz_no IS NULL OR gnz_no = 0) and fullname not like 'ATC%' and fullname not like 'Trial%'
+        and active is not null and not active
     -- missing gnz no in users
         union
         SELECT id, fullname, 'User missing GNZ Code',8,'Warning','users'
         FROM users
         WHERE gnz_no IS NULL OR gnz_no = 0
+        and fullname in (select s0.fullname from pilots s0 where s0.active is not null and s0.active)
     -- GNZ code in users not in pilots
         UNION 
         SELECT id, fullname, 'User GNZ Code not in pilots table',8,'Warning','users'
@@ -315,12 +318,12 @@ def userverify():
         SELECT 
         max(id),name,'Pilot has more than one flight in the last 90 days but not in pilots table',max(2),'ERROR','flights'
         FROM (
-            SELECT id,'pic' 'type', pic 'name' 
+            SELECT id,'pic' 'type', pic 'name', ac_regn 
                 FROM flights 
                 WHERE linetype = 'FL'
                 AND julianday('now') - julianday(flt_date) < 90
             UNION
-            SELECT id,'p2', p2 
+            SELECT id,'p2', p2 , ac_regn
                 FROM flights 
                 WHERE linetype = 'FL' 
                 AND julianday('now') - julianday(flt_date) < 90
@@ -330,6 +333,7 @@ def userverify():
         AND name NOT LIKE '%trial%'
         and name not like '%pax%'
         and name not like 'ATC%'
+        and ac_regn != 'TUG ONLY'
         GROUP BY 2 HAVING count(*) > 1
     -- pilot has chargeable flight in last 30 days but not in pilots table
         UNION
