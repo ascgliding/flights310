@@ -341,6 +341,10 @@ def resgister_blueprints(app):
             from . import tableedit
             app_for_log = 'tabledit'
             app.register_blueprint(tableedit.bp)
+            # Register the Query viewer
+            from . import qryviewer
+            app_for_log = 'qryviewer'
+            app.register_blueprint(qryviewer.bp)
             #
             app.logger.info("All blueprints successfully registered")
     except Exception as e:

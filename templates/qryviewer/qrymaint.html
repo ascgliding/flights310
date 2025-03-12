@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock %}
+{% block content %}
+<form method="Post" autocomplete="off">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    {% if not form.id %}
+      <li>{{ render_field(form.id) }}</li>
+    {% endif %}
+    <li>{{ render_field(form.shortname) }}</li>
+    <li>{{ render_field(form.pagetitle) }}</li>
+    <li>{{ render_field(form.querysql) }}</li>
+  </ul>
+</fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+  {{ form.delete() }}
+</form>
+{% endblock %}

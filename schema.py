@@ -1254,6 +1254,20 @@ class ACMaintUser(db.Model):
     def __repr__(self):
         return "(" + str(self.id or 0) + ") "+ str(self.user_rec or self.user_id) + "/" \
                    + str(self.aircraft_rec or self.ac_id)
+
+class Queries(db.Model):
+    __tablename__ = 'queries'
+
+    id = db.Column(db.Integer, db.Sequence('queries_id_seq'), primary_key=True)
+    shortname = db.Column(db.String, comment="Internal name to identify the query")
+    pagetitle = db.Column(db.String, comment="Title to Appear at the top of the page")
+    querysql = db.Column(db.String, comment="The SQL to use for the Query")
+
+    def __str__(self):
+        return self.shortname
+
+    def __repr__(self):
+        return "(" + str(self.id) + ") " + self.shortname
 #
 # @event.listens_for(Member, "after_update")
 # def before_update_member(mapper,connection,target):
