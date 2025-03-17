@@ -221,7 +221,7 @@ def hrsmins(pmins):
         if hrs > 0:
             return str(hrs) + ':' + "%02d" % mins
         else:
-            return '0:' + str(mins)
+            return '0:' + "%02d" % mins
     else:
         return ""
 
