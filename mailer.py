@@ -32,7 +32,7 @@ class ascmailer:
         self.__recipients = [] # list of email addresses to send to
         self.__response = None
         self.__cc = ''
-        app.logger.info('Mail item created ' + subject)
+        app.logger.info('Mail item created.  Subject: ' + subject)
 
 
     def __str__(self):
@@ -208,8 +208,8 @@ class ascmailer:
             self.__message.attachment = thisfile
         # send it
         try:
+            app.logger.info('About to send to Mail Recipients : {}'.format(",".join(self.__recipients)))
             self.__response = self.__sg.send(self.__message)
-            app.logger.info('Mail Recipients : {}'.format(",".join(self.__recipients)))
             app.logger.info('Mail sent successfully with status {}'.format(self.__response.status_code))
             # the correct status code is 202.  I don't want other conditions to be an error because
             # who knows what sendgrid may do in the future, but I do want to log non-202 status codes.
@@ -217,7 +217,7 @@ class ascmailer:
                 app.logger.error('Mail returned an non-202 status code.  This looks odd.')
             # it may also be usefult to know self.__response.headers and self.__response.body
         except Exception as e:
-            app.logger.error('Error sending mail {}'.format(str(e)))
+            app.logger.error('Error sending mail : {}'.format(str(e)))
             raise self.mailerError(str(e))
 
 

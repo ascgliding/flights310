@@ -635,6 +635,12 @@ class Slot(db.Model):
     def convert_upper(self, key, value):
         return value.upper()
 
+    def __repr__(self):
+        return "(" + str(self.id) + ") " + self.slot_type + "/" + self.slot_key
+
+    def __str(self):
+        return  self.slot_type + "/" + self.slot_key
+
 
 class Aircraft(db.Model):
     __tablename__ = "aircraft"

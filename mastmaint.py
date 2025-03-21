@@ -569,11 +569,13 @@ def unpaidemail():
     tbl = None  # this is an important control (None or not) on how the loop works.
     total = 0
     counter = 0
+    recipients_in_error = []
     for index,l in enumerate(list):
         # If the mail changes or we reach the last item.....
         if l['email'] != lastemail:
             if tbl != '' and lastemail != '':
-                send_debtor_email(tbl,lastemail,total)
+                if not send_debtor_email(tbl,lastemail,total):
+                    recipients_in_error.append(lastemail)
                 tbl = None
                 total = 0
                 counter += 1
@@ -586,7 +588,11 @@ def unpaidemail():
         total += l['amount']
         lastemail = l['email']
     # now deal with sending the lastt item at the end of the loop.
-    send_debtor_email(tbl, lastemail, total)
+    if not send_debtor_email(tbl, lastemail, total):
+        recipients_in_error.append(lastemail)
+    # Now... What to do about the errors?
+    for err in recipients_in_error:
+        flash(f'Mail did not get sent to : {err}',"error")
     return redirect(url_for('mastmaint.index'))
 
 def send_debtor_email(ptbl,pemail,ptotal):
@@ -620,22 +626,33 @@ def send_debtor_email(ptbl,pemail,ptotal):
         msg.add_body('<br>Paymemts received after {} have not yet been processed'.format(lastdate.slot_data))
         msg.add_body('<br>')
     # If we are not in debug mode
-    if db.session.query(Slot).filter_by(slot_type='SYSTEM', slot_key='MAILDEBUG').first() is None:
+    if db.session.query(Slot).filter_by(slot_type='SYSTEM').filter_by(slot_key='MAILDEBUG').first() is None:
         if dunningcc is not None:
-            if len(dunningcc.slot_data) > 0:
+            if len(dunningcc.slot_data) > 0 and dunningcc.slot_data != pemail:
                 msg.cc = dunningcc.slot_data
         msg.add_recipient(pemail)
-        msg.send()
-        applog.info('Dunning email sent to {}'.format(pemail))
+        try:
+            msg.send()
+            applog.info('Dunning email sent to {}'.format(pemail))
+        except:
+            applog.error(f'There was an error sending email to: {pemail}')
+            return False
     # ELSE i.e. we are in DEBUG mode.....
     else:
+        flash("Debug active - no emails actually sent","warning")
         msg.add_body('<br> would have gone to: {}'.format(pemail))
-        msg.add_body('<br> cc would have been {}'.format(dunningcc.slot_data))
         msg.add_recipient("ray@rayburns.nz")
         if dunningcc is not None:
-            if len(dunningcc.slot_data) > 0:
+            if len(dunningcc.slot_data) > 0 and dunningcc.slot_data != pemail:
                 msg.cc = dunningcc.slot_data
-        msg.send()
+                msg.add_body('<br> cc would have been {}'.format(dunningcc.slot_data))
+        try:
+            msg.send()
+            applog.info('DEBUG: Dunning email sent to {}'.format(pemail))
+        except:
+            applog.error(f'DEBUG: There was an error sending email to: {pemail}')
+            return False
+    return True
 
 
 
