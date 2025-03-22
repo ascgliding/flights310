@@ -34,7 +34,7 @@
     {% if m.tbl == 'users' %}
       <div class="cell"><a href="{{ url_for('auth.usermaint', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
     {% elif m.tbl == 'pilots' %}
-      <div class="cell"><a href="{{ url_for('mastmaint.pilotmaint', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
+      <div class="cell"><a href="{{ url_for('membership.membermaint', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
     {% elif m.tbl == 'flights' %}
       <div class="cell"><a href="{{ url_for('flights.changeflight', id=m.key) }}">{{ m.key | displayfornone }}</a></div>
     {% else %}

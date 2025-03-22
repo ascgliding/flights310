@@ -369,6 +369,13 @@ def userverify():
         and (t0.tug_regn = ''
         or t0.tug_regn is null)
         and t0.flt_date > DATETIME('now', '-3 month')
+    -- Members who are Solo but have no BFR recorded.
+        UNION
+        select t1.id, t1.fullname,'No BFR Transaction for Post Solo Pilot',2,'ERROR','pilots'
+        from membertrans t0
+        join pilots t1 on t0.memberid = t1.id
+        where transtype = 'RTG' and transsubtype = 'AB'
+        and  not exists(select * from membertrans s1 where t0.memberid = s1.memberid and transtype ='BFR')
     -- sort
         ORDER BY priority
             """)
