@@ -7,7 +7,7 @@
       <h1>{% block title %}{{ pilot.fullname }} Currency {% endblock %}</h1>
     </div>
   </div>
-  Data is hours/launches.  <br>
+  <h4>Crew Summary </h4>(Data is hours/launches.)  <br>
 </div>
 {% endblock %}
 
@@ -28,6 +28,29 @@
     </div>
   {% endfor %}
       <br>
+    </div>
+
+{% if picsummary %}
+<h4>PIC Summary</h4>
+    <div class="table">
+    <div class="row">
+      <div class="heading" >Regn</div>
+      <div class="heading " >Hours</div>
+      <div class="heading" >Flights</div>
+    </div>
+  {% for l in picsummary %}
+    <div class="row">
+      <div class="cell" align="left" >{{l.ac_regn}} </div>
+      <div class="cell  " align="right">{{l.mins | hrsmins}} </div>
+      <div class="cell " align="right">{{l.flights}} </div>
+    </div>
+  {% endfor %}
+      <br>
+    </div>
+{% endif %}
+
+
+
     <div class="table">
       {% if pilot.medical_due %}
       <div class="row">
