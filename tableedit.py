@@ -23,6 +23,7 @@
 from flask import (
     Blueprint, flash, render_template,  session, send_file, request, g, redirect, url_for, current_app
 )
+from flask_login import login_required
 
 # WTforms
 from flask_wtf import FlaskForm
@@ -120,12 +121,14 @@ class TableEditForm(FlaskForm):
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
 
 @bp.route('/table_select', methods=['GET', 'POST'])
+@login_required
 def table_select():
     return render_template('table_select.html', list=get_table_list())
 
 
 @bp.route('/table_rows/<tablename>')
 @bp.route('/table_rows/<tablename>/<int:page>')
+@login_required
 def table_rows(tablename,page=1):
     # Note that we assume that every table defined in the schema has a valied str() defined
     thistable = get_one_table_object(tablename)
@@ -142,6 +145,7 @@ def table_rows(tablename,page=1):
 @bp.route('/table_edit', methods=['GET', 'POST'])
 @bp.route('/table_edit/<tablename>', methods=['GET', 'POST'])
 @bp.route('/table_edit/<tablename>/<rowid>', methods=['GET', 'POST'])
+@login_required
 def table_edit(tablename,rowid=None):
     class ThisViewForm(TableEditForm):
         pass

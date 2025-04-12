@@ -2,6 +2,7 @@ from asc.schema import Queries
 from flask import (
     Blueprint,  render_template,  session, send_file, request, g, redirect, url_for, current_app, flash
 )
+from flask_login import login_required
 
 from sqlalchemy import text as sqltext
 
@@ -29,6 +30,7 @@ class QryEditForm(FlaskForm):
 @bp.route('/qrylist')
 ##@bp.route('/table_rows/<tablename>/<int:page>')
 ##def table_rows(tablename,page=1):
+@login_required
 def qrylist():
     thisqry = Queries.query.all()
     return render_template('qryviewer/qrylist.html', list=thisqry)
@@ -36,6 +38,7 @@ def qrylist():
 @bp.route('/qrymaint/<id>', methods=['GET','POST'])
 ##@bp.route('/table_rows/<tablename>/<int:page>')
 ##def table_rows(tablename,page=1):
+@login_required
 def qrymaint(id):
     thisrow = db.session.get(Queries,id)
     if thisrow is None:
@@ -78,6 +81,7 @@ def qrymaint(id):
 @bp.route('/qryviewer/<id>')
 ##@bp.route('/table_rows/<tablename>/<int:page>')
 ##def table_rows(tablename,page=1):
+@login_required
 def qryviewer(id):
     thisqry = db.session.get(Queries,id)
     data = db.engine.execute(thisqry.querysql).fetchall()
