@@ -229,7 +229,7 @@ def logbook():
 def daterange():
     thisform = PromptForm(name='Select Date Range')
     if thisform.cancel.data:
-        return render_template('logbook/logbook.html')
+        return redirect(url_for('logbook.logbook'))
     if request.method == 'GET':
         if 'startdate' in session:
             startdate = datetime.datetime.strptime(session['startdate'], "%Y-%m-%d").date()
