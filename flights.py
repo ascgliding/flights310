@@ -360,7 +360,7 @@ def changeflight(id):
           where fullname not like 'ATC%'
           """)
     if thisrec.flt_date is not None:
-        activepilotdate = thisrec.flt_date - datetime.timedelta(days=180)
+        activepilotdate = thisrec.flt_date - datetime.timedelta(days=90)
     else:
         activepilotdate = datetime.date.today()
     pilotlist = [r[0] for r in db.engine.execute(sql, date=activepilotdate).fetchall()]
@@ -425,9 +425,9 @@ def changeflight(id):
                 # thisrec.pic_gnz_no = thisrec.get_pic_gnz_no()
                 # thisrec.p2_gnz_no = thisrec.get_p2_gnz_no()
                 if thisrec.ac_regn == constREGN_FOR_TUG_ONLY or thisrec.tug_regn == constTOW_FOR_SELF_LAUNCH:
-                    if thisrec.tug_down == None and thisrec.landed != None:
+                    if thisrec.tug_down is None and thisrec.landed is not None:
                         thisrec.tug_down = thisrec.landed
-                    elif thisrec.tug_down != None and thisrec.landed == None:
+                    elif thisrec.tug_down is not None and thisrec.landed is None:
                         thisrec.landed = thisrec.tug_down
                 if thisrec.ac_regn == constTOW_FOR_SELF_LAUNCH or thisrec.ac_regn == constREGN_FOR_WINCH:
                     thisrec.tow_pilot = None
@@ -436,6 +436,7 @@ def changeflight(id):
                 addupdslot('DEFAULT','LASTTOWIE',thisrec.tow_pilot)
                 addupdslot('DEFAULT','LASTTUG',thisrec.tug_regn)
             applog.debug('Just before commit: towie is {}'.format(thisrec.tow_pilot))
+            # Todo - partial match on both PIC and P2.  Try to trap for Steve vs Steven Wallace, Dave vs David Todd
             db.session.commit()
             if thisform.note.data:
                 return redirect(url_for('flights.flightnote', id=thisrec.id))
@@ -550,9 +551,9 @@ def tuglanded(id):
             down -= datetime.timedelta(seconds = down.second, microseconds=down.microsecond)
         thisflight.tug_down = down.time()
         if thisflight.ac_regn == constREGN_FOR_TUG_ONLY or thisflight.tug_regn == constTOW_FOR_SELF_LAUNCH:
-            if thisflight.tug_down == None and thisflight.landed != None:
+            if thisflight.tug_down is None and thisflight.landed is not None:
                 thisflight.tug_down = thisflight.landed
-            elif thisflight.tug_down != None and thisflight.landed == None:
+            elif thisflight.tug_down is not None and thisflight.landed is None:
                 thisflight.landed = thisflight.tug_down
         db.session.commit()
     except Exception as e:
@@ -699,16 +700,25 @@ def calc_charges(id):
                 thisrec.tow_charge += tug.flat_charge_per_launch
             # Calculate the glider charge
             thisrec.glider_charge = Decimal(thisrec.glider_mins()) * (thisac.rate_per_hour / 60)
+            # the payer is eitehr pic or if tthe the pic is an instructor then p2.
             if thisrec.p2 is not None:
                 pic = Pilot.query.filter_by(fullname=thisrec.pic).first()
-                if pic.instructor:
-                    payer = Pilot.query.filter_by(fullname=thisrec.p2).first()
+                if pic is None:
+                    flash("Note that the payer for this flight is not a member of the club (is it right?)","warning")
+                    payer =  Pilot.query.filter_by(fullname=constOTHER_CLUB_MEMBER).first()
                 else:
-                    payer = pic
+                    if pic.instructor:
+                        payer = Pilot.query.filter_by(fullname=thisrec.p2).first()
+                    else:
+                        payer = pic
+            # if we still don't have a payer, then it is PIC or other club member
             if payer is None:
                 payer = Pilot.query.filter_by(fullname=thisrec.pic).first()
-                if payer.instructor and (thisrec.p2 is not None and thisrec.p2 != ''):
+                if payer is None:
                     payer = Pilot.query.filter_by(fullname=constOTHER_CLUB_MEMBER).first()
+                else:
+                    if payer.instructor and (thisrec.p2 is not None and thisrec.p2 != ''):
+                        payer = Pilot.query.filter_by(fullname=constOTHER_CLUB_MEMBER).first()
             if payer is not None:
                 if payer.bscheme and thisac.bscheme:
                     thisrec.glider_charge = 0
