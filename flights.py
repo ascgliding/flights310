@@ -358,9 +358,18 @@ def changeflight(id):
           select fullname
           from pilots
           where fullname not like 'ATC%'
+          and active = true
+          and member = true
           """)
     if thisrec.flt_date is not None:
-        activepilotdate = thisrec.flt_date - datetime.timedelta(days=90)
+        daysinterval = 0
+        days_slot = db.session.query(Slot).filter_by(slot_type="SYSTEM").filter_by(slot_key="PILOTDDDAYS").one_or_none()
+        if days_slot is not None and days_slot.slot_data is not None:
+            if days_slot.slot_data.isnumeric():
+                daysinterval = int(days_slot.slot_data)
+        if daysinterval == 0:
+            daysinterval = 30
+        activepilotdate = thisrec.flt_date - datetime.timedelta(days=daysinterval)
     else:
         activepilotdate = datetime.date.today()
     pilotlist = [r[0] for r in db.engine.execute(sql, date=activepilotdate).fetchall()]
@@ -412,6 +421,9 @@ def changeflight(id):
                         thisrec.payment_note = 'No Pmt Required'
                         thisrec.payer = 'ATC'
                         thisrec.paid = True
+                isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).one_or_none()
+                if isvalidpic is None:
+                    flash('Warning - The PIC is not in the list of members.  Have you spelt it right? Did you use an abbreviation? Correct Capitalisation?',"warning")
                 db.session.add(thisrec)
                 # to get the inserted record id, you need to flush and refresh.
                 db.session.flush()
@@ -432,11 +444,17 @@ def changeflight(id):
                 if thisrec.ac_regn == constTOW_FOR_SELF_LAUNCH or thisrec.ac_regn == constREGN_FOR_WINCH:
                     thisrec.tow_pilot = None
                 applog.info('Flight {} changed'.format(id))
+                if isvalidpic is None:
+                    flash(
+                        'Warning - The PIC is not in the list of members.  Have you spelt it right? Did you use an abbreviation? Correct Capitalisation?',
+                        "warning")
             if thisrec.tug_regn != constTOW_FOR_SELF_LAUNCH and thisrec.tug_regn != constREGN_FOR_WINCH and thisrec.ac_regn != constREGN_FOR_TUG_ONLY:
                 addupdslot('DEFAULT','LASTTOWIE',thisrec.tow_pilot)
                 addupdslot('DEFAULT','LASTTUG',thisrec.tug_regn)
             applog.debug('Just before commit: towie is {}'.format(thisrec.tow_pilot))
             # Todo - partial match on both PIC and P2.  Try to trap for Steve vs Steven Wallace, Dave vs David Todd
+            isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).one_or_none()
+
             db.session.commit()
             if thisform.note.data:
                 return redirect(url_for('flights.flightnote', id=thisrec.id))
