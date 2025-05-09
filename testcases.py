@@ -2219,7 +2219,46 @@ class adhoc(unittest.TestCase):
         print(thiswx.cloud_base)
         print(thiswx.wind_speed)
 
+class soundex(unittest.TestCase):
 
+    def test001(self):
+        for i in ["sTeve wAllace", "Steven Wallace", "dAve todd", "david Todd", "Steve", "Steven"]:
+            print(soundex_generator(i))
+
+def soundex_generator(token):
+
+    # Convert the word to upper
+    # case for uniformity
+    token = token.upper()
+
+    soundex = ""
+
+    # Retain the First Letter
+    soundex += token[0]
+
+    # Create a dictionary which maps
+    # letters to respective soundex
+    # codes. Vowels and 'H', 'W' and
+    # 'Y' will be represented by '.'
+    dictionary = {"BFPV": "1", "CGJKQSXZ": "2",
+                  "DT": "3",
+                  "L": "4", "MN": "5", "R": "6",
+                  "AEIOUHWY": "."}
+
+    # Enode as per the dictionary
+    for char in token[1:]:
+        for key in dictionary.keys():
+            if char in key:
+                code = dictionary[key]
+                if code != '.':
+                    if code != soundex[-1]:
+                        soundex += code
+
+    # Trim or Pad to make Soundex a
+    # 7-character code
+    soundex = soundex[:7].ljust(7, "0")
+
+    return soundex
 
 
 if __name__ == '__main__':
@@ -2233,8 +2272,9 @@ if __name__ == '__main__':
     case7 = unittest.TestLoader().loadTestsFromTestCase(sqlalchemy_read_tests)
     case9 = unittest.TestLoader().loadTestsFromTestCase(googlecalendar)
     case10 = unittest.TestLoader().loadTestsFromTestCase(adhoc)
+    case11 = unittest.TestLoader().loadTestsFromTestCase(soundex)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case7])
+    thissuite = unittest.TestSuite([case11])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')

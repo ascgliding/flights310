@@ -454,8 +454,6 @@ def changeflight(id):
                 addupdslot('DEFAULT','LASTTUG',thisrec.tug_regn)
             applog.debug('Just before commit: towie is {}'.format(thisrec.tow_pilot))
             # Todo - partial match on both PIC and P2.  Try to trap for Steve vs Steven Wallace, Dave vs David Todd
-            isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).one_or_none()
-
             db.session.commit()
             if thisform.note.data:
                 return redirect(url_for('flights.flightnote', id=thisrec.id))
