@@ -421,7 +421,7 @@ def changeflight(id):
                         thisrec.payment_note = 'No Pmt Required'
                         thisrec.payer = 'ATC'
                         thisrec.paid = True
-                isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).one_or_none()
+                isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).filter(Pilot.active).one_or_none()
                 if isvalidpic is None:
                     flash('Warning - The PIC is not in the list of members.  Have you spelt it right? Did you use an abbreviation? Correct Capitalisation?',"warning")
                 db.session.add(thisrec)
@@ -444,6 +444,7 @@ def changeflight(id):
                 if thisrec.ac_regn == constTOW_FOR_SELF_LAUNCH or thisrec.ac_regn == constREGN_FOR_WINCH:
                     thisrec.tow_pilot = None
                 applog.info('Flight {} changed'.format(id))
+                isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).filter(Pilot.active).one_or_none()
                 if isvalidpic is None:
                     flash(
                         'Warning - The PIC is not in the list of members.  Have you spelt it right? Did you use an abbreviation? Correct Capitalisation?',
