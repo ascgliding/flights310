@@ -423,7 +423,7 @@ def changeflight(id):
                         thisrec.paid = True
                 isvalidpic = db.session.query(Pilot).filter(Pilot.fullname == thisrec.pic).filter(Pilot.active).one_or_none()
                 if isvalidpic is None:
-                    flash('Warning - The PIC is not in the list of members.  Have you spelt it right? Did you use an abbreviation? Correct Capitalisation?',"warning")
+                    flash('Warning - The PIC is not in the list of members.  Have you spelled it right? Did you use an abbreviation? Correct Capitalisation?',"warning")
                 db.session.add(thisrec)
                 # to get the inserted record id, you need to flush and refresh.
                 db.session.flush()
