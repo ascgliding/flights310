@@ -1,4 +1,5 @@
 import urllib.request
+from os.path import basename
 
 import sendgrid
 from flask_sqlalchemy import __version__ as fsqa_version,model
@@ -31,6 +32,8 @@ from asc.oMaint import ACMaint
 # from asc.oReadingTools import   ReadingTools
 from  asc.common import *
 
+from asc.oMailerSmtp import *
+
 import os
 
 # accessing a calendar:
@@ -38,6 +41,24 @@ from urllib.request import urlopen
 
 
 import base64
+
+
+# google email:
+
+import os.path
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
+
+
+# from google.auth.transport.requests import Request
+# from google.oauth2.credentials import Credentials
+# from google_auth_oauthlib.flow import InstalledAppFlow
+# from googleapiclient.discovery import build
+# from googleapiclient.errors import HttpError
+
 
 print('about to create app')
 app = create_app()
@@ -50,12 +71,6 @@ def dict_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
-
-
-
-
-
-
 
 class TestTbl(db.Model):
     """This is a test table cor check create and delete"""
@@ -73,7 +88,6 @@ class TestTbl(db.Model):
     @db.validates('test_type', 'test_key')
     def convert_upper(self, key, value):
         return value.upper()
-
 
 class FSqlalchemyTst(unittest.TestCase):
 
@@ -1826,8 +1840,6 @@ class maintenance_test(unittest.TestCase):
         correct_current_readings += ",test302 - Unsed Meter - undeletable:No Readings"
         self.assertEqual(oMaint.currentreadings,correct_current_readings,"Invalid current readings string")
 
-
-
 class maintenance_test_ac_obj(unittest.TestCase):
 
 
@@ -2169,16 +2181,12 @@ class sqlalchemy_read_tests(unittest.TestCase):
         for f in list:
             print(f[0])
 
-class googlecalendar(unittest.TestCase):
-
-
-
-
-
-    def test001(self):
-        sdate = datetime.date(2024,9,5)
-        edate = sdate + relativedelta(days=10)
-        processcalendar(sdate,edate)
+# class googlecalendar(unittest.TestCase):
+#
+#     def test001(self):
+#         sdate = datetime.date(2024,9,5)
+#         edate = sdate + relativedelta(days=10)
+#         processcalendar(sdate,edate)
 
 class adhoc(unittest.TestCase):
     def test001(self):
@@ -2219,46 +2227,171 @@ class adhoc(unittest.TestCase):
         print(thiswx.cloud_base)
         print(thiswx.wind_speed)
 
-class soundex(unittest.TestCase):
+# class soundex(unittest.TestCase):
+#
+#     def test001(self):
+#         for i in ["sTeve wAllace", "Steven Wallace", "dAve todd", "david Todd", "Steve", "Steven"]:
+#             print(soundex_generator(i))
+#
+#     def soundex_generator(token):
+#
+#     # Convert the word to upper
+#     # case for uniformity
+#     token = token.upper()
+#
+#     soundex = ""
+#
+#     # Retain the First Letter
+#     soundex += token[0]
+#
+#     # Create a dictionary which maps
+#     # letters to respective soundex
+#     # codes. Vowels and 'H', 'W' and
+#     # 'Y' will be represented by '.'
+#     dictionary = {"BFPV": "1", "CGJKQSXZ": "2",
+#                   "DT": "3",
+#                   "L": "4", "MN": "5", "R": "6",
+#                   "AEIOUHWY": "."}
+#
+#     # Enode as per the dictionary
+#     for char in token[1:]:
+#         for key in dictionary.keys():
+#             if char in key:
+#                 code = dictionary[key]
+#                 if code != '.':
+#                     if code != soundex[-1]:
+#                         soundex += code
+#
+#     # Trim or Pad to make Soundex a
+#     # 7-character code
+#     soundex = soundex[:7].ljust(7, "0")
+#
+#     return soundex
 
-    def test001(self):
-        for i in ["sTeve wAllace", "Steven Wallace", "dAve todd", "david Todd", "Steve", "Steven"]:
-            print(soundex_generator(i))
+class google_email(unittest.TestCase):
 
-def soundex_generator(token):
+    # def test001(self):
+    #     # If modifying these scopes, delete the file token.json.
+    #     SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+    #
+    #     """Shows basic usage of the Gmail API.
+    #     Lists the user's Gmail labels.
+    #     """
+    #     creds = None
+    #     # The file token.json stores the user's access and refresh tokens, and is
+    #     # created automatically when the authorization flow completes for the first
+    #     # time.
+    #     if os.path.exists("token.json"):
+    #         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    #     jsonfile = os.path.join(app.instance_path, "client_secret_1089381088292-n94dlme1tktfe2aa2htiert38hsk9ful.apps.googleusercontent.com.json")
+    #     # if os.path.exists(jsonfile):
+    #     #     creds = Credentials.from_authorized_user_file(jsonfile, SCOPES)
+    #     # If there are no (valid) credentials available, let the user log in.
+    #     if not creds or not creds.valid:
+    #         if creds and creds.expired and creds.refresh_token:
+    #             creds.refresh(Request())
+    #         else:
+    #             # flow = InstalledAppFlow.from_client_secrets_file(
+    #             #     "credentials.json", SCOPES
+    #             flow = InstalledAppFlow.from_client_secrets_file(
+    #                 jsonfile, SCOPES
+    #             )
+    #             creds = flow.run_local_server(port=0)
+    #         # Save the credentials for the next run
+    #         with open("token.json", "w") as token:
+    #             token.write(creds.to_json())
+    #
+    #     try:
+    #         # Call the Gmail API
+    #         service = build("gmail", "v1", credentials=creds)
+    #         results = service.users().labels().list(userId="me").execute()
+    #         labels = results.get("labels", [])
+    #
+    #         if not labels:
+    #             print("No labels found.")
+    #             return
+    #         print("Labels:")
+    #         for label in labels:
+    #             print(label["name"])
+    #
+    #     except HttpError as error:
+    #         # TODO(developer) - Handle errors from gmail API.
+    #         print(f"An error occurred: {error}")
 
-    # Convert the word to upper
-    # case for uniformity
-    token = token.upper()
+    def test002(self):
+        """ test using smtp"""
 
-    soundex = ""
+        # this is so simple with gmail.
+        #   Log in to your account
+        #   From the three-dot menu select "Manage Your Account"
+        #   Select Security
+        #   2 Factor Authenticaion MUST be enabled
+        #   Go to the 2FA screen - at the bottom is a section called "App Passwords"
+        #   Create an app password.  It will be a string of four groups of four characters
+        #   When using the server.login method the email address is your gmail account address
+        #   And the password is the four character password.
+        EMAIL_ADDRESS="ray.burns.ggl@gmail.com"
+        EMAIL_PASSWORD="ujcw vbig bxob zxff"
 
-    # Retain the First Letter
-    soundex += token[0]
+        SMTP_SERVER = "smtp.gmail.coxm"
+        SMTP_PORT = 587
 
-    # Create a dictionary which maps
-    # letters to respective soundex
-    # codes. Vowels and 'H', 'W' and
-    # 'Y' will be represented by '.'
-    dictionary = {"BFPV": "1", "CGJKQSXZ": "2",
-                  "DT": "3",
-                  "L": "4", "MN": "5", "R": "6",
-                  "AEIOUHWY": "."}
+        print('testing smtp')
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = EMAIL_ADDRESS
+            msg['To'] = "ray.burns@velocityglobal.co.nz"
+            msg['Subject'] = "test"
 
-    # Enode as per the dictionary
-    for char in token[1:]:
-        for key in dictionary.keys():
-            if char in key:
-                code = dictionary[key]
-                if code != '.':
-                    if code != soundex[-1]:
-                        soundex += code
+            # it is best to send EITHER plain text OR HTML in the body.
+            # if you try to mix them you end up with the html as an attachement.
 
-    # Trim or Pad to make Soundex a
-    # 7-character code
-    soundex = soundex[:7].ljust(7, "0")
+            # body = "this is great"
+            # msg.attach(MIMEText(body,'plain'))
+            html = """\
+            <html>
+              <head></head>
+              <body>
+                <h1> HTML Content </h1>
+                <p>Hi!<br>
+                    <hr/>
+                   <i>How are you?</i>
+                   <br>
+                   Here is the <a href="http://www.python.org">link</a> you wanted.
+                    <hr/>
+                </p>
+              </body>
+            </html>
+            """
+            msg.attach(MIMEText(html,'html'))
+            files = [os.path.join(app.instance_path, "asc.sqlite")]
+            # for f in files or []:
+            #     with open(f,"rb") as file:
+            #         part = MIMEApplication(file.read(),name=basename(f))
+            #     part['Content-Disposition'] = f'attachment; filename={basename(f)}'
+            #     msg.attach(part)
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
+                server.sendmail(EMAIL_ADDRESS,"ray.burns@velocityglobal.co.nz", msg.as_string())
 
-    return soundex
+            print('email sent')
+
+        except Exception as e:
+            print(str(e))
+
+    def test003(self):
+        """ Test the class"""
+        try:
+            thismail = MailerSmtp('A test mail')
+            thismail.replyto = 'cfi@ascgliding.org'
+            thismail.add_body("<h2> this is the body </h2>")
+            thismail.add_recipient("ray.burns@velocityglobal.co.nz")
+            # thismail.add_attachment(os.path.join(app.instance_path,"asc.sqlite"))
+            thismail.send()
+        except Exception as e:
+            print(str(e))
+
 
 
 if __name__ == '__main__':
@@ -2270,11 +2403,12 @@ if __name__ == '__main__':
     case5 = unittest.TestLoader().loadTestsFromTestCase(maintenance_test_ac_obj)
     case6 = unittest.TestLoader().loadTestsFromTestCase(maintenance_time_values)
     case7 = unittest.TestLoader().loadTestsFromTestCase(sqlalchemy_read_tests)
-    case9 = unittest.TestLoader().loadTestsFromTestCase(googlecalendar)
+    # case9 = unittest.TestLoader().loadTestsFromTestCase(googlecalendar)
     case10 = unittest.TestLoader().loadTestsFromTestCase(adhoc)
-    case11 = unittest.TestLoader().loadTestsFromTestCase(soundex)
+    # case11 = unittest.TestLoader().loadTestsFromTestCase(soundex)
+    case12 = unittest.TestLoader().loadTestsFromTestCase(google_email)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case11])
+    thissuite = unittest.TestSuite([case12])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
