@@ -96,7 +96,7 @@ class PilotForm(FlaskForm):
     delete = MatButtonField('delete', id='matdeletebtn', icon='delete', help='Press to delete this record',
                             render_kw={'onclick': 'return ConfirmDelete()'})
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
     # I don't believe it matters if the email address is used more than once.
     # This may well occur if we have two juniors from the same family and they both use a parents email addres.

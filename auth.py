@@ -51,7 +51,7 @@ class UserMaintForm(FlaskForm):
     pilot_id = SelectField('Pilot Key')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
     password = TextButtonField('Password',
                                     id="password",
                                     text='Password',
@@ -62,21 +62,21 @@ class RoleMaint(FlaskForm):
     name = StringField('Role', description='The name of the Role')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 class ViewMaint(FlaskForm):
     viewname = StringField('View', description='The leading characters of the view including the path')
     role_id = SelectField('Role', description='Role who has access')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 class UserRoleMaint(FlaskForm):
     user_id = SelectField('User', description='User id')
     role_id = SelectField('Role', description='Role user plays')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 @bp.route('/register', methods=('GET', 'POST'))

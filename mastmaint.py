@@ -54,7 +54,7 @@ class PilotForm(FlaskForm):
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
     # Can't do this because it does not work if the user changes the code.
     # def validate_email(self, email):
@@ -92,7 +92,7 @@ class AircraftForm(FlaskForm):
                                    render_kw={'class': 'mobile_port_suppress mobile_land_suppress longnote'})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class SlotForm(FlaskForm):
@@ -106,7 +106,7 @@ class SlotForm(FlaskForm):
     slot_data = StringField('Data Field', description='Usually maintained in code somewhere')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class RosterUploadForm(FlaskForm):
@@ -125,7 +125,7 @@ class RosterMaintForm(FlaskForm):
                             render_kw = {'list': "allpilots"})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 

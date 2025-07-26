@@ -215,7 +215,7 @@ class StdTaskForm(FlaskForm):
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class StdMeterForm(FlaskForm):
@@ -229,7 +229,7 @@ class StdMeterForm(FlaskForm):
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class StdUserAccessForm(FlaskForm):
@@ -244,7 +244,7 @@ class StdUserAccessForm(FlaskForm):
 
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class ACSelectNewMeterForm(FlaskForm):
@@ -283,7 +283,7 @@ class ACMeterMaintForm(FlaskForm):
                                    text='Reset Readings',
                                    help="Recalculate readings based on an entered final reading.")
 
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class ACSelectNewTaskForm(FlaskForm):
@@ -360,7 +360,7 @@ class ACTaskForm(FlaskForm):
                               text='History',
                               help="Display task completion history")
 
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 
 class ACAddNewReadingForm(Form):
@@ -389,7 +389,7 @@ class ACTaskHistoryMaint(FlaskForm):
     task_description = TextAreaField('Task Description', description='Add any relevant Notes', render_kw={'rows': '8'})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 class ACImportReading(FlaskForm):
     name = "Import Readings from Flight Details"

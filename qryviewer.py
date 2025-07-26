@@ -25,7 +25,7 @@ class QryEditForm(FlaskForm):
     querysql = TextAreaField('SQL',description="Sql Statement to run", render_kw={"rows":12})
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
-    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "ConfirmDelete()"})
+    delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
 @bp.route('/qrylist')
 ##@bp.route('/table_rows/<tablename>/<int:page>')
