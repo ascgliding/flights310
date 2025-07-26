@@ -259,7 +259,10 @@ class UserRoles(db.Model):
         return self.user_rec.name + "/" + self.role_rec.name
 
     def __repr__(self):
-        return "UserRole:(" + str(id) +")"  + self.user_rec.name + "/" + self.role_rec.name
+        if self.user_rec is not None and self.role_rec is not None:
+            return "UserRole:(" + str(id) +")"  + self.user_rec.name + "/" + self.role_rec.name
+        else:
+            return "UserRole:(" + str(id) + ")" + "/" + str(self.user_id) + "/" + str(self.role_id)
 
 class ViewSecurity(db.Model):
     __tablename__ = 'viewsecurity'
