@@ -22,8 +22,34 @@ from wtforms import Form, StringField, PasswordField, validators, SubmitField, S
 from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length
 
-from asc.mailer import ascmailer
+#from asc.mailer import ascmailer
+from asc.oMailerSmtp import MailerSmtp
 import decimal
+
+
+##########################################################################
+#  DB-based mailer                                                       #
+#########################################################################A
+
+
+class Mailer(MailerSmtp):
+
+    def __init__(self,subject=None):
+        # super(MailerSmtp, self).__init__(subject)
+        super().__init__(subject)
+        # now get the values from the database
+        smtpkeys = Slot.query.filter(Slot.slot_type == 'SMTP').all()
+        for s in smtpkeys:
+            print(f'{s.slot_key} / {s.slot_data}')
+            if s.slot_key == 'SMTP_SERVER':
+                self.smtp_server = s.slot_data
+            elif s.slot_key == 'SMTP_PORT':
+                self.smtp_port = int(s.slot_data)
+            elif s.slot_key == 'SMTP_MAIL_ADDRESS':
+                self.smtp_mail_address = s.slot_data
+            elif s.slot_key == 'SMTP_PASSWORD':
+                print(f'setting password to s.slot_data')
+                self.smtp_mail_password = s.slot_data
 
 
 ##########################################################################
@@ -621,7 +647,7 @@ def send_debtor_email(ptbl,pemail,ptotal):
     ptbl += "</table>"
     # Creatte the mail
     dunningcc = db.session.query(Slot).filter_by(slot_type='SYSTEM', slot_key='DUNNINGCC').first()
-    msg = ascmailer('Outstanding flights requiring payment.')
+    msg = Mailer('Outstanding flights requiring payment.')
     msg.add_body('Our records currently show the following flights as outstanding.<br>')
     msg.add_body('For further information on individual flights, log into the club flight system.<br>')
     msg.add_body('If you believe payment has already been made please contact the club treasurer.<br>')

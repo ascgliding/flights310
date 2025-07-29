@@ -15,6 +15,7 @@ from asc.oMetservice import MetService
 # from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
 # import datetime
 
+from oMailerSmtp import MailerSmtp
 from asc.common import *
 import re
 import os
@@ -35,6 +36,24 @@ print("sys.path is ".format(sys.path))
 print("pwd is {}".format(os.getcwd()))
 print("pythonpath (in create_app dayend)_ is {}".format(os.environ['PYTHONPATH']))
 
+class Mailer(MailerSmtp):
+
+    def __init__(self,subject=None):
+        # super(MailerSmtp, self).__init__(subject)
+        super().__init__(subject)
+        # now get the values from the database
+        smtpkeys = Slot.query.filter(Slot.slot_type == 'SMTP').all()
+        for s in smtpkeys:
+            print(f'{s.slot_key} / {s.slot_data}')
+            if s.slot_key == 'SMTP_SERVER':
+                self.smtp_server = s.slot_data
+            elif s.slot_key == 'SMTP_PORT':
+                self.smtp_port = int(s.slot_data)
+            elif s.slot_key == 'SMTP_MAIL_ADDRESS':
+                self.smtp_mail_address = s.slot_data
+            elif s.slot_key == 'SMTP_PASSWORD':
+                print(f'setting password to s.slot_data')
+                self.smtp_mail_password = s.slot_data
 
 def testmailer():
     """
@@ -43,7 +62,7 @@ def testmailer():
     """
     print("*** Send Test Email ***")
     try:
-        msg = ascmailer('Test Mailer Subject')
+        msg = Mailer('Test Mailer Subject')
         msg.add_body("Here is the Test Email")
         msg.add_body("</br> It is now " + datetime.datetime.now().strftime('%A %d-%b-%Y %H:%M'))
         msg.add_body("See table below<br>")
@@ -58,17 +77,15 @@ def testmailer():
                           )
         thisset = db.engine.execute(sql).fetchall()
         dictlist = [x._asdict() for x in thisset]
-        print(dictlist)
-        print(list(dictlist))
-        print(type(dictlist[0]))
+        # print(dictlist)
+        # print(list(dictlist))
+        # print(type(dictlist[0]))
         dictlist.insert(0, ['ID', 'PIC', 'Landed'])
         msg.add_body_list(dictlist)
         msg.add_recipient('ray@rayburns.nz')
         msg.send()
-        print("Send grid status {}".format(msg.response.status_code))
-        print(msg.response.headers)
     except Exception as e:
-        print("Error raised :{}".format(e))
+        print("Error raised :{} {}".format(type(e),str(e)))
 
 
 def update_auto_readings():
@@ -92,7 +109,7 @@ def send_one_maintenance_email(address, thelist):
     # for t in thelist:
     #     print(t)
     # send the email here
-    msg = ascmailer('ASC Aircraft tasks due')
+    msg = Mailer('ASC Aircraft tasks due')
     # msg.add_body("Email should have gone to {}".format(address))
     msg.add_body_list(thelist)
     msg.add_recipient(address)
@@ -181,7 +198,7 @@ def validate_all_readings():
 def send_db():
     print('sending Database')
     print(os.getcwd())
-    msg = ascmailer('Database Backup')
+    msg = Mailer('Database Backup')
     # msg.add_body("Email should have gone to {}".format(address))
     msg.add_body("<html>Here is the Database Backup")
     msg.add_body("</br> It is now " + datetime.datetime.now().strftime('%A %d-%b-%Y %H:%M'))
@@ -214,7 +231,7 @@ def send_med_bfr_to_cfi():
             email_list.append(
                 {'Name': m.fullname, 'Medical': m.medical_due, 'BFR': m.bfr_due, 'Message': ','.join(msgs)})
     if count > 0:
-        msg = ascmailer('Medical and BFR Status')
+        msg = Mailer('Medical and BFR Status')
         msg.add_body_list(email_list)
         msg.add_recipient('ray@rayburns.nz')
         msg.send()
@@ -306,7 +323,7 @@ def send_stats_to_gnz(asat):
     ''')
     stats = db.engine.execute(sql, asat=asat.strftime('%Y-%m-%d')).fetchall()
     # now email it
-    msg = ascmailer('Statistics')
+    msg = Mailer('Statistics')
     msg.add_body('<html>For the period {} to {} <br>'.format(asat - relativedelta(months=6), asat))
     msg.add_body('<br>Here are the first solos<br>')
     # row one has to be titles
@@ -345,7 +362,7 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
     :return:
     """
     log.info('Event email being sent to {}'.format(instructor.fullname))
-    msg = ascmailer('Events for this coming weekend')
+    msg = Mailer('Events for this coming weekend')
     msg.add_body('<html>')
     msg.add_body('Events for {}'.format(thisdate.strftime('%A, %d %B')))
     msg.add_body('<br>')
@@ -532,7 +549,7 @@ if __name__ == '__main__':
         if datetime.date.today().day == 1:
             log.info("Sending Statistic Emails")
             send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
-        # testmailer()
+        testmailer()
         log.info("Updating Readings")
         update_auto_readings()
         if datetime.date.today().weekday() in [0]:  # 0 is Monday

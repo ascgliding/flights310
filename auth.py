@@ -20,7 +20,8 @@ from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Le
 from asc.wtforms_ext import MatButtonField, TextButtonField
 
 
-from asc.mailer import ascmailer
+#from asc.mailer import ascmailer
+from asc.oMailerSmtp import MailerSmtp
 
 app = Flask(__name__)
 # app = create_app()
@@ -40,6 +41,25 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 #     test_url = urllib.parse(urllib.parse.urljoin(request.host_url, target))
 #     return test_url.scheme in ('http', 'https') and \
 #            ref_url.netloc == test_url.netloc
+
+class Mailer(MailerSmtp):
+
+    def __init__(self,subject=None):
+        # super(MailerSmtp, self).__init__(subject)
+        super().__init__(subject)
+        # now get the values from the database
+        smtpkeys = Slot.query.filter(Slot.slot_type == 'SMTP').all()
+        for s in smtpkeys:
+            print(f'{s.slot_key} / {s.slot_data}')
+            if s.slot_key == 'SMTP_SERVER':
+                self.smtp_server = s.slot_data
+            elif s.slot_key == 'SMTP_PORT':
+                self.smtp_port = int(s.slot_data)
+            elif s.slot_key == 'SMTP_MAIL_ADDRESS':
+                self.smtp_mail_address = s.slot_data
+            elif s.slot_key == 'SMTP_PASSWORD':
+                print(f'setting password to s.slot_data')
+                self.smtp_mail_password = s.slot_data
 
 class UserMaintForm(FlaskForm):
     name = StringField('User Name', description='User Name',render_kw={'data-lpignore':True,'autocomplete':False})
@@ -125,7 +145,7 @@ def register():
             if len(emaillist) > 0:
                 for email in emaillist:
                     thisemail = email.slot_data
-                    mail = ascmailer(thisuser.name + ' has registered and needs approving')
+                    mail = Mailer(thisuser.name + ' has registered and needs approving')
                     mail.add_body('User with fullname ' + thisuser.fullname + ' has newly registered and needs approving')
                     mail.add_recipient(thisemail)
                     mail.send()

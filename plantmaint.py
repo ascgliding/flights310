@@ -33,7 +33,7 @@ from flask import send_file
 from asc.export import ExcelPromptForm
 
 from asc.oMaint import ACMaint
-from asc.mailer import ascmailer
+# from asc.mailer import ascmailer
 from asc.common import *
 import decimal
 

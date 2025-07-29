@@ -15,15 +15,47 @@ class MailerSmtp:
     #   Select Security
     #   2 Factor Authenticaion MUST be enabled
     #   Go to the 2FA screen - at the bottom is a section called "App Passwords"
+    #       or "Your Connections to third-party apps & services"
+    #   July 2025 - now have to type "app password" in the search bar
     #   Create an app password.  It will be a string of four groups of four characters
     #   When using the server.login method the email address is your gmail account address
     #   And the password is the four character password.
-    #  Set all of this in config.py:
 
+    # There are four parameters, your gmail account, the server, port and the app
+    # password created in the steps above.
+
+    # It is intended that this class is completely standalone.  I don't want it linked
+    # to any database instance.  So, out of the box the system will work with these
+    # parameters defined in config.py:
     # SMTP_MAIL_ADDRESS="ray.burns.ggl@gmail.com"
     # SMTP_MAIL_PASSWORD = "xxxx xxxx xxxx xxxx"
     # SMTP_SERVER = "smtp.gmail.com"
     # SMTP_PORT = 587
+
+    # However, that is going to cause a problem when we store the config on github
+    # as it will complain that this is a security breach.  A bettter solution is to
+    # to store the values in the database and then set them when the class is used.
+    # A neat solution is to inherit this class to another class and set the values
+    # in the inhertited class.  e.g.:
+
+    # class Mailer(MailerSmtp):
+    #
+    #     def __init__(self, subject=None):
+    #         # super(MailerSmtp, self).__init__(subject)
+    #         super().__init__(subject)
+    #         # now get the values from the database
+    #         smtpkeys = Slot.query.filter(Slot.slot_type == 'SMTP').all()
+    #         for s in smtpkeys:
+    #             print(f'{s.slot_key} / {s.slot_data}')
+    #             if s.slot_key == 'SMTP_SERVER':
+    #                 self.smtp_server = s.slot_data
+    #             elif s.slot_key == 'SMTP_PORT':
+    #                 self.smtp_port = int(s.slot_data)
+    #             elif s.slot_key == 'SMTP_MAIL_ADDRESS':
+    #                 self.smtp_mail_address = s.slot_data
+    #             elif s.slot_key == 'SMTP_PASSWORD':
+    #                 print(f'setting password to s.slot_data')
+    #                 self.smtp_mail_password = s.slot_data
 
     # Limits.
     # Note that there is a limit.  You can send 500 emails per 24 hour period.
@@ -38,15 +70,33 @@ class MailerSmtp:
     def __init__(self,subject=None):
         # Before anything verify the following variables are defined:
 
-        for v in ['SMTP_SERVER','SMTP_PORT','SMTP_MAIL_ADDRESS','SMTP_MAIL_PASSWORD']:
-            if v not in app.config.keys():
-                raise self.mailerError(f'Variable {v} is missing from config.py')
-            if v == 'SMTP_PORT':
-                if not isinstance(app.config[v],int):
-                    raise self.mailerError(f'Variable {v} in config.py is not a valid integer')
-            else:
-                if not isinstance(app.config[v],str):
-                    raise self.mailerError(f'Variable {v} in config.py is not a valid string')
+        # it is not a good idea to put the password in any kind of python file
+        # because GIT will complain about it incessantly (and probably not good practice).
+        # for v in ['SMTP_SERVER','SMTP_PORT','SMTP_MAIL_ADDRESS','SMTP_MAIL_PASSWORD']:
+        #     if v not in app.config.keys():
+        #         raise self.mailerError(f'Variable {v} is missing from config.py')
+        #     if v == 'SMTP_PORT':
+        #         if not isinstance(app.config[v],int):
+        #             raise self.mailerError(f'Variable {v} in config.py is not a valid integer')
+        #     else:
+        #         if not isinstance(app.config[v],str):
+        #             raise self.mailerError(f'Variable {v} in config.py is not a valid string')
+        self.__smtp_server = None
+        self.__smtp_port = None
+        self.__smtp_mail_address = None
+        self.__smtp_mail_password = None
+        # It is not a good idea to store these in config.py becuase git will complain.
+        # This is the fallback.
+        # If the values are to be stored in a database then this class should
+        # be inherited and the values set in the inherited class.
+        if 'SMTP_SERVER' in app.config:
+            self.__smtp_server = app.config['SMTP_SERVER']
+        if 'SMTP_PORT' in app.config:
+            self.__smtp_port = app.config['SMTP_PORT']
+        if 'SMTP_MAIL_ADDRESS' in app.config:
+            self.__smtp_mail_address = app.config['SMTP_MAIL_ADDRESS']
+        if 'SMTP_MAIL_PASSWORD' in app.config:
+            self.__smtp_mail_password = app.config['SMTP_MAIL_PASSWORD']
 
         self.__subject = ''
         if subject is not None:
@@ -121,6 +171,38 @@ class MailerSmtp:
         if not isinstance(value, str):
             raise AttributeError("reply to is not a string variable")
         self.__replyto = value
+
+    @property
+    def smtp_server(self):
+        return self.__smtp_server
+
+    @smtp_server.setter
+    def smtp_server(self,value):
+        self.__smtp_server = value
+
+    @property
+    def smtp_port(self):
+        return self.__smtp_server
+
+    @smtp_port.setter
+    def smtp_port(self, value):
+        self.__smtp_port = value
+
+    @property
+    def smtp_mail_address(self):
+        return self.__smtp_mail_address
+
+    @smtp_mail_address.setter
+    def smtp_mail_address(self, value):
+        self.__smtp_mail_address = value
+
+    @property
+    def smtp_mail_password(self):
+        return self.__smtp_mail_password
+
+    @smtp_mail_password.setter
+    def smtp_mail_password(self, value):
+        self.__smtp_mail_password = value
 
 
     # -----------------------------------------------------------------------------------------
@@ -216,6 +298,9 @@ class MailerSmtp:
         self.__attachments.append(value)
 
     def send(self):
+        print(f'{self.__smtp_server}/{self.__smtp_port} User: {self.__smtp_mail_address} / {self.__smtp_mail_password}')
+        if self.__smtp_mail_address is None or self.__smtp_mail_password is None or self.__smtp_server is None or self.__smtp_port is None:
+            raise self.mailerError('Either the server, port, mail address or password is not defined')
         thismsg = MIMEMultipart()
         if self.__recipients is None:
             raise self.mailerError("Recipient list is None")
@@ -230,7 +315,7 @@ class MailerSmtp:
         recipient_string = ",".join(self.__recipients)
         thismsg['To']   = recipient_string
         thismsg['Cc']   = ",".join(self.__cc)
-        thismsg['From']   = app.config['SMTP_MAIL_ADDRESS']
+        thismsg['From']   = self.__smtp_mail_address
         if self.__replyto is not None and isinstance(self.__replyto,str):
             thismsg.add_header('reply-to',self.__replyto)
 
@@ -244,10 +329,10 @@ class MailerSmtp:
         try:
             app.logger.info('About to send to Mail Recipients : {}'.format(",".join(self.__recipients)))
 
-            with smtplib.SMTP(app.config['SMTP_SERVER'], app.config['SMTP_PORT']) as server:
+            with smtplib.SMTP(self.__smtp_server , self.__smtp_port) as server:
                 server.starttls()
-                server.login(app.config['SMTP_MAIL_ADDRESS'],app.config['SMTP_MAIL_PASSWORD'])
-                server.sendmail(app.config['SMTP_MAIL_ADDRESS'],recipient_string, thismsg.as_string())
+                server.login(self.__smtp_mail_address,self.__smtp_mail_password)
+                server.sendmail(self.__smtp_mail_address,recipient_string, thismsg.as_string())
             app.logger.info('Mail sent successfully')
         except Exception as e:
             app.logger.error('Error sending mail : {}'.format(str(e)))

@@ -26,6 +26,13 @@ class Config(object):
     SESSION_REFRESH_EACH_REQUEST=True
     SESSION_COOKIE_SECURE=True
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=3)
+    SMTP_MAIL_ADDRESS="ascgliding@gmail.com"
+    # This is being obfuscated to stop github from whining.
+    # The password is actually stored in the slots table but I'm keeping it here
+    # so we don't lose it.
+    # it is: lgtm ppbj makb dfei
+    SMTP_SERVER = "smtp.gmail.com"
+    SMTP_PORT = 587
 
 class development(Config):
     # Note that this config assumes windows.

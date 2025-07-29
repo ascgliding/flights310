@@ -16,7 +16,7 @@ import unittest
 import sys
 from decimal import Decimal
 from asc import db, create_app
-from asc.mailer import ascmailer
+# from asc.mailer import ascmailer
 from asc.oMetservice import MetService
 #from csv import DictWriter,DictReader
 import csv
@@ -2318,74 +2318,78 @@ class google_email(unittest.TestCase):
     #         # TODO(developer) - Handle errors from gmail API.
     #         print(f"An error occurred: {error}")
 
-    def test002(self):
-        """ test using smtp"""
-
-        # this is so simple with gmail.
-        #   Log in to your account
-        #   From the three-dot menu select "Manage Your Account"
-        #   Select Security
-        #   2 Factor Authenticaion MUST be enabled
-        #   Go to the 2FA screen - at the bottom is a section called "App Passwords"
-        #   Create an app password.  It will be a string of four groups of four characters
-        #   When using the server.login method the email address is your gmail account address
-        #   And the password is the four character password.
-        EMAIL_ADDRESS="ray.burns.ggl@gmail.com"
-        EMAIL_PASSWORD="ujcw vbig bxob zxff"
-
-        SMTP_SERVER = "smtp.gmail.coxm"
-        SMTP_PORT = 587
-
-        print('testing smtp')
-        try:
-            msg = MIMEMultipart()
-            msg['From'] = EMAIL_ADDRESS
-            msg['To'] = "ray.burns@velocityglobal.co.nz"
-            msg['Subject'] = "test"
-
-            # it is best to send EITHER plain text OR HTML in the body.
-            # if you try to mix them you end up with the html as an attachement.
-
-            # body = "this is great"
-            # msg.attach(MIMEText(body,'plain'))
-            html = """\
-            <html>
-              <head></head>
-              <body>
-                <h1> HTML Content </h1>
-                <p>Hi!<br>
-                    <hr/>
-                   <i>How are you?</i>
-                   <br>
-                   Here is the <a href="http://www.python.org">link</a> you wanted.
-                    <hr/>
-                </p>
-              </body>
-            </html>
-            """
-            msg.attach(MIMEText(html,'html'))
-            files = [os.path.join(app.instance_path, "asc.sqlite")]
-            # for f in files or []:
-            #     with open(f,"rb") as file:
-            #         part = MIMEApplication(file.read(),name=basename(f))
-            #     part['Content-Disposition'] = f'attachment; filename={basename(f)}'
-            #     msg.attach(part)
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                server.login(EMAIL_ADDRESS,EMAIL_PASSWORD)
-                server.sendmail(EMAIL_ADDRESS,"ray.burns@velocityglobal.co.nz", msg.as_string())
-
-            print('email sent')
-
-        except Exception as e:
-            print(str(e))
+    # def test002(self):
+    #     """ test using smtp"""
+    #
+    #     # this is so simple with gmail.
+    #     #   Log in to your account
+    #     #   From the three-dot menu select "Manage Your Account"
+    #     #   Select Security
+    #     #   2 Factor Authenticaion MUST be enabled
+    #     #   Go to the 2FA screen - at the bottom is a section called "App Passwords"
+    #     #   Create an app password.  It will be a string of four groups of four characters
+    #     #   When using the server.login method the email address is your gmail account address
+    #     #   And the password is the four character password.
+    #
+    #
+    #     # EMAIL_ADDRESS="ray.burns.ggl@gmail.com"
+    #     # EMAIL_PASSWORD="ujcw vbig bxob zxff"
+    #     #
+    #     # SMTP_SERVER = "smtp.gmail.coxm"
+    #     # SMTP_PORT = 587
+    #
+    #     print('testing smtp')
+    #     try:
+    #         msg = MIMEMultipart()
+    #         msg['From'] = app.config['EMAIL_ADDRESS']
+    #         msg['To'] = "ray.burns@velocityglobal.co.nz"
+    #         msg['To'] = "ray@rayburns.nz"
+    #         msg['Subject'] = "test - test002"
+    #
+    #         # it is best to send EITHER plain text OR HTML in the body.
+    #         # if you try to mix them you end up with the html as an attachement.
+    #
+    #         # body = "this is great"
+    #         # msg.attach(MIMEText(body,'plain'))
+    #         html = """\
+    #         <html>
+    #           <head></head>
+    #           <body>
+    #             <h1> HTML Content </h1>
+    #             <p>Hi!<br>
+    #                 <hr/>
+    #                <i>How are you?</i>
+    #                <br>
+    #                Here is the <a href="http://www.python.org">link</a> you wanted.
+    #                 <hr/>
+    #             </p>
+    #           </body>
+    #         </html>
+    #         """
+    #         msg.attach(MIMEText(html,'html'))
+    #         files = [os.path.join(app.instance_path, "asc.sqlite")]
+    #         # for f in files or []:
+    #         #     with open(f,"rb") as file:
+    #         #         part = MIMEApplication(file.read(),name=basename(f))
+    #         #     part['Content-Disposition'] = f'attachment; filename={basename(f)}'
+    #         #     msg.attach(part)
+    #         with smtplib.SMTP(app.config['SMTP_SERVER'], app.config['SMTP_PORT']) as server:
+    #             server.starttls()
+    #             server.login(app.config['EMAIL_ADDRESS'],app.config['EMAIL_PASSWORD'])
+    #             server.sendmail(app.config['EMAIL_ADDRESS'],"ray.burns@velocityglobal.co.nz", msg.as_string())
+    #
+    #         print('email sent')
+    #
+    #     except Exception as e:
+    #         print(str(e))
 
     def test003(self):
         """ Test the class"""
         try:
-            thismail = MailerSmtp('A test mail')
+            thismail = MailerSmtp('A test mail - test003')
             thismail.replyto = 'cfi@ascgliding.org'
             thismail.add_body("<h2> this is the body </h2>")
+            thismail.add_recipient("ray@rayburns.nz")
             thismail.add_recipient("ray.burns@velocityglobal.co.nz")
             # thismail.add_attachment(os.path.join(app.instance_path,"asc.sqlite"))
             thismail.send()
