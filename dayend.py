@@ -338,7 +338,7 @@ def send_stats_to_gnz(asat):
     msg.add_body('No winch Launching or Automobile Launches</html>')
 
     msg.add_recipient('ray@rayburns.nz')
-    msg.add_recipient('lionelpnz@gmail.com')
+    msg.add_recipient('max.stevens@scorch.co.nz')
     msg.send()
 
 
@@ -546,10 +546,10 @@ if __name__ == '__main__':
             log.info("Sending Event Emails")
             processcalendar(sdate, edate)
         # Send statistics on the first of the month
-        if datetime.date.today().day == 1:
+        if datetime.date.today().day == 1 and (datetime.date.today().month == 1 or datetime.date.today().month == 7):
             log.info("Sending Statistic Emails")
             send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
-        testmailer()
+        # testmailer()
         log.info("Updating Readings")
         update_auto_readings()
         if datetime.date.today().weekday() in [0]:  # 0 is Monday
