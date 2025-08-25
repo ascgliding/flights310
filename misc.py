@@ -43,6 +43,7 @@ from asc.ochart import Chart
 from flask_wtf import FlaskForm
 from wtforms import  SelectField, FloatField
 from asc.wtforms_ext import TextButtonField,MatButtonField
+from asc.oBasePass import BasePassMnt
 from geopy import distance
 bp = Blueprint('misc', __name__, url_prefix='/misc')
 
@@ -404,3 +405,33 @@ def createmshipxlsx():
     workbook.close()
     return filename
 
+@bp.route('/memberpasslist/', defaults={'active':'ACTIVE'}, methods=['GET', 'POST'])
+@bp.route('/memberpasslist/<active>', methods=['GET', 'POST'])
+@login_required
+def memberpasslist(active='ACTIVE'):
+    #TODO: download s/sheet
+    #todo: update member spreadsheet with expiry ddate
+    #Todo: email users.
+    if request.method == 'GET':
+        if active=='ACTIVE':
+            list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.fullname).all()
+        else:
+            list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname).all()
+    try:
+        return render_template('misc/memberpasslist.html', list=list, active=active, today=datetime.date.today(),
+                                   twomonths=datetime.date.today() - relativedelta(months=-2))
+    except Exception as e:
+        flash(str(e),"error")
+        return render_template('misc/index.html')
+
+@bp.route('/mntbasepass/<int:memberid>/', methods=['GET', 'POST'])
+@login_required
+def mntbasepass(memberid):
+    try:
+        mntform = BasePassMnt(memberid)
+        mntform.thispage = 'misc.mntbasepass'
+        mntform.prevpage = 'misc.memberpasslist'
+        return mntform.theform()
+    except Exception as e:
+        flash(str(e), "error")
+        return redirect(url_for('misc.memberpasslist', id=memberid))

@@ -18,6 +18,7 @@ from wtforms import Form, StringField, PasswordField, validators, SubmitField, S
 from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, optional, Regexp
 from asc.wtforms_ext import MatButtonField, TextButtonField
+from asc.oBasePass import BasePassMnt
 
 
 #from asc.mailer import ascmailer
@@ -225,6 +226,8 @@ def profile():
     if request.method == 'POST':
         if 'pwdbtn' in request.form:
             return redirect(url_for('auth.password'))
+        if 'passbtn' in request.form:
+            return redirect(url_for('auth.mntbasepass'))
         current_user.fullname = request.form['fullname']
         current_user.email = request.form['email']
         if 'administrator' in request.form:
@@ -283,6 +286,22 @@ def userpassword(id):
         return render_template("auth/userpassword.html", user=thisuser)
     else:
         return render_template("auth/userpassword.html", user=thisuser)
+
+
+@bp.route('/mntbasepass', methods=['GET', 'POST'])
+@fresh_login_required
+def mntbasepass():
+    if current_user.pilot_tbl is None:
+        flash('Your user id does not yet have a member id attached.  Contact the sysadmin')
+        return redirect(url_for('auth.profile'))
+    try:
+        mntform = BasePassMnt(current_user.pilot_tbl.id)
+        mntform.thispage = 'auth.mntbasepass'
+        mntform.prevpage = 'auth.profile'
+        return mntform.theform()
+    except Exception as e:
+        flash(str(e),"error")
+        return redirect(url_for('auth.profile'))
 
 
 @bp.route('/userlist')

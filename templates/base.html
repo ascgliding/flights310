@@ -216,6 +216,9 @@ function myLower(cObj)
           {% else %}
             <p><a href="{{ url_for('misc.contactlist',active='ACTIVE') }}">Members</a></p>
           {% endif %}
+          {% if current_user.is_member_of("PASSMGR") %}
+            <p><a href="{{ url_for('misc.memberpasslist',active='ACTIVE') }}">Base Passes</a></p>
+          {% endif %}
           {% if 'regn' in session %}
             <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
           {% endif %}

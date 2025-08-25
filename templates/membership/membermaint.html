@@ -96,9 +96,13 @@
     </ul>
   </fieldset>
     {{ form.btnsubmit() }}
+
     {{ form.cancel() }}
+    <a class="textbtn" href="{{ url_for('membership.mntbasepass',memberid=form.id.data) }}" title="Maintain Base Pass." >Base Pass</a>
+
 <!--    {{ form.print() }}-->
     {{ form.trans() }}
+
     {{ form.delete() }}
 </form>
 {% endblock %}

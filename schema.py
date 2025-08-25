@@ -279,7 +279,10 @@ class ViewSecurity(db.Model):
         return self.viewname + "/" + self.role_rec.name
 
     def __repr__(self):
-        return "ViewSecurity:(" + str(id) +")"  + self.viewname + "/" + self.role_rec.name
+        if self.role_rec is not None:
+            return "ViewSecurity:(" + str(id) +")"  + self.viewname + "/" + self.role_rec.name
+        else:
+            return "ViewSecurity:(" + str(id) +")"  + self.viewname
 
 
 
@@ -456,6 +459,7 @@ class Pilot(db.Model):
     old_member_id = db.Column(db.Integer, comment='Old Member id - not used')
     user_id = db.Column(db.Integer, ForeignKey("users.id"), comment="If non null then a valid user id" )
     user_tbl = relationship('User', backref='User.id', primaryjoin="Pilot.user_id == User.id")
+
     transactions = relationship("MemberTrans", cascade="all,delete-orphan")
 
     inserted = db.Column(db.DateTime, default=datetime.datetime.now)
@@ -620,6 +624,16 @@ class Pilot(db.Model):
         if results is None:
             return 0
         return round(((results[0] / 41 + results[1] / 32) / 2) * 100, 0)
+
+    @property
+    def basepassexpirydate(self):
+        last_pass = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+            filter(MemberTrans.transtype == 'BPASS'). \
+            order_by(MemberTrans.inserted.desc()).first()
+        if last_pass is not None:
+            parts = last_pass.transnotes.split('/')
+            return datetime.datetime.strptime(parts[2], "%Y-%m-%d").date()
+        return None
 
 class Slot(db.Model):
     __tablename__ = "slots"
@@ -874,7 +888,7 @@ class MemberTrans(db.Model):
     id = db.Column(db.Integer, db.Sequence('member_id_seq'), primary_key=True)
     memberid = db.Column(db.Integer, ForeignKey('pilots.id'), comment="Must match member id")
     transdate = db.Column(db.Date, comment="Effect Date of Transaction")
-    transtype = db.Column(db.Enum('IR', 'MF', 'DCG', 'MD', 'ICR', 'RTG', 'BFR', 'NOT'),
+    transtype = db.Column(db.Enum('IR', 'MF', 'DCG', 'MD', 'ICR', 'RTG', 'BFR', 'NOT', 'BPASS'),
                           comment="Transaction type (see slots)")
     transsubtype = db.Column(db.String, comment="Transaction subtype (see slots)")
     transnotes = db.Column(db.Text, comment='Transaction Notes')

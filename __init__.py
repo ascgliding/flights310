@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 from flask_login import LoginManager, current_user
 from flask_login import __version__ as flogin_version
 import argparse
-from flask import Flask, session, g, current_app
+from flask import Flask, session, g, current_app,request
 from flask_sqlalchemy import SQLAlchemy
 from flask_sqlalchemy import __version__ as fsqa_version
 from flask import __version__ as flask_version
@@ -83,6 +83,13 @@ def create_app(test_config=None):
         # print("Create App with Windows instance path: {}".format(app.instance_path))
     else:
         app = Flask(__name__, instance_relative_config=True)
+
+    @app.before_request
+    def global_before_request():
+        # REmember where we came from so that it is easy to go back using
+        # flash(some error message)
+        # redirect(session['prev_url'])
+        session['prev_url'] = request.referrer
 
     # -----------------------------------------------------------------------------------------------------
     # Load Configuration

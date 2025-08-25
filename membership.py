@@ -1,5 +1,6 @@
+
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app, send_file
+    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app, send_file,session
 )
 import datetime
 import xlsxwriter
@@ -9,6 +10,7 @@ from werkzeug.exceptions import abort
 from flask_login import login_required, current_user
 from asc import db,create_app
 from asc.schema import Pilot,  Slot, MemberTrans, User
+from asc.oBasePass import BasePassMnt
 from sqlalchemy import text as sqltext
 from sqlalchemy import or_, and_
 import os
@@ -34,6 +36,7 @@ app = current_app
 applog = app.logger
 
 bp = Blueprint('membership', __name__, url_prefix='/membership')
+
 
 
 class PilotForm(FlaskForm):
@@ -140,6 +143,19 @@ class TransactionForm(FlaskForm):
     delete = MatButtonField('delete', id='matdeletebtn', icon='delete',
                             help='Press to delete this record', render_kw={'onclick':'return ConfirmDelete()'})
 
+# class BasePassForm(FlaskForm):
+#     # id = IntegerField('ID', description='Primary Key', render_kw={'readonly': True, 'hidden':True})
+#     # memberid = IntegerField('Member', description='The id of the related member field', render_kw={'readonly': True, 'hidden':True})
+#     type = SelectField('Pass Type', description='The type of pass issued',
+#                             choices=[('none', 'None'),('CLUB', 'Club Pass'), ('MD58','Military (MD58)'), ('3389','Cadet')])
+#     reference = StringField('Reference', description='Reference eg. Pass No or Service No.')
+#     issuedate = DateField('Issue Date', description='The date the pass was issued')
+#     expirydate = DateField('Expiry Date', description='The date the pass will expire')
+#     btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Confirm all Changes")
+#     cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
+#                             help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
+#     delete = MatButtonField('delete', id='matdeletebtn', icon='delete',
+#                             help='Press to delete this record', render_kw={'onclick':'return ConfirmDelete()'})
 
 @bp.route('/memberlist/', defaults={'active':'ACTIVE'}, methods=['GET', 'POST'])
 @bp.route('/memberlist/<active>', methods=['GET', 'POST'])
@@ -159,7 +175,6 @@ def memberlist(active='ACTIVE'):
     except Exception as e:
         flash(str(e),"error")
         return render_template('membership/index.html')
-
 
 
 @bp.route('/membermaint/<id>', methods=['GET', 'POST'])
@@ -261,6 +276,7 @@ def translist(id):
         return render_template('membership/translist.html', list=list, member=thismember)
 
 
+
 @bp.route('/transmaint/<id>/<member>', methods=['GET', 'POST'])
 @login_required
 def transmaint(id, member=None):
@@ -291,11 +307,29 @@ def transmaint(id, member=None):
         return redirect(url_for('membership.translist',id=member))
     return render_template('membership/transmaint.html', form=thisform)
 
+@bp.route('/mntbasepass/<int:memberid>/', methods=['GET', 'POST'])
+@login_required
+def mntbasepass(memberid):
+    try:
+        mntform = BasePassMnt(memberid)
+        mntform.thispage = 'membership.mntbasepass'
+        mntform.prevpage = 'membership.membermaint'
+        return mntform.theform()
+    except Exception as e:
+        flash(str(e),"error")
+        return redirect(url_for('membership.membermaint', id=memberid))
+
+
+
+
+
 @bp.route('/spreadsheet>', methods=['GET', 'POST'])
 @login_required
 def spreadsheet():
     return send_file(createmshipxlsx(True,True,True),
                      as_attachment=True)
+
+
 
 
 def createmshipxlsx(include_currency=False,include_incident=False, include_nok=False):

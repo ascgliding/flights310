@@ -33,7 +33,7 @@ from asc.oMaint import ACMaint
 from  asc.common import *
 
 from asc.oMailerSmtp import *
-
+from asc.oBasePass import BasePass
 import os
 
 # accessing a calendar:
@@ -2396,6 +2396,14 @@ class google_email(unittest.TestCase):
         except Exception as e:
             print(str(e))
 
+class basepass(unittest.TestCase):
+
+    def test001(self):
+        thispass = BasePass()
+        print('something')
+        print(thispass.reference)
+
+
 
 
 if __name__ == '__main__':
@@ -2411,8 +2419,9 @@ if __name__ == '__main__':
     case10 = unittest.TestLoader().loadTestsFromTestCase(adhoc)
     # case11 = unittest.TestLoader().loadTestsFromTestCase(soundex)
     case12 = unittest.TestLoader().loadTestsFromTestCase(google_email)
+    case13 = unittest.TestLoader().loadTestsFromTestCase(basepass)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case12])
+    thissuite = unittest.TestSuite([case13])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
