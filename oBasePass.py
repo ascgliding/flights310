@@ -9,7 +9,7 @@ from wtforms import StringField, SelectField
 from wtforms.fields import  DateField
 from asc.wtforms_ext import MatButtonField
 
-from flask import (flash, redirect, render_template, url_for)
+from flask import (flash, redirect, render_template, url_for, current_app as app)
 
 
 class BasePass:
@@ -114,12 +114,11 @@ class BasePass:
                 addupd_date = thistrans.inserted.date()
             else:
                 addupd_date = thistrans.updated.date()
-            if addupd_date < datetime.date.today() - datetime.timedelta(days=-30):
+            if addupd_date < datetime.date.today() - datetime.timedelta(days=30):
             # if addupd_date < datetime.date.today() - datetime.timedelta(days=30):
                 # The pass has not been updated or created in the last 30 days so
                 # we want to add new Transactions
                 thistrans = None
-        #TODO: Auditing
         if thistrans is None:
             thistrans = MemberTrans(self.__memberid)
             thistrans.transtype = 'BPASS'
@@ -127,9 +126,11 @@ class BasePass:
             thistrans.transnotes = self.__transnote()
             db.session.add(thistrans)
             db.session.commit()
+            app.logger.info('Base Pass Added' + str(self.__memberid) + "/" + thistrans.transnotes)
         else:
             thistrans.transdate = self.__issuedate
             thistrans.transnotes = self.__transnote()
+            app.logger.info('Base Pass Updated:' + str(self.__memberid) + "/" + thistrans.transnotes)
 
 
 class BasePassMnt():
