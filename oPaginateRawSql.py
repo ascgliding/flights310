@@ -154,7 +154,6 @@ class PaginateRawSql():
     #----------------------------------------------------------------------------
 
     def iter_pages(self, left_edge=2,left_current=2,right_current=5,right_edge=2):
-        #Todo: fix this
         # The iter_pages() method is especially interesting.
         # The method actually takes up to 4 arguments: left_edge, left_current, right_current, and right_edge, which are all integers.
         # .

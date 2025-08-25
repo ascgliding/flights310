@@ -39,7 +39,7 @@ applog = app.logger
 from asc.common import *
 from asc.oMetservice import MetService
 from asc.ochart import Chart
-
+from asc.membership import createmshipxlsx as passlist
 from flask_wtf import FlaskForm
 from wtforms import  SelectField, FloatField
 from asc.wtforms_ext import TextButtonField,MatButtonField
@@ -409,8 +409,6 @@ def createmshipxlsx():
 @bp.route('/memberpasslist/<active>', methods=['GET', 'POST'])
 @login_required
 def memberpasslist(active='ACTIVE'):
-    #TODO: download s/sheet
-    #todo: update member spreadsheet with expiry ddate
     #Todo: email users.
     if request.method == 'GET':
         if active=='ACTIVE':
@@ -435,3 +433,10 @@ def mntbasepass(memberid):
     except Exception as e:
         flash(str(e), "error")
         return redirect(url_for('misc.memberpasslist', id=memberid))
+
+@bp.route('/spreadsheet>', methods=['GET', 'POST'])
+@login_required
+def spreadsheet():
+    return send_file(passlist(include_basepass=True),
+                     as_attachment=True)
+

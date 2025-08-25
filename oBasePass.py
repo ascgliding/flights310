@@ -39,7 +39,6 @@ class BasePass:
         else:
             # If the update or inserted date was quite recent then we will asssume they are changing
             # the record that exists, otherwise we will add a new row.
-            # TODO:flesh out above rule.
             parts = last_pass.transnotes.split('/')
             self.__type = parts[0]
             self.__reference  = parts[1]
@@ -131,6 +130,7 @@ class BasePass:
             thistrans.transdate = self.__issuedate
             thistrans.transnotes = self.__transnote()
             app.logger.info('Base Pass Updated:' + str(self.__memberid) + "/" + thistrans.transnotes)
+            db.session.commit()
 
 
 class BasePassMnt():

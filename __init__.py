@@ -234,15 +234,15 @@ def establish_login_extension(app):
 
     @login_manager.user_loader
     def load_user(user_id):
-        app.logger.debug("Loading User {}".format(user_id))
+        # app.logger.debug("Loading User {}".format(user_id))
         thisuser = User.query.filter_by(name=user_id).one_or_none()
         if thisuser is None:
             app.logger.error("The user object is none")
         else:
-            if thisuser.authenticated:
-                app.logger.debug("{} is Authenticated".format(thisuser.name))
-            else:
+            if not thisuser.authenticated:
                 app.logger.debug("{} is not authenticated.".format(thisuser.name))
+            # else:
+            #     app.logger.debug("{} is Authenticated".format(thisuser.name))
         return thisuser
 
 

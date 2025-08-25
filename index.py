@@ -42,7 +42,7 @@ def before_request():
     secdefined = db.engine.scalar(sql, page=request.path)
     if secdefined > 0:
         # there is security defined so who has access?
-        applog.debug("Access Page: {}".format(request.path))
+        # applog.debug("Access Page: {}".format(request.path))
         sql = sqltext('''
         select count(*)
 --        DISTINCT  t3.name

@@ -172,7 +172,7 @@ bp = Blueprint('mastmaint', __name__, url_prefix='/mastmaint')
 @bp.route('/index')
 @login_required
 def index():
-    app.logger.info("Maintenance Page accessed")
+    # app.logger.info("Maintenance Page accessed")
     return render_template('mastmaint/index.html')
 
 

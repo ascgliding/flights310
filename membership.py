@@ -319,20 +319,13 @@ def mntbasepass(memberid):
         flash(str(e),"error")
         return redirect(url_for('membership.membermaint', id=memberid))
 
-
-
-
-
 @bp.route('/spreadsheet>', methods=['GET', 'POST'])
 @login_required
 def spreadsheet():
-    return send_file(createmshipxlsx(True,True,True),
+    return send_file(createmshipxlsx(True,True,True, True,True),
                      as_attachment=True)
 
-
-
-
-def createmshipxlsx(include_currency=False,include_incident=False, include_nok=False):
+def createmshipxlsx(include_members=False,include_currency=False,include_incident=False, include_nok=False, include_basepass=True):
     """
     Creates a spreadsheet ready for download for flights between two dates.
     :param self:
@@ -381,55 +374,56 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
     #  Add the members Sheet
     #
     ssdata = Pilot.query.filter(Pilot.active).order_by(Pilot.surname).all()
-    if len(ssdata) == 0:
-        return
-    ws = workbook.add_worksheet("Members")
-    ws.set_landscape()
-    ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
-    ws.set_footer('&L&A&CPage &P of &N')
-    ws.fit_to_pages(1, 0)  # fit all columns on page
-    ws.repeat_rows(0,2)
-    ws.set_paper(9)
-    try:
-        row = 2
-        ws.write(row, 0, "Surname", col_head_fmt)
-        ws.write(row, 1, "First Name", col_head_fmt)
-        ws.write(row, 2, "Rank", col_head_fmt)
-        ws.write(row, 3, "Note", col_head_fmt)
-        ws.write(row, 4, "Address", col_head_fmt)
-        ws.write(row, 6, "Email", col_head_fmt)
-        ws.write(row, 7, "Home", col_head_fmt)
-        ws.write(row, 8, "Mobile", col_head_fmt)
-        ws.write(row, 9, "Class", col_head_fmt)
-        ws.merge_range("E3:F3", "Address",col_head_fmt)
-        row += 1
-        for m in ssdata:
-            ws.write(row, 0, m.surname, border_fmt)
-            ws.write(row, 1, m.firstname, border_fmt)
-            ws.write(row, 2, m.rank, border_fmt)
-            ws.write(row, 3, m.note, border_fmt)
-            ws.write(row, 4, m.address_1, border_fmt)
-            ws.write(row, 5, m.address_2, border_fmt)
-            ws.write(row, 6, m.email, border_fmt)
-            ws.write(row, 7, m.phone, border_fmt)
-            ws.write(row, 8, m.mobile, border_fmt)
-            ws.write(row, 9, m.type, border_fmt)
+    if include_members:
+        if len(ssdata) == 0:
+            return
+        ws = workbook.add_worksheet("Members")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(0,2)
+        ws.set_paper(9)
+        try:
+            row = 2
+            ws.write(row, 0, "Surname", col_head_fmt)
+            ws.write(row, 1, "First Name", col_head_fmt)
+            ws.write(row, 2, "Rank", col_head_fmt)
+            ws.write(row, 3, "Note", col_head_fmt)
+            ws.write(row, 4, "Address", col_head_fmt)
+            ws.write(row, 6, "Email", col_head_fmt)
+            ws.write(row, 7, "Home", col_head_fmt)
+            ws.write(row, 8, "Mobile", col_head_fmt)
+            ws.write(row, 9, "Class", col_head_fmt)
+            ws.merge_range("E3:F3", "Address",col_head_fmt)
             row += 1
-        # col widths
-        ws.autofit()
-        # autfit overrides
-        # ws.set_column(0, 0, 12)
-        col = 1
-        # for i in range(len(installed_meters)):
-        #     ws.set_column(col, col, 12)
-        #     ws.set_column(col + 1, col + 1, 12)
-        #     col += 2
-        # Put in the title last so that the autofit works nicely
-        ws.merge_range("A1:J1", "ASC Membership " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
-    except Exception as e:
-        applog.error("An error ocurred during spreadsheet create:{}".format(str(e)))
-        applog.debug("Row was:{}".format(row))
-        raise
+            for m in ssdata:
+                ws.write(row, 0, m.surname, border_fmt)
+                ws.write(row, 1, m.firstname, border_fmt)
+                ws.write(row, 2, m.rank, border_fmt)
+                ws.write(row, 3, m.note, border_fmt)
+                ws.write(row, 4, m.address_1, border_fmt)
+                ws.write(row, 5, m.address_2, border_fmt)
+                ws.write(row, 6, m.email, border_fmt)
+                ws.write(row, 7, m.phone, border_fmt)
+                ws.write(row, 8, m.mobile, border_fmt)
+                ws.write(row, 9, m.type, border_fmt)
+                row += 1
+            # col widths
+            ws.autofit()
+            # autfit overrides
+            # ws.set_column(0, 0, 12)
+            col = 1
+            # for i in range(len(installed_meters)):
+            #     ws.set_column(col, col, 12)
+            #     ws.set_column(col + 1, col + 1, 12)
+            #     col += 2
+            # Put in the title last so that the autofit works nicely
+            ws.merge_range("A1:J1", "ASC Membership " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+        except Exception as e:
+            applog.error("An error ocurred during spreadsheet create:{}".format(str(e)))
+            applog.debug("Row was:{}".format(row))
+            raise
     #
     #  Currency Spreadsheet
     #
@@ -610,6 +604,99 @@ def createmshipxlsx(include_currency=False,include_incident=False, include_nok=F
             applog.error("An error ocurred during currency spreadsheet create:{}".format(str(e)))
             applog.debug("Row was:{}".format(row))
             raise
+#
+# Base Passes
+#
+    if include_basepass:
+        ws = workbook.add_worksheet("BasePass")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(0,2)
+        ws.set_paper(9)  # A4
+        try:
+            row = 2
+            ws.write(row, 0, "Name", col_head_fmt)
+            ws.write(row,1, "Type", col_head_fmt)
+            ws.write(row,2, "Reference", col_head_fmt)
+            ws.write(row,3, "Issue Date", col_head_fmt)
+            ws.write(row,4, "Expiry Date", col_head_fmt)
+            row += 1
+            for m in ssdata:
+                last_pass = MemberTrans.query.filter(MemberTrans.memberid == m.id). \
+                    filter(MemberTrans.transtype == 'BPASS'). \
+                    order_by(MemberTrans.inserted.desc()).first()
+                if last_pass is not None:
+                    parts = last_pass.transnotes.split('/')
+                    passtype = parts[0]
+                    reference = parts[1]
+                    expiry = datetime.datetime.strptime(parts[2], "%Y-%m-%d").date()
+                else:
+                    passtype = None
+                    reference = None
+                    expiry = None
+
+                ws.write(row, 0, m.fullname, border_fmt)
+                ws.write(row, 1, passtype, border_fmt)
+                ws.write(row, 2, reference, border_fmt)
+                if last_pass is not None:
+                    ws.write(row, 3, last_pass.transdate, date_fmt)
+                else:
+                    ws.write(row, 3, '', border_fmt)
+                ws.write(row, 4, expiry, date_fmt)
+                row += 1
+            ws.autofit()
+            ws.set_column(4,5,12)  # (first,last,width) dates with traffic lights
+            theseicons = []
+            # In order to use conditional formatting, the formatting values require the julian number of dates
+            # not a python object.  I'm not quite sure why I needed to add two days, but I checked the values
+            # in excel with what I could get in python and this is the numbers I needed.
+            green = ((datetime.date.today() + relativedelta(days=90)) - datetime.date(1900,1,1)).days + 2
+            orange = ((datetime.date.today() + relativedelta(days=1)) - datetime.date(1900,1,1,)).days + 2
+            theseicons.append({'criteria': '>=', 'type':'number', 'value': green})
+            theseicons.append({'criteria': '<', 'type':'number', 'value': orange})
+            ws.conditional_format(
+                'E1:E1',
+                {'type': 'icon_set',
+                 'icon_style': '4_red_to_black',
+                 'icons': [{'criteria': '>=', 'type': 'number', 'value': 90},
+                           {'criteria': '<', 'type': 'percentile', 'value': 50},
+                           {'criteria': '<=', 'type': 'percent', 'value': 25}]}
+            )
+            ws.conditional_format(3,4,row -1,5,
+                                  {'type':'icon_set',
+                                            'icon_style': '3_traffic_lights',
+                                            'icons':theseicons
+                                            })
+            # start = datetime.date(datetime.date.today().year,10,1)
+            # if datetime.date.today().month < 10:
+            #     start -= relativedelta(years=1)
+            # red_date = workbook.add_format({'num_format':'dd-mmm-yy',
+            #                                'font_color': 'red',
+            #                                'border':1})
+            # ws.conditional_format(3,7,row - 1,7,
+            #                       {'type':'date',
+            #                                 'criteria': 'less than',
+            #                                 'value': start - relativedelta(months=1),
+            #                                 'format':red_date
+            #                        }
+            #                       )
+            ws.merge_range("A1:E1", "ASC Base Pass List " + datetime.date.today().strftime("%d-%m-%Y"), title_merge_format)
+
+        except Exception as e:
+            applog.error("An error ocurred during Base Pass spreadsheet create:{}".format(str(e)))
+            applog.debug("Row was:{}".format(row))
+            raise
+
+
+
+
+
+
+
+
+
 
     workbook.close()
     return filename
