@@ -218,14 +218,16 @@ def send_med_bfr_to_cfi():
     email_list = [{'name': 'Name', 'medical': 'Medical', 'bfr': 'BFR', 'message': 'Message'}]
     for m in mems:
         msgs = []
-        if m.bfr_due is not None and m.bfr_due < datetime.date.today():
-            msgs.append('BFR Expired')
-        elif m.bfr_due is not None and m.bfr_due < datetime.date.today() - relativedelta(days=60):
-            msgs.append('BFR Coming Up')
-        if m.medical_due is not None and m.medical_due < datetime.date.today():
-            msgs.append('Medical Expired')
-        elif m.medical_due is not None and m.medical_due < datetime.date.today() - relativedelta(days=60):
-            msgs.append('Medical Coming Up')
+        if m.email_bfr_warning:
+            if m.bfr_due is not None and m.bfr_due < datetime.date.today():
+                msgs.append('BFR Expired')
+            elif m.bfr_due is not None and m.bfr_due < datetime.date.today() + relativedelta(days=60):
+                msgs.append('BFR Coming Up')
+        if m.email_med_warning:
+            if m.medical_due is not None and m.medical_due < datetime.date.today():
+                msgs.append('Medical Expired')
+            elif m.medical_due is not None and m.medical_due < datetime.date.today() + relativedelta(days=60):
+                msgs.append('Medical Coming Up')
         if len(msgs) > 0:
             count += 1
             email_list.append(
@@ -235,6 +237,55 @@ def send_med_bfr_to_cfi():
         msg.add_body_list(email_list)
         msg.add_recipient('ray@rayburns.nz')
         msg.send()
+
+def send_bfr_reminders_to_members():
+    mems = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_bfr_warning == True).order_by(Pilot.surname).all()
+    for m in mems:
+        if m.email is not None and m.type != 'SOCIAL':
+            if m.bfr_due is not None and m.bfr_due < datetime.date.today() + relativedelta(days=60):
+                msg = Mailer('BFR Reminder')
+                msg.add_body("<HTML>")
+                if m.bfr_due is not None and m.bfr_due < datetime.date.today():
+                    msg.add_body('Our records show that your BFR has Expired.<br>')
+                    msg.add_body(f'It appears to have expired on {m.bfr_due.strftime("%B %d, %Y")}.<br>')
+                else:
+                    msg.add_body('Our records show that your BFR is nearly due.<br>')
+                    msg.add_body(f'It appears to be due  on {m.bfr_due.strftime("%B %d, %Y")}.<br>')
+                msg.add_body('You may have had this done elsewhere in which case please let the CFI know.<br>')
+                # debug:
+                # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
+                msg.add_recipient(m.email)
+                # msg.add_recipient('ray@rayburns.nz')
+                #
+                msg.send()
+                app.logger.info(f'BFR Reminder sent to {m.fullname}')
+
+
+
+def send_medical_reminders_to_members():
+    mems = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_med_warning == True).order_by(Pilot.surname).all()
+    for m in mems:
+        if m.email is not None and m.type != 'SOCIAL':
+            if m.medical_due is not None and m.medical_due < datetime.date.today() + relativedelta(days=60):
+                msg = Mailer('Medical Reminder')
+                msg.add_body("<HTML>")
+                if m.medical_due is not None and m.medical_due < datetime.date.today():
+                    msg.add_body('Our records show that your Medical has Expired<br>')
+                    msg.add_body(f'It appears to have expired on {m.medical_due.strftime("%B %d, %Y")}<br>')
+                else:
+                    msg.add_body('Our records show that your Medical is nearly due<br>')
+                    msg.add_body(f'It appears to be due  on {m.medical_due.strftime("%B %d, %Y")}<br>')
+                msg.add_body('You are required to have a valid medical if you are flying passengers or students<br>')
+                msg.add_body('If you are over 70 you will require a DL9 Medical which can be booked with your GP.<br>')
+                msg.add_body('If you are under 70 you may choose to use either a DL9 Medical or the standard GNZ medical form')
+                msg.add_body(' which can be found on the GNZ website.<br>')
+                # debug:
+                # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
+                msg.add_recipient(m.email)
+                # msg.add_recipient('ray@rayburns.nz')
+                #
+                msg.send()
+                app.logger.info(f'Medical Reminder sent to {m.fullname}')
 
 
 
@@ -536,6 +587,8 @@ if __name__ == '__main__':
         # sdate = datetime.date(2024,10,11)
         # edate = sdate + relativedelta(days=7)
         # processcalendar(sdate, edate)
+        # send_bfr_reminders_to_members()
+        # send_medical_reminders_to_members()
         # exit()
         # get_metforecast(174.6131,-36.7928)
         # exit()
@@ -555,6 +608,9 @@ if __name__ == '__main__':
         if datetime.date.today().weekday() in [0]:  # 0 is Monday
             log.info("Sending Maintenance Emails")
             send_maintenance_emails()
+        if datetime.date.today().weekday() in [1]:  # 1 is Tuesday ... just to balance the number of emails.
+            send_bfr_reminders_to_members()
+            send_medical_reminders_to_members()
         # send me the database on Saturdays and Sundays.
         if datetime.datetime.today().weekday() in [6, 0]:
             log.info("Database Emailed during Dayend")
