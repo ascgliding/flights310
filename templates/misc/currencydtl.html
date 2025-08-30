@@ -66,6 +66,17 @@
       {% endif %}
     </div>
     <br>
+  {% if current_user.is_member_of("INSTRUCTOR") %}
+    <div>
+        Next of Kin:
+        <br/>
+        Name : {{ pilot.nok_name }} <br>
+        Relationship: {{ pilot.nok_rship }} <br>
+        Phone : {{ pilot.nok_phone }} {{ " / " if pilot.nok_phone }} {{pilot.nok_mobile }} <br>
+    </div>
+  {% endif %}
+
+
     <h4>Last Flights</h4>
   <div class="table">
     <div class="row">
