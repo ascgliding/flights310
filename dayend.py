@@ -252,6 +252,7 @@ def send_bfr_reminders_to_members():
                     msg.add_body('Our records show that your BFR is nearly due.<br>')
                     msg.add_body(f'It appears to be due  on {m.bfr_due.strftime("%B %d, %Y")}.<br>')
                 msg.add_body('You may have had this done elsewhere in which case please let the CFI know.<br>')
+                msg.add_body('</html>')
                 # debug:
                 # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
                 msg.add_recipient(m.email)
@@ -259,8 +260,6 @@ def send_bfr_reminders_to_members():
                 #
                 msg.send()
                 app.logger.info(f'BFR Reminder sent to {m.fullname}')
-
-
 
 def send_medical_reminders_to_members():
     mems = Pilot.query.filter(Pilot.active == True).filter(Pilot.email_med_warning == True).order_by(Pilot.surname).all()
@@ -279,6 +278,7 @@ def send_medical_reminders_to_members():
                 msg.add_body('If you are over 70 you will require a DL9 Medical which can be booked with your GP.<br>')
                 msg.add_body('If you are under 70 you may choose to use either a DL9 Medical or the standard GNZ medical form')
                 msg.add_body(' which can be found on the GNZ website.<br>')
+                msg.add_body('</html>')
                 # debug:
                 # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
                 msg.add_recipient(m.email)
@@ -287,7 +287,36 @@ def send_medical_reminders_to_members():
                 msg.send()
                 app.logger.info(f'Medical Reminder sent to {m.fullname}')
 
-
+def send_base_pass_reminders_to_members():
+    mems = Pilot.query.filter(Pilot.active == True).order_by(Pilot.surname).all()
+    for m in mems:
+        if m.email is not None and m.type != 'SOCIAL':
+            if m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today() + relativedelta(days=60):
+                msg = Mailer('Base Pass Reminder')
+                msg.add_body("<HTML>")
+                if m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today():
+                    msg.add_body('Our records show that your Base Pass has expired<br>')
+                    msg.add_body(f'It appears to have expired on {m.medical_due.strftime("%B %d, %Y")}<br>')
+                else:
+                    msg.add_body('Our records show that your Base Pass is nearly due.<br>')
+                    msg.add_body(f'It appears to be due  on {m.basepassexpirydate.strftime("%B %d, %Y")}.<br>')
+                msg.add_body('You are required to have a valid base pass to fly at NZWP.<br>')
+                msg.add_body('<ul>In order to renew your pass you must have:')
+                msg.add_body('<li>a valid MOJ clearance that is no less than 6 months old.</li>')
+                msg.add_body('<li>a valid H&S certificate.</li>')
+                msg.add_body('<li>a pass request form signed by the current CEO.</li>')
+                msg.add_body('</ul><B> PLEASE make sure this is done <u> BEFORE</u> it expires, otherwise ')
+                msg.add_body(' you will force some other member to take time from their day jobs to escort you on and off base.</b><br><br>')
+                msg.add_body(f'Once renewed please login to the system and update the pass details')
+                msg.add_body(f' using the profile button from the menu.<br>')
+                # debug:
+                # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
+                msg.add_body('</html>')
+                msg.add_recipient(m.email)
+                # msg.add_recipient('ray@rayburns.nz')
+                #
+                msg.send()
+                app.logger.info(f'Base Pass Reminder sent to {m.fullname}')
 
 def send_stats_to_gnz(asat):
     """
@@ -304,7 +333,6 @@ def send_stats_to_gnz(asat):
         Number of First Solos – please also provide the names of your first-solos so we don’t double-count them!
     :return:
     """
-    print('Sending Statistics')
     # Get the first solos....
     sql = sqltext('''
     select distinct t0.flt_date, t0.pic
@@ -391,6 +419,7 @@ def send_stats_to_gnz(asat):
     msg.add_recipient('ray@rayburns.nz')
     msg.add_recipient('max.stevens@scorch.co.nz')
     msg.send()
+    app.logger.info(f'Statistics email sent to Max.')
 
 
 def getpilot(somename):
@@ -589,6 +618,7 @@ if __name__ == '__main__':
         # processcalendar(sdate, edate)
         # send_bfr_reminders_to_members()
         # send_medical_reminders_to_members()
+        # send_base_pass_reminders_to_members()
         # exit()
         # get_metforecast(174.6131,-36.7928)
         # exit()
@@ -611,6 +641,8 @@ if __name__ == '__main__':
         if datetime.date.today().weekday() in [1]:  # 1 is Tuesday ... just to balance the number of emails.
             send_bfr_reminders_to_members()
             send_medical_reminders_to_members()
+        if datetime.date.today().weekday() in [2]:  # 1 is Wednesday ... just to balance the number of emails.
+            send_base_pass_reminders_to_members()
         # send me the database on Saturdays and Sundays.
         if datetime.datetime.today().weekday() in [6, 0]:
             log.info("Database Emailed during Dayend")
