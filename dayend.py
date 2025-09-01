@@ -235,7 +235,10 @@ def send_med_bfr_to_cfi():
     if count > 0:
         msg = Mailer('Medical and BFR Status')
         msg.add_body_list(email_list)
+#        msg.add_recipient('ray.burns@velocityglobal.co.nz')
         msg.add_recipient('ray@rayburns.nz')
+        msg.add_recipient('pbthorpe@xtra.co.nz')
+        msg.add_recipient('lionelpnz@gmail.com')
         msg.send()
 
 def send_bfr_reminders_to_members():
@@ -611,7 +614,8 @@ if __name__ == '__main__':
         # The execution time is 0400.
         log.info("Dayend started")
         # print("starting in test")
-        # send_med_bfr_to_cfi()
+        send_med_bfr_to_cfi()
+        exit()
         # print("finished med and bfr")
         # sdate = datetime.date(2024,10,11)
         # edate = sdate + relativedelta(days=7)

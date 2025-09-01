@@ -311,9 +311,6 @@ class MailerSmtp:
         # Create the mail
         thismsg['Subject'] = self.__subject
         thismsg.attach(MIMEText(self.__bodyhtml,'html'))
-        # Recipients
-        recipient_string = ",".join(self.__recipients)
-        thismsg['To']   = recipient_string
         thismsg['Cc']   = ",".join(self.__cc)
         thismsg['From']   = self.__smtp_mail_address
         if self.__replyto is not None and isinstance(self.__replyto,str):
@@ -332,7 +329,7 @@ class MailerSmtp:
             with smtplib.SMTP(self.__smtp_server , self.__smtp_port) as server:
                 server.starttls()
                 server.login(self.__smtp_mail_address,self.__smtp_mail_password)
-                server.sendmail(self.__smtp_mail_address,recipient_string, thismsg.as_string())
+                server.sendmail(self.__smtp_mail_address,to_addrs=self.__recipients, msg=thismsg.as_string())
             app.logger.info('Mail sent successfully')
         except Exception as e:
             app.logger.error('Error sending mail : {}'.format(str(e)))
