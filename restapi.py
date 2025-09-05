@@ -56,9 +56,6 @@ def getdefaults():
     # Get the ac details to determine seat count, default launch method and default pilot
     thisdict = {}
     thisac = Aircraft.query.filter_by(regn=ac).first()
-    print(thisac.regn)
-    print(thisdate)
-    print(constTOW_FOR_SELF_LAUNCH)
     lastflt = Flight.query.filter(Flight.flt_date <= thisdate).filter(Flight.linetype == 'FL').filter(Flight.tug_regn != constTOW_FOR_SELF_LAUNCH).order_by(Flight.id.desc()).first()
     # unknown Ac
     if thisac is None:
