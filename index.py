@@ -67,8 +67,5 @@ def before_request():
 
 @bp.route('/')
 def index():
-
-    app.logger.info("Main Page accessed")
-
     return render_template('index.html')
 
