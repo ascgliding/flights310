@@ -321,7 +321,7 @@ def userverify():
         SELECT id, fullname , 'No Customer code and payer is in the last 90 days',9,'Warning', 'pilots'
         FROM pilots
         WHERE (accts_cust_code IS NULL OR length(accts_cust_code) = 0)
-        AND fullname IN (SELECT payer FROM flights WHERE julianday('now') - julianday(flt_date) < 90)
+        AND fullname IN (SELECT payer FROM flights WHERE julianday('now','localtime') - julianday(flt_date) < 90)
     -- pilots missing a gnz code
         UNION
         SELECT id, fullname, 'No GNZ Code',8,'Warning','pilots'
@@ -347,12 +347,12 @@ def userverify():
             SELECT id,'pic' 'type', pic 'name', ac_regn 
                 FROM flights 
                 WHERE linetype = 'FL'
-                AND julianday('now') - julianday(flt_date) < 90
+                AND julianday('now','localtime') - julianday(flt_date) < 90
             UNION
             SELECT id,'p2', p2 , ac_regn
                 FROM flights 
                 WHERE linetype = 'FL' 
-                AND julianday('now') - julianday(flt_date) < 90
+                AND julianday('now','localtime') - julianday(flt_date) < 90
                 AND (p2 IS NOT NULL and LENGTH(p2) > 0)
         ) AS t0
         WHERE name NOT IN (SELECT fullname FROM pilots)
@@ -367,7 +367,7 @@ def userverify():
         FROM flights
         WHERE payer NOT IN (SELECT fullname FROM pilots)
         and payer != ''
-        AND julianday('now') - julianday(flt_date) < 30
+        AND julianday('now','localtime') - julianday(flt_date) < 30
         and payment_note not in ('No Pmt Required')
     -- GNZ no different between users and pilots
         union
@@ -380,7 +380,7 @@ def userverify():
         select t0.id, t0.payer, 'Invalid Payer',2,'ERROR','flights'
         from flights t0
         where t0.payer != ''
-        AND julianday('now') - julianday(flt_date) < 30
+        AND julianday('now','localtime') - julianday(flt_date) < 30
         and t0.payer not in (
         select fullname 
             from pilots s0
