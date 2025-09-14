@@ -89,7 +89,7 @@ def logbook():
                 WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
                 and ((t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
-                    or (due != 0 and paid == 0) )
+                    or (due != 0 and paid == 0 and payer=t2.fullname) )
                 and t0.linetype = 'FL'
                 and ac_regn != 'TUG ONLY'
             """)
@@ -133,11 +133,11 @@ def logbook():
                 t0.paid
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.tug_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.fullname = :pilot
                 WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
                 and ((t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
-                    or (due != 0 and paid == 0) )
+                    or (due != 0 and paid == 0 and payer = t2.fullname) )
                 and t0.linetype = 'FL'
                 and ac_regn = 'TUG ONLY'
         """)
@@ -169,7 +169,7 @@ def logbook():
                 coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0) towmins
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.fullname = :pilot
                 WHERE upper(t2.fullname) = t0.tow_pilot
                 and (t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -195,7 +195,7 @@ def logbook():
                 sum(coalesce(round((julianday(t0.tug_down) - julianday(t0.takeoff)) * 1440,0),0)) towmins
                 FROM flights t0
                 LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
-                LEFT OUTER JOIN pilots t2 ON t2.user_id = :pilot
+                LEFT OUTER JOIN pilots t2 ON t2.fullname = :pilot
                 WHERE upper(t2.fullname) = t0.tow_pilot
                 and (t0.flt_date >= :startdate
                     and t0.flt_date <= :enddate)
@@ -210,8 +210,10 @@ def logbook():
                           tows=db.Integer,
                           towmins=db.Integer
                           )
-
+        print(f'{startdate} to {enddate}')
+        print(str(sql))
         flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
+        print(len(flights))
         slot = db.session.query(Slot).filter_by(slot_key='LASTPAIDUPDATE').first()
         tugonlyflights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
         tows = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()

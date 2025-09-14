@@ -2169,17 +2169,78 @@ class sqlalchemy_read_tests(unittest.TestCase):
 
 
     def test006(self):
+        start = datetime.date(2025,7,1)
+        end = datetime.date(2025,7,30)
         sql = sqltext("""
-            select t1.regn as 'regn' ,count(*)
-            from acmeters t0
-            join aircraft t1 on t1.id = t0.ac_id 
-            where auto_update  = 1
-            group by 1
+            select t0.pic, t0.p2,t0.flt_date
+            from flights t0
+            where t0.pic = 'Ivor Woodfield'
+            and t0.flt_date >= :startdate
+            and t0.flt_date <= :enddate
             """)
-        sql = sql.columns(regn=db.String)
-        list = db.engine.execute(sql).fetchall()
+        sql = sql.columns(flt_date=db.Date)
+        list = db.engine.execute(sql,startdate = start, enddate=end).fetchall()
         for f in list:
-            print(f[0])
+            print(f)
+
+    def test007(self):
+        start = datetime.date(2025,7,1)
+        end = datetime.date(2025,7,30)
+        thispilot = 'Ivor Woodfield'
+        sql = sqltext("""
+            SELECT
+                t0.id,
+                t0.flt_date,
+                t0.pic,
+                t0.p2,
+                COALESCE(t1.TYPE,"Unknown") actype,
+                CASE WHEN ac_regn = 'TUG ONLY'
+                    THEN tug_regn
+                    ELSE ac_regn
+                END regn,
+                time(takeoff) takeoff,
+                time(landed) landed,
+                coalesce(round((julianday(t0.landed) - julianday(t0.takeoff)) * 1440,0),0) totalmins,
+                coalesce(t1.seat_count,0) seat_count,
+                CASE WHEN t0.p2 = t2.fullname THEN 'P2'
+                    WHEN t1.seat_count = 1 THEN 'P1'
+                    WHEN t1.seat_count = 2 AND t0.p2 = '' THEN 'P1'
+                    WHEN t1.seat_count = 2 AND t2.instructor = 1 THEN 'DI' 
+                    ELSE 'P1'
+                END crew_capacity,
+                (tow_charge + glider_charge + other_charge )  due,
+                -- Instructors only want to see paid/unpaid for their own flights:
+                case when t0.payer != t2.fullname then 1 else t0.paid end paid
+                FROM flights t0
+                LEFT OUTER JOIN aircraft t1 ON t0.ac_regn = t1.regn
+                LEFT OUTER JOIN pilots t2 ON t2.fullname = :pilot
+                WHERE (t2.fullname = t0.pic OR t2.fullname = t0.p2)
+                and ((t0.flt_date >= :startdate
+                    and t0.flt_date <= :enddate)
+                    or (due != 0 and paid == 0 and payer=t2.fullname) )
+                and t0.linetype = 'FL'
+                and ac_regn != 'TUG ONLY'
+            """)
+        sql = sql.columns(id=db.Integer,
+                         flt_date=db.Date,
+                         pic=db.String,
+                         p2=db.String,
+                         actype=db.String,
+                         regn=db.String,
+                         takeoff=db.Time,
+                         landed=db.Time,
+                         totalmins=db.Integer,
+                         seat_count=db.Integer,
+                         crew_capacity=db.String,
+                         due=SqliteDecimal(10,2),
+                         paid=db.Boolean
+                         )
+        print(f'{start} to {end} for {thispilot}')
+        print(str(sql))
+        flights = db.engine.execute(sql, startdate=start, enddate=end, pilot=thispilot).fetchall()
+        for f in flights:
+            print(f)
+
 
 # class googlecalendar(unittest.TestCase):
 #
@@ -2421,7 +2482,7 @@ if __name__ == '__main__':
     case12 = unittest.TestLoader().loadTestsFromTestCase(google_email)
     case13 = unittest.TestLoader().loadTestsFromTestCase(basepass)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case13])
+    thissuite = unittest.TestSuite([case7])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
