@@ -262,9 +262,13 @@ textarea        {border:1px solid #ff0000;
 
 input.time          {width:50px;}
 input.longnote      {width:80%;}
+/* Normal Input field */
 input[type=text]    {border:1px solid #ff0000; border-style: none none solid none;
                      autocomplete:off;
-                    }
+                    }  
+/* Remove the underline if the input field is disabled. */
+input:readonly    {border:1px solid #ff0000; border-style: none none none none; }
+input:disabled    {border:1px solid #ff0000; border-style: none none none none; }
 input[type=number]    {text-align:right }
 input.uppercase      {text-transform: uppercase;}
 
