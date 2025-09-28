@@ -15,7 +15,7 @@ class MailerSmtp:
     #   Select Security
     #   2 Factor Authenticaion MUST be enabled
     #   Go to the 2FA screen - at the bottom is a section called "App Passwords"
-    #       or "Your Connections to third-party apps & services"
+    #     - Last time I tried there wasn't.  The only way to get to App Passwords was to select the search function and put in App Passwords as the search term.
     #   July 2025 - now have to type "app password" in the search bar
     #   Create an app password.  It will be a string of four groups of four characters
     #   When using the server.login method the email address is your gmail account address
@@ -312,6 +312,7 @@ class MailerSmtp:
         thismsg['Subject'] = self.__subject
         thismsg.attach(MIMEText(self.__bodyhtml,'html'))
         thismsg['Cc']   = ",".join(self.__cc)
+        thismsg['To']   = ",".join(self.__recipients)
         thismsg['From']   = self.__smtp_mail_address
         if self.__replyto is not None and isinstance(self.__replyto,str):
             thismsg.add_header('reply-to',self.__replyto)
