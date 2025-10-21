@@ -740,6 +740,7 @@ def load_rdw_history():
     # Check the "lifed items" and "maintenance due" sheets and compare them with the calls to add_history
     # (towards the end of this routine)
     # export columns A-J of "Logbook Hours" : pipe delimited, Dateformat "yyyy-mm-dd", name "rdwhours.csv"
+    # include headings, make the terminator CRLF
 
     click.echo("Loading RDW maintenancce tables")
     # tasks are referred to by name in more than one place so I have allocated them to their
@@ -925,37 +926,42 @@ def load_rdw_history():
                     pass
         print('{} records added'.format(count))
     db.session.commit()
-    add_history(oRDW.id,tsk50hr,None,1505.3,None,1102,
+    add_history(oRDW.id,tsk50hr,None,1651.7,None,1102,
                          [206.7,306.7,350.61,403.73,470.04,519.22,567.51,623.24,
                          661.31,710.08,760.78,802,859.1,896.28,949.8,992.78,1045.53,1095.93,
-                         1102,1148.72,1210.2,1242.94,1300.49,1347.88,1407,1456.33,1505.3])
-    add_history(oRDW.id,tsk100hr,None,1505.3,None,1202,
+                         1102,1148.72,1210.2,1242.94,1300.49,1347.88,1407,1456.33,1505.3,
+                          1550.7,1603.89,1651.7])
+    add_history(oRDW.id,tsk100hr,None,1603.89,None,1202,
                          [250.75,301.91,399.83,470.04,567.51,661.31,760.78,
-                         859.1,949.8,1102,1210.2,1300.49,1407,1505.3])
-    add_history(oRDW.id,tsk200hr,None,1407,None,1202,
-                         [470.04,670.04,661.31,881.31,859.1,1059.1,1102,1210.2,1407])
+                         859.1,949.8,1102,1210.2,1300.49,1407,1505.3,1603.89])
+    add_history(oRDW.id,tsk200hr,None,1603.89,None,1202,
+                         [470.04,670.04,661.31,881.31,859.1,1059.1,1102,1210.2,1407,1603.89])
     add_history(oRDW.id,tsk500hr,None,1102,None,1202,
                          [])
-    add_history(oRDW.id,tsktransponder,datetime.date(2023,10,17),None,None,None,
+    add_history(oRDW.id,tsktransponder,datetime.date(2025,10,17),None,None,None,
                          [datetime.date(2017,7,28),
                           datetime.date(2019, 5, 3),
                           datetime.date(2021, 6, 3),
-                          datetime.date(2023, 10, 17)
+                          datetime.date(2023, 10, 17),
+                          datetime.date(2025, 10, 17)
                           ])
-    add_history(oRDW.id,tskaltimeter,datetime.date(2023,10,17),None,None,None,
+    add_history(oRDW.id,tskaltimeter,datetime.date(2025,10,17),None,None,None,
                          [datetime.date(2017, 7, 28),
                           datetime.date(2019, 5, 3),
                           datetime.date(2021, 6, 3),
-                          datetime.date(2023, 10, 17)
+                          datetime.date(2023, 10, 17),
+                          datetime.date(2025, 10, 17)
                           ])
-    add_history(oRDW.id,tskelt,datetime.date(2023,10,17),None,None,None,
+    add_history(oRDW.id,tskelt,datetime.date(2025,10,17),None,None,None,
                          [datetime.date(2017, 7, 28),
                           datetime.date(2019, 5, 3),
                           datetime.date(2021, 6, 3),
-                          datetime.date(2023, 10, 17)
+                          datetime.date(2023, 10, 17),
+                          datetime.date(2025, 10, 17)
                           ])
     add_history(oRDW.id,tskeltbatt,datetime.date(2021,6,28),None,None,None,
-                         [datetime.date(2012, 8, 1)
+                         [datetime.date(2012, 8, 1),
+                          datetime.date(2021, 6, 21)
                           ])
     add_history(oRDW.id,tskara,datetime.date(2023,11,18),None,None,None,
                          [datetime.date(2011, 2, 9),
@@ -967,22 +973,41 @@ def load_rdw_history():
                           datetime.date(2021, 12, 6),
                           datetime.date(2023, 11, 18)
                           ])
-    add_history(oRDW.id,tskbeambolts,None,10360,None,None,
-                         [1120,2071,2468,3623,4289,5080,6328,7272,8181,9075,10093,10360])
+    add_history(oRDW.id,tskbeambolts,None,11381,None,None,
+                         [1120,2071,2468,3623,4289,5080,6328,7272,8181,9075,10093,10360,11381])
     add_history(oRDW.id,tskbrakefluid,datetime.date(2023,7,1),None,None,None,
                          [datetime.date(2012, 5, 1),
                           datetime.date(2014, 11, 1),
                           datetime.date(2018, 11, 1),
                           datetime.date(2020, 12, 1),
-                          datetime.date(2023, 7, 1)
+                          datetime.date(2023, 7, 30)
                           ])
-    add_history(oRDW.id,tskcarbflange,None,1407.02,None,None,
-                         [270,949.98,1189.04,1407.02])
+    add_history(oRDW.id,tskcarbflange,None,1603.89,None,None,
+                         [270,949.98,1189.04,1407.02,1603.89])
     add_history(oRDW.id,tskairbox,None,1,None,None,[])
-    add_history(oRDW.id, tskvibe, datetime.date(2023,5,13), 1346.33, None, None, [250,403.73,567.51,760.78,949.8,1346.33])
+    add_history(oRDW.id, tskvibe, datetime.date(2023,5,13), 1660.49, None, None,
+                [250,403.73,567.51,760.78,949.8,1346.33,1550.7,1660.49])
     add_history(oRDW.id, tskbowden, None, 1300.49, None, None, [470.04,894.88,1300.49])
     add_history(oRDW.id,tskelasto, datetime.date(2023,6,5), 1347.88, None, None, [470.04,949.8,1347.88])
     add_history(oRDW.id,tskbrs, datetime.date(2020,12,22), None, None, None, [])
+    print('Updating last dates')
+    set_last_values(oRDW.id)
+
+def set_last_values(pac_id):
+    '''
+    Set the last date and last reading for a task
+    based on the task history
+    :param pac_id:
+    :param ptsk_desc:
+    :return:
+    '''
+    taskhistory = (db.session.query(ACMaintHistory).filter(ACMaintHistory.ac_id==pac_id).
+                   order_by(ACMaintHistory.history_date).all())
+    for history in taskhistory:
+        history.actask_rec.last_date = history.history_date
+        history.actask_rec.last_reading = history.meter_reading
+        history.actask_rec.last_reading = history.meter_reading
+        db.session.commit()
 
 
 def add_history(pac_id,ptask_desc,plast_done,plast_done_reading,
@@ -1014,6 +1039,8 @@ def add_history(pac_id,ptask_desc,plast_done,plast_done_reading,
     thisactask.last_done_reading = plast_done_reading
     thisactask.due_basis_date = pdue_basis_date
     thisactask.due_basis_reading = pdue_basis_reading
+    if plast_done is not None:
+        thisactask.last_done = plast_done
     db.session.commit()
     for h in phistory:
         histrow=ACMaintHistory(ac_id=pac_id,task_id=thisactask.id,

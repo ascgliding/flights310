@@ -38,6 +38,7 @@ class ACMaint:
                 self.__due_basis_date = ptask.due_basis_date
                 self.__due_basis_reading = ptask.due_basis_reading
                 self.__estimate_days = ptask.estimate_days
+                self.__next_due_override = ptask.next_due_override
                 self.__meter = None
                 self.__meter = ptask.std_task_rec.std_meter_rec
                 if self.__meter is None:
@@ -50,11 +51,13 @@ class ACMaint:
                 self.__last_meter_reading_value = None
                 self.__validate_task()
                 self.__set_last_reading()
+                self.__next_due_reading = None
                 self.__daily_use = None
                 self.__set_daily_use()
                 self.__next_due_date = None
                 self.__next_due_message = None
                 self.__set_next_due()
+
 
 
         def __str__(self):
@@ -115,6 +118,14 @@ class ACMaint:
         @property
         def next_due_date(self):
             return self.__next_due_date
+
+        @property
+        def next_due_reading(self):
+            return self.__next_due_reading
+
+        @property
+        def next_due_override(self):
+            return self.__next_due_override
 
         @property
         def days_to_go(self):
@@ -377,6 +388,7 @@ class ACMaint:
                     nextduereading = preference_reading
                     while nextduereading <= plastdone:
                         nextduereading += pregenerate_every
+
                 else:
                     # the reference reading is in front of the last done
                     nextduereading = preference_reading + pregenerate_every
@@ -444,6 +456,8 @@ class ACMaint:
                             self.__regenerate_from_reading(self.__last_done_reading,
                                                          self.__stdtask.task_meter_period,
                                                          self.__due_basis_reading)
+                    if self.__next_due_override is not None and self.__next_due_override > self.__last_done_reading:
+                        due_at_next_reading = self.__next_due_override
                 if self.__last_done_reading is None:
                     vnext_date = None
                 else:
@@ -483,7 +497,8 @@ class ACMaint:
                             vnext_date = datetime.date.today() + datetime.timedelta(days=daystogo)
                         except OverflowError as e:
                             vnext_date = None
-
+            if self.task_basis == 'Meter':
+                self.__next_due_reading = due_at_next_reading
             if cnext_date is None and vnext_date is None:
                 self.__next_due_message  = 'Unable to determine Due Date'
                 self.__next_due_date = next_date

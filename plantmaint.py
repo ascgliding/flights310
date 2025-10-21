@@ -93,11 +93,23 @@ class HrsMinsWidget(object):
 
     def __call__(self, field, **kwargs):
         field_id = kwargs.pop('id', field.id)
+        # work through the render kw dictonary
+        renderkw = ''
+        if kwargs is not None:
+            for k in kwargs:
+                if isinstance(kwargs[k], bool):
+                    if kwargs[k] is True:
+                        renderkw = ' '.join([renderkw, k])
+                elif isinstance(kwargs[k], str):
+                    renderkw = ' '.join([renderkw, f'{k}="{kwargs[k]}"'])
+
         html = []
         html.append(
-            '<input style="text-align:right;color:#2277FF" id="{}" name="{}" value="{}">'.format(field_id, field_id,
+            '<input style="text-align:right;color:#2277FF" id="{}" name="{}" value="{}" {}>'.format(field_id, field_id,
                                                                                                  mins2hrsmins(
-                                                                                                     field.data)))
+                                                                                                     field.data)),
+                                                                                                renderkw
+                    )
         return ' '.join(html)
 
 
@@ -123,11 +135,18 @@ class HrsWidget(object):
 
     def __call__(self, field, **kwargs):
         field_id = kwargs.pop('id', field.id)
+        # work through the render kw dictonary
+        renderkw = ''
+        if kwargs is not None:
+            for k in kwargs:
+                if isinstance(kwargs[k], bool):
+                    if kwargs[k] is True:
+                        renderkw = ' '.join([renderkw, k])
+                elif isinstance(kwargs[k], str):
+                    renderkw = ' '.join([renderkw, f'{k}="{kwargs[k]}"'])
         html = []
         html.append(
-            '<input style="text-align:right;color:#2277FF" id="{}" name="{}" value="{}">'.format(field_id, field_id,
-                                                                                                 mins2hrsdec(
-                                                                                                     field.data)))
+            f'<input style="text-align:right;color:#2277FF" id="{field_id}" name="{field_id}" value="{mins2hrsdec(field.data)}" {renderkw}>')
         return ' '.join(html)
 
 
@@ -730,20 +749,43 @@ def actaskmaint(id):
         flash('No such task')
         return redirect(url_for('plantmaint.actasklist'))
     else:
-        # todo: need same kind of logic for Qty based readings.
+        # Todo:  Need to get current calculated next_due_reading and add that to the
+        # form as a readonly field.  This will require getting an instance of the acmaint
+        # object from oMaint for this a/c.  Then stepping through
+        # todo: Need to do same processing for next due override.
         if stdtask.task_meter_id is not None:
             if thisrec.ac_meter_rec.entry_uom == 'Qty':
                 ThisViewFrm.last_done_reading = IntegerField('Last Done Meter Reading in units',
                                                              [validators.optional()],
                                                              description='The QTY meter reading when this was last done')
+                ThisViewFrm.next_due_reading = IntegerField('Next Due Meter Reading in units',
+                                                            description='Next task should be done at this reading.',
+                                                            render_kw={'disabled':True,'readonly':True})
+                ThisViewFrm.next_due_override = IntegerField('Override Next Due Reading in units',
+                                                            description='Override the next due reading with this value',
+                                                            )
             elif thisrec.ac_meter_rec.entry_uom == 'Hours:Minutes':
                 ThisViewFrm.last_done_reading = HrsMinsField('Last Done Meter Reading in Hrs:Mins',
                                                              [validators.optional()],
                                                              description='The meter reading when this was last done in Hours and Minutes')
+                ThisViewFrm.next_due_reading = HrsMinsField('Next Due Meter Reading in Hrs:Mins',
+                                                            description='Next task should be done at this reading.',
+                                                            render_kw={'disabled': True})
+                ThisViewFrm.next_due_override = HrsMinsField('Override Next Due Reading in units',
+                                                             description='Override the next due reading with this value',
+                                                             render_kw={'placeholder':'Override next due'}
+                                                             )
             else:
                 ThisViewFrm.last_done_reading = HrsField('Last Done Meter Reading in Decimal Hrs',
                                                          [validators.optional()],
                                                          description='The meter reading when this was last done in Decimal Hours')
+                ThisViewFrm.next_due_reading = HrsField('Next Due Meter Reading in Decimal Hrs',
+                                                            description='Next task should be done at this reading.',
+                                                            render_kw={'disabled': True,'readonly':True})
+                ThisViewFrm.next_due_override = HrsField('Override Next Due Reading in units',
+                                                     description='Override the next due reading with this value',
+                                                         render_kw={'placeholder': 'Override next due'}
+                                                         )
         # Add a field for the override due basis depending on the type of task and type of meter
         if stdtask.task_basis == 'Calendar':
             ThisViewFrm.due_basis_date = DateField('Basis Date for regeneration',
@@ -816,8 +858,14 @@ def actaskmaint(id):
                 "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
                 "error")
         return redirect(url_for('plantmaint.actasklist'))
+    # Not a POST operation......
+    # now find the task
+    if hasattr(thisform,"next_due_reading"):
+        thistask = [t for t in thisac.tasks if t.id == thisrec.id]
+        if len(thistask) > 0:
+            thisform.next_due_reading.data = thistask[0].next_due_reading
     return render_template('plantmaint/actaskmaint.html', form=thisform, meter=thisrec.std_task_rec.std_meter_rec,
-                           ac=thisac)
+                           ac=thisac, task=thisrec.std_task_rec)
 
 
 @bp.route('/acselectnewtask', methods=['GET', 'POST'])
@@ -1195,7 +1243,7 @@ def acmaintainhist():
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))
 
-    list = db.session.query(ACMaintHistory).filter(ac_id == thisac.id)
+    list = db.session.query(ACMaintHistory).filter(ACMaintHistory.ac_id == thisac.id)
     if request.method == 'GET':
         return render_template('plantmaint/maintainhist.html', list=list)
 

@@ -45,6 +45,18 @@
         (Qty or Mins)</I>
       </div>
     </div>
+      {#
+    {% if l.task_basis == 'Meter' %}
+    <div class="row mobile_port_suppress mobile_land_suppress">
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+        <div class="cell">
+            <I>Next Due Reading {{'%0.2f'|format(l.next_due_reading or 0)}} </I>
+        </div>
+    </div>
+    {% endif %}
+      #}
   {% endfor %}
   </div>
 {% endblock %}

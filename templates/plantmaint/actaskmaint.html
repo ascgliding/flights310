@@ -39,21 +39,29 @@ Some important notes:
     </br>
     <li>{{ render_field(form.last_done) }}</li>
     {% for f in form %}
-    {% if f.name == 'last_done_reading' %}
-    <li>{{ render_field(form.last_done_reading) }}  </li>
-    {% endif %}
+        {% if f.name == 'last_done_reading' %}
+            <li>{{ render_field(form.last_done_reading) }}  </li>
+        {% endif %}
+        {% if f.name == 'next_due_reading' %}
+          <li>{{ render_field(form.next_due_reading) }} </li>
+        {% endif %}
+        {% if f.name == 'next_due_reading' %}
+          <li>{{ render_field(form.next_due_override) }} </li>
+        {% endif %}
     {% endfor %}
     </br>
-    {% for f in form %}
-    {% if f.name  == 'due_basis_date' %}
-      <li>{{ render_field(form.due_basis_date) }} </li>
+    {% if task.task_basis != 'Calendar' %}
+        {% for f in form %}
+            {% if f.name  == 'due_basis_date' %}
+              <li>{{ render_field(form.due_basis_date) }} </li>
+            {% endif %}
+            {% if f.name == 'due_basis_reading' %}
+              <li>{{ render_field(form.due_basis_reading) }} </li>
+            {% endif %}
+        {% endfor %}
+        </br>
+        <li>{{ render_field(form.estimate_days) }}</li>
     {% endif %}
-    {% if f.name == 'due_basis_reading' %}
-      <li>{{ render_field(form.due_basis_reading) }} </li>
-    {% endif %}
-    {% endfor %}
-    </br>
-    <li>{{ render_field(form.estimate_days) }}</li>
     </br>
     <li>{{ render_field(form.warning_days) }}</li>
     <li>{{ render_field(form.warning_email) }} </li>

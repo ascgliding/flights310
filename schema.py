@@ -1070,6 +1070,8 @@ class ACTasks(db.Model):
                             comment="Override due basis if NOT based on the last done date")
     due_basis_reading =  db.Column(SqliteDecimal(10,2), default=None,
                             comment="Override due basis if NOT based on the last done reading")
+    next_due_override = db.Column(SqliteDecimal(10, 2),
+                                   comment="Override the value of when the task is next due", default=0)
 
     warning_days = db.Column(db.Integer,
         comment="The number of days before the due date in which a warning will be emailed")
