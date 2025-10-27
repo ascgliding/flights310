@@ -322,7 +322,7 @@ def changeflight(id):
         # Determine the TUG:
         if lastflt is not None:
             thisrec.tow_pilot = lastflt.tow_pilot
-            applog.debug("New rec tow pilot set to {} at point A. LAst flit id is {}".format(lastflt.tow_pilot, lastflt.id))
+            applog.debug("New rec tow pilot set to {} at point A. Last flt id is {}".format(lastflt.tow_pilot, lastflt.id))
             thisrec.tug_regn = lastflt.tug_regn
         # on a mobile platform the flight date is always the current date.  On windows or linux it will be prompted.
         # is todays date equal to the flight date?
