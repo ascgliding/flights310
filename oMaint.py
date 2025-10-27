@@ -625,7 +625,7 @@ class ACMaint:
                 if self.__entry_uom == 'Hours:Minutes':
                     return str(int(self.__last_reading_value / 60)) + \
                         ':' + \
-                           str(self.__last_reading_value % 60)
+                        "{:02}".format(self.__last_reading_value % 60)
                 else:
                     return round(self.__last_reading_value / 60, 2)
             else:

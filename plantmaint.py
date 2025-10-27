@@ -107,8 +107,8 @@ class HrsMinsWidget(object):
         html.append(
             '<input style="text-align:right;color:#2277FF" id="{}" name="{}" value="{}" {}>'.format(field_id, field_id,
                                                                                                  mins2hrsmins(
-                                                                                                     field.data)),
-                                                                                                renderkw
+                                                                                                     field.data),
+                                                                                                renderkw)
                     )
         return ' '.join(html)
 
