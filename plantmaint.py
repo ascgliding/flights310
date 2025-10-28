@@ -469,6 +469,7 @@ def maintpagecheck(checkpagename=None):
                         else:  # A page has been passed but we don't know which one AND the user does not have aircraft access
                             return None
     else:
+        applog.debug('regn variable is no longer in the session')
         return None
 
 
@@ -503,6 +504,7 @@ def index(pregn=None):
             return render_template('../index.html')
     else:
         session['regn'] = pregn
+        applog.debug(f'Added {pregn} to session')
         try:
             thisac = ACMaint(session['regn'])
         except Exception as e:
@@ -515,7 +517,9 @@ def index(pregn=None):
 @bp.route('/changeac', methods=['GET'])
 @login_required
 def changeac():
-    session.pop('regn')
+    if 'regn' in session:
+        session.pop('regn')
+        applog.debug(f'maintenance a/c regn removed from session')
     return redirect(url_for('plantmaint.maintainedac'))
 
 
