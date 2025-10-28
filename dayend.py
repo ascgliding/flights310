@@ -626,6 +626,8 @@ if __name__ == '__main__':
         # send_base_pass_reminders_to_members()
         # exit()
         # get_metforecast(174.6131,-36.7928)
+        # log.info("Updating Readings")
+        # update_auto_readings()
         # exit()
         # ---------------------------------------------------------------------------------------------------
         # send me the database on Saturdays and Sundays.
