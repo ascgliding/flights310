@@ -447,7 +447,7 @@ def maintpagecheck(checkpagename=None):
             raise RuntimeError('There is a problem in the maintenance program setup for {}'.format(session['regn']))
 
         if thisac is None:
-            return redirect(url_for('plantmaint.maintainedac'))
+            return None
         else:
             if thisac.get_security_level(current_user.id) is None:
                 return None
@@ -469,8 +469,9 @@ def maintpagecheck(checkpagename=None):
                         else:  # A page has been passed but we don't know which one AND the user does not have aircraft access
                             return None
     else:
-        applog.debug('regn variable is no longer in the session')
+        applog.info('regn variable is no longer in the session')
         return None
+
 
 
 # Aircraft with maintenance Schedules
@@ -479,15 +480,20 @@ def maintpagecheck(checkpagename=None):
 def maintainedac():
     if request.method == 'GET':
         sqlstmt = """
-        select 
-            t0.regn ,
-            t0.id,
-            t0.owner
-        from aircraft t0 
+        select t2.regn,
+            t0.ac_id,
+            t2.owner
+            from acmaintuser t0
+            join users t1 on t1.id = t0.user_id
+            join aircraft t2 on t2.id = t0.ac_id
+            where t0.user_id = :current_user
         """
         sql_to_execute = sqlalchemy.sql.text(sqlstmt)
         # sql_to_execute = sql_to_execute.columns(transdate=db.Date)
-        list = db.engine.execute(sql_to_execute).fetchall()
+        list = db.engine.execute(sql_to_execute,{'current_user':current_user.id}).fetchall()
+        if len(list) == 1:
+            print(list[0][0])
+            return redirect(url_for('plantmaint.index', pregn=list[0][0]))
         return render_template('plantmaint/maintainedac.html', list=list)
 
 
@@ -721,6 +727,8 @@ def stdusermaint(id):
 def actasklist():
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -740,6 +748,8 @@ def actaskmaint(id):
 
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -877,6 +887,8 @@ def actaskmaint(id):
 def acselectnewtask():
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -902,6 +914,8 @@ def acselectnewtask():
 def acmeterlist():
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -917,6 +931,8 @@ def acmeterlist():
 def acmetermaint(id):
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -983,6 +999,8 @@ def acmetermaint(id):
 def acselectnewmeter():
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -1073,6 +1091,8 @@ def acaddnewreading():
 
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -1173,6 +1193,8 @@ def acmeterreadinglist(meter_id):
     #    Whether it is forwards or backwards through the data.
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -1213,6 +1235,8 @@ def acmeterreadinglist(meter_id):
 def acmeterreadingremove(reading_id):
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.maintainedac'))
@@ -1243,6 +1267,8 @@ def acmeterreadingremove(reading_id):
 def acmaintainhist():
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))
@@ -1260,6 +1286,8 @@ def actaskcomplete(task):
 
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))
@@ -1360,6 +1388,8 @@ def achistorylist(task):
     '''
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', thiac=None))
@@ -1383,6 +1413,8 @@ def actaskhistorymaint(acmainthistory_id):
     # TODO: Add code to support changing / displaying the meter reading.
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', thiac=None))
@@ -1426,6 +1458,8 @@ def actaskhistorymaint(acmainthistory_id):
 def acimportreading(acmeters_id):
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))
@@ -1464,6 +1498,8 @@ def acresetreadings(acmeters_id):
 
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))
@@ -1508,6 +1544,8 @@ def acresetreadings(acmeters_id):
 def acmaintlogbook():
     try:
         thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
     except Exception as e:
         flash(str(e))
         return redirect(url_for('plantmaint.index', ac=None))

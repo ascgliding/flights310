@@ -25,7 +25,9 @@ class Config(object):
     SESSION_COOKIE_HTTPONLY=True
     SESSION_REFRESH_EACH_REQUEST=True
     SESSION_COOKIE_SECURE=True
-    PERMANENT_SESSION_LIFETIME=timedelta(minutes=3)
+    # I changed this to 6 hours because this is where it stores the aircraft registration currently
+    # being maintained in the plant maintenance system.
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=360)
     SMTP_MAIL_ADDRESS="ascgliding@gmail.com"
     # This is being obfuscated to stop github from whining.
     # The password is actually stored in the slots table but I'm keeping it here
@@ -37,6 +39,7 @@ class Config(object):
 class development(Config):
     # Note that this config assumes windows.
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(app.instance_path, 'asc.sqlite')
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=3)
     LOGCLEAR = True
     LOGLEVEL = 'DEBUG'
 
