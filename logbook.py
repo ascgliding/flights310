@@ -210,15 +210,15 @@ def logbook():
                           tows=db.Integer,
                           towmins=db.Integer
                           )
-        print(f'{startdate} to {enddate}')
-        print(str(sql))
-        flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
-        print(len(flights))
+        # print(f'{startdate} to {enddate}')
+        # print(f'{thisuser}: {thisuser.id}')
+        flights = db.engine.execute(sql, startdate=startdate, enddate=enddate, pilot=current_user.id).fetchall()
+        # print(len(flights))
         slot = db.session.query(Slot).filter_by(slot_key='LASTPAIDUPDATE').first()
-        tugonlyflights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
-        tows = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
-        print(tows)
-        towsummary = db.engine.execute(tow_summary, startdate=startdate, enddate=enddate, pilot=thisuser.user_id).fetchall()
+        tugonlyflights = db.engine.execute(tugonly, startdate=startdate, enddate=enddate, pilot=thisuser.fullname).fetchall()
+        tows = db.engine.execute(towdetail, startdate=startdate, enddate=enddate, pilot=thisuser.fullname).fetchall()
+        # print(tows)
+        towsummary = db.engine.execute(tow_summary, startdate=startdate, enddate=enddate, pilot=thisuser.fullname).fetchall()
         return render_template('logbook/logbook.html', list=flights, tugonly=tugonlyflights,
                                 tows=tows, towsummary=towsummary,
                                startdate=startdate, enddate=enddate,
