@@ -163,7 +163,7 @@ class TransactionForm(FlaskForm):
 def memberlist(active='ACTIVE'):
     if request.method == 'GET':
         if active=='ACTIVE':
-            list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.fullname).all()
+            list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname).all()
         else:
             list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname).all()
         # for l in list:

@@ -312,7 +312,7 @@ def mntbasepass():
 @bp.route('/userlist')
 @fresh_login_required
 def userlist():
-    users = User.query.order_by(User.fullname).all()
+    users = User.query.order_by(User.name).all()
     return render_template("auth/userlist.html", users=users)
 
 
