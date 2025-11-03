@@ -242,13 +242,18 @@ def profile():
         # See note above.
         # else:
          #    current_user.approved = False
-        if User.pilot_tbl:
-            User.pilot_tbl.email = current_user.email
-            User.pilot_tbl.gnz_no = current_user.gnz_no
+        if current_user.pilot_tbl:
+            current_user.pilot_tbl.email = current_user.email
+            # User.pilot_tbl.gnz_no = current_user.gnz_no
+            print(f'mobile on form : {request.form["mobile"]} for {current_user.pilot_tbl.fullname}')
+            current_user.pilot_tbl.mobile = request.form['mobile']
+            current_user.pilot_tbl.email_med_warning = request.form['email_med_warning']
+            current_user.pilot_tbl.email_bfr_warning = request.form['email_bfr_warning']
         db.session.commit()
         return redirect(url_for('index'))
     else:
-        return render_template("auth/profile.html")
+        pilot = current_user.pilot_tbl
+        return render_template("auth/profile.html", pilot=pilot)
 
 # This routine is for changing the current user's password
 

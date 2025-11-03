@@ -17,6 +17,24 @@
         <label for="email">EMail Address</label>
         <input name="email" id="email" style="width:50%" required value="{{ current_user.email }}">
       </li>
+      {% if pilot is not none %}
+          <li>
+              <label for="mobile">Mobile</label>
+              <input name="mobile" id="mobile" value="{{ pilot.mobile }}" placeholder="02x xxxx xxxx">
+          </li>
+          <li>
+            <label for="email_bfr_warning">Email BFR Warning</label>
+            <input type="checkbox" name="email_bfr_warning" id="email_bfr_warning"
+                   title="Check to have the system email you weekly warnings before your bfr expires"
+                   {{ 'checked="checked"' if pilot.email_bfr_warning else "" }} />
+          </li>
+          <li>
+            <label for="email_med_warning">Email Medical Warning</label>
+            <input type="checkbox" name="email_med_warning" id="email_med_warning"
+                   title="Check to have the system email you weekly warnings before your medical expires"
+                   {{ 'checked="checked"' if pilot.email_med_warning else "" }} />
+          </li>
+      {% endif %}
       {% if current_user.administrator %}
       <li>
         <label for="administrator">Administrator</label>

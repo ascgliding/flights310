@@ -222,9 +222,11 @@ function myLower(cObj)
           {% if 'regn' in session %}
             <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
           {% endif %}
+          {% if current_user.is_member_of("SYSADMIN") or current_user.is_member_of("TREASURER") or current_user.is_member_of("PLTADMIN") %}
           <div class="nophxone">
             <p><a href="{{ url_for('mastmaint.index') }}">Maintenance</a></p>
           </div>
+          {% endif %}
         {% else %}
           <p><a href="{{ url_for('auth.register') }}">Register</a></p>
           <p><a href="{{ url_for('auth.login') }}">Log In</a></p>

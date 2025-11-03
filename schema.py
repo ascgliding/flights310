@@ -150,7 +150,7 @@ class User(db.Model):
 
     @db.validates('name')
     def convert_lower(self, key, value):
-        if key == 'name':
+        if key == 'name' and value is not None:
             return value.strip().lower()
 
     def __init__(self, name=None):
