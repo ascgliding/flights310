@@ -3,25 +3,18 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-# from asc.schema import *
-# from decimal import Decimal
 from asc import db, create_app
 from asc.mailer import ascmailer
 from asc.oMetservice import MetService
-# # In order to trap errors from the engine
-# import sqlalchemy.exc
-# from sqlalchemy import text as sqltext, func
-# from sendgrid import SendGridAPIClient
-# from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
-# import datetime
 
 from oMailerSmtp import MailerSmtp
 from asc.common import *
 import re
 import os
-import arrow
+import arrow  # date manipulation - the ics module returns dates as arrow objects.  So this is needed for the calendar events
 from ics import Calendar
 import requests
+
 
 app = create_app()
 log = app.logger
@@ -52,7 +45,7 @@ class Mailer(MailerSmtp):
             elif s.slot_key == 'SMTP_MAIL_ADDRESS':
                 self.smtp_mail_address = s.slot_data
             elif s.slot_key == 'SMTP_PASSWORD':
-                print(f'setting password to s.slot_data')
+                print(f'setting password to {s.slot_data}')
                 self.smtp_mail_password = s.slot_data
 
 def testmailer():
@@ -77,9 +70,6 @@ def testmailer():
                           )
         thisset = db.engine.execute(sql).fetchall()
         dictlist = [x._asdict() for x in thisset]
-        # print(dictlist)
-        # print(list(dictlist))
-        # print(type(dictlist[0]))
         dictlist.insert(0, ['ID', 'PIC', 'Landed'])
         msg.add_body_list(dictlist)
         msg.add_recipient('ray@rayburns.nz')
@@ -104,17 +94,10 @@ def update_auto_readings():
 
 
 def send_one_maintenance_email(address, thelist):
-    # print('TESTING: Email to {}'.format(address))
-    # print('About to send:')
-    # for t in thelist:
-    #     print(t)
-    # send the email here
     msg = Mailer('ASC Aircraft tasks due')
-    # msg.add_body("Email should have gone to {}".format(address))
     msg.add_body_list(thelist)
     msg.add_recipient(address)
     msg.send()
-    # print(msg.body)
 
 
 def send_maintenance_emails():
@@ -132,14 +115,11 @@ def send_maintenance_emails():
     common_set_log(log)
     emails = []
     for ac in ac_with_warnings:
-        # print('Processing {}'.format(ac.regn))
         thisac = ACMaint(ac[0])
         for t in thisac.tasks:
-            # print('Task {}'.format(t.description))
             if t.warning_days is not None:
                 if t.next_due_date - relativedelta(days=t.warning_days) <= datetime.date.today():
                     addresses = re.split(',|;| |\|', t.warning_email)
-                    # print('Addresses: {}'.format(emails))
                     for addr in addresses:
                         if "@" in addr:  # looks like an email and deals with any empty list items.
                             emails.append({'addr': addr,
@@ -155,11 +135,6 @@ def send_maintenance_emails():
     print('Now Processing Sorted list')
     lastaddr = None
     emailtext = []
-    # emailtext.append({'ac':'Regn',
-    #                   'task':'Task',
-    #                   'due':'Due',
-    #                   'duemsg': 'Due Message'
-    #                     })
     emailtext.append(['Regn', 'Task', 'Due', 'Message'])
     for tasks in sortedlist:
         if lastaddr is not None and lastaddr != tasks['addr']:
@@ -199,7 +174,6 @@ def send_db():
     print('sending Database')
     print(os.getcwd())
     msg = Mailer('Database Backup')
-    # msg.add_body("Email should have gone to {}".format(address))
     msg.add_body("<html>Here is the Database Backup")
     msg.add_body("</br> It is now " + datetime.datetime.now().strftime('%A %d-%b-%Y %H:%M'))
     msg.add_body("</html>")
@@ -235,7 +209,6 @@ def send_med_bfr_to_cfi():
     if count > 0:
         msg = Mailer('Medical and BFR Status')
         msg.add_body_list(email_list)
-#        msg.add_recipient('ray.burns@velocityglobal.co.nz')
         msg.add_recipient('ray@rayburns.nz')
         msg.add_recipient('pbthorpe@xtra.co.nz')
         msg.add_recipient('lionelpnz@gmail.com')
@@ -259,8 +232,6 @@ def send_bfr_reminders_to_members():
                 # debug:
                 # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
                 msg.add_recipient(m.email)
-                # msg.add_recipient('ray@rayburns.nz')
-                #
                 msg.send()
                 app.logger.info(f'BFR Reminder sent to {m.fullname}')
 
@@ -285,8 +256,6 @@ def send_medical_reminders_to_members():
                 # debug:
                 # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
                 msg.add_recipient(m.email)
-                # msg.add_recipient('ray@rayburns.nz')
-                #
                 msg.send()
                 app.logger.info(f'Medical Reminder sent to {m.fullname}')
 
@@ -440,9 +409,13 @@ def getpilot(somename):
 
 
 def send_instr_email(thisdate, dayevents, instructor, tp, dp):
-    """    :param events: a list of calendar event objects
+    """
+    :param thisdate: The date in question.  Only sends one mail per date
+    :param events: a list of calendar event objects provided by ics module
     :param instructor: A Pilot object for the instructor
-    :return:
+    :param tp: A Pilot object for the tow pilot
+    :param dp: A Pilot object for the duty Pilot
+    :return: None
     """
     log.info('Event email being sent to {}'.format(instructor.fullname))
     msg = Mailer('Events for this coming weekend')
@@ -477,6 +450,67 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
         msg.add_body('</html>')
         msg.send()
 
+def send_summary_event_email(events):
+    """
+    This routine sends a summary of events and contact details.  It is mainly intended
+    for base operations (akbaseoperatons@nzdf.mil.nz) and the tower (WP_Tower@airways.co.nz)
+    :param events: a list of calendar event objects provided by ics module
+    :return: None
+    """
+    msg = Mailer('Upcoming Gliding Club Events and Contacts ')
+    msg.add_body('<html>')
+    msg.add_body('<b> Upcoming Events </b>')
+    # Create a list of dictionaries for the events
+    eventlist=[{'Date':'', 'Description':''}]  # title row
+    for event in events:
+        thismatch = re.search("(^INS:)(.*)(TP:)(.*)(DP:)(.*)", event.name)
+        eventname = event.name
+        if thismatch:
+            thisinstr = getpilot(thismatch.group(2))
+            log.info(f'Found Instructor for day: {thisinstr.fullname}')
+            thistp = getpilot(thismatch.group(4))
+            eventname = f"Instructor : {thisinstr.fullname} ({thisinstr.mobile}), Tow Pilot : {thistp.fullname} ({thistp.mobile})"
+        else:
+            thismatch = re.search("(^GNW:)", event.name)
+            if thismatch:
+                eventname = f"ATC Cadets : {event.name} "
+            else:
+                thismatch = re.search("(^Trial Flight)", event.name)
+                if thismatch:
+                    eventname = None # don't include this one
+        if eventname is not None:
+            print(f'Adding event: {eventname}')
+            eventlist.append({'Date': event.begin.to('local').datetime.strftime('%A, %d %B'), 'Name': eventname})
+    msg.add_body_list(eventlist)
+
+    # create a list of dictionaries for use in the smtp mailer function....
+    instructors = db.session.query(Pilot.fullname,Pilot.mobile).filter(Pilot.active).filter(Pilot.instructor).all()
+    dictlist = [x._asdict() for x in instructors]
+    dictlist.insert(0, ['Name', 'Mobile'])
+    msg.add_body('<br>')
+    msg.add_body('<hr>')
+    msg.add_body('<b> Full List of Current Instructors </b>')
+    msg.add_body_list(dictlist)
+
+    #CFI
+    cfi_user = db.session.execute(select(UserRoles).join(UserRoles.role_rec).filter(Role.name == 'CFI')).one_or_none()
+    if cfi_user is not None:
+        print(cfi_user[0].user_rec.pilot_tbl.fullname)
+        msg.add_body('<br>')
+        msg.add_body('<hr>')
+        msg.add_body(f'<b> CFI:  {cfi_user[0].user_rec.pilot_tbl.fullname} ({cfi_user[0].user_rec.pilot_tbl.mobile}) {cfi_user[0].user_rec.pilot_tbl.email} or cfi@ascgliding.org   </b>')
+
+    msg.add_body('</html>')
+
+    # send the mail
+    recipient = db.session.query(Slot.slot_data).filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'SUMMARYEVENTEMAIL').one_or_none()
+    print(recipient[0])
+    if recipient is not None:
+        for r in recipient[0].split(','):
+            log.info('Event summary email being sent to {}'.format(r))
+            msg.add_recipient(r)
+    # msg.add_recipient(sendto)
+    msg.send()
 
 def update_roster(rdate, instr, tp, dp):
     """
@@ -528,7 +562,30 @@ def geteventlist(file, startdate, enddate,prefix=None):
     return rtnlist
 
 
-def processcalendar(startdate, enddate):
+def eventlist(startdate, enddate):
+    """
+    This function uses the ics.py package to return a list of events
+    printing a single event will look very much like an ics file:
+        BEGIN:VEVENT
+        CREATED:20250913T014049Z
+        DTSTART;VALUE=DATE:20251108
+        DTEND;VALUE=DATE:20251109
+        DTSTAMP:20251108T172829Z
+        LAST-MODIFIED:20251015T055601Z
+        SUMMARY:INS:I BURR TP:R Burns DP:D MCGOWAN
+        END:VEVENT
+    But note that the data in each event is referred to via something
+    like event.begin or event.description.
+
+    Be careful when dealing with event dates.  These are represented in the
+    ics package as arrow objects.  So you need to review the documentation
+    for that object to understand how to deal with them.
+
+    :param startdate:
+    :param enddate:
+    :return: a list of event objects as defined in the ics.py module
+    """
+
     # print(icalendar.__version__)
 
     print('processing roster between {} and {}'.format(startdate, enddate))
@@ -540,6 +597,7 @@ def processcalendar(startdate, enddate):
     ascurl = "https://calendar.google.com/calendar/ical/ascgliding%40gmail.com/public/basic.ics"
     # Atc
     atcurl = "https://calendar.google.com/calendar/ical/pegasus.flying.trust%40gmail.com/public/basic.ics"
+
     # This works fine:
     # with urlopen(myurl) as calendar:
     #     for line in calendar:
@@ -566,12 +624,16 @@ def processcalendar(startdate, enddate):
     # print('Herer are all the events')
     # for e in eventlist:
     #     print("{} : {}".format(e.begin.to('local'), e.name))
-    for event in eventlist:  # thiscal.timeline.included(arrow.get(startdate),arrow.get(enddate)):
+    return eventlist
+
+def clubemails(events):
+    for event in events:  # thiscal.timeline.included(arrow.get(startdate),arrow.get(enddate)):
         log.info('Processing {} on {}'.format(event.name, event.begin.to('local').date()))
         # build a  list of all items on this date....
         if lastdate is None or event.begin.to('local').date() != lastdate:
             if date_has_roster: # and len(dayevents) != 0:
                 send_instr_email(lastdate, dayevents, thisinstr, thistp, thisdp)
+                # send_base_ops_email(lastdate, dayevents, thisinstr, thistp, thisdp)
             # now get ready for the next day
             dayevents = []
             thisinstr = None
@@ -598,6 +660,9 @@ def processcalendar(startdate, enddate):
     if date_has_roster:
         # here is what we do with it.
         send_instr_email(lastdate, dayevents, thisinstr, thistp, thisdp)
+        # send_base_ops_email(lastdate, dayevents, thisinstr, thistp, thisdp)
+
+
 
 def get_metforecast(long,lat):
     apikey = Slot.query.filter(Slot.slot_type == 'SYSTEM').filter(Slot.slot_key == 'METSERVICEAPIKEY').first()
@@ -629,6 +694,11 @@ if __name__ == '__main__':
         # log.info("Updating Readings")
         # update_auto_readings()
         # exit()
+        # sdate = datetime.date(2025,11,10)
+        # edate = sdate + relativedelta(days=7)
+        # events = eventlist(sdate, edate)
+        # send_summary_event_email(events)
+        # exit()
         # ---------------------------------------------------------------------------------------------------
         # send me the database on Saturdays and Sundays.
         if datetime.datetime.today().weekday() in [6, 0]:
@@ -640,7 +710,9 @@ if __name__ == '__main__':
             sdate = datetime.date.today()
             edate = sdate + relativedelta(days=7)
             log.info("Sending Calendar Event Emails")
-            processcalendar(sdate, edate)
+            events = eventlist(sdate, edate)
+            clubemails(events)
+            send_summary_event_email(events)
 
         # Send statistics on the first of the month
         if datetime.date.today().day == 1 and (datetime.date.today().month == 1 or datetime.date.today().month == 7):
