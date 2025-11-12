@@ -610,11 +610,11 @@ def eventlist(startdate, enddate):
     # for testing:
     # with open("instance/basic.ics","r") as f:
     #     thiscal = Calendar(f.read())
-    lastdate = None
-    dayevents = []
+    # lastdate = None
+    # dayevents = []
     # There may be some events in the calendar that are not related to the roster
     # such as committee meetings and so on.  We don't want to process those
-    date_has_roster = False
+    # date_has_roster = False
     # eventlist = geteventlist("../instance/basic.ics", startdate,enddate)
     # eventlist.extend(geteventlist("../instance/atc.ics", startdate,enddate, "GNW:"))
     eventlist = geteventlist(ascurl, startdate,enddate)
@@ -627,6 +627,9 @@ def eventlist(startdate, enddate):
     return eventlist
 
 def clubemails(events):
+    lastdate = None
+    dayevents = []
+    date_has_roster = False
     for event in events:  # thiscal.timeline.included(arrow.get(startdate),arrow.get(enddate)):
         log.info('Processing {} on {}'.format(event.name, event.begin.to('local').date()))
         # build a  list of all items on this date....
@@ -659,6 +662,7 @@ def clubemails(events):
     # if len(dayevents) != 0 and date_has_roster:
     if date_has_roster:
         # here is what we do with it.
+        # print("emailed")
         send_instr_email(lastdate, dayevents, thisinstr, thistp, thisdp)
         # send_base_ops_email(lastdate, dayevents, thisinstr, thistp, thisdp)
 
@@ -694,10 +698,10 @@ if __name__ == '__main__':
         # log.info("Updating Readings")
         # update_auto_readings()
         # exit()
-        # sdate = datetime.date(2025,11,10)
+        # sdate = datetime.date(2025,11,13)
         # edate = sdate + relativedelta(days=7)
         # events = eventlist(sdate, edate)
-        # send_summary_event_email(events)
+        # clubemails(events)
         # exit()
         # ---------------------------------------------------------------------------------------------------
         # send me the database on Saturdays and Sundays.
@@ -706,7 +710,7 @@ if __name__ == '__main__':
             send_db()
 
         # Upload the calendar
-        if datetime.date.today().weekday() in [3]:  # Thursdays.
+        if datetime.date.today().weekday() in [4]:  # Fridays.
             sdate = datetime.date.today()
             edate = sdate + relativedelta(days=7)
             log.info("Sending Calendar Event Emails")
