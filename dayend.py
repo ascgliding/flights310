@@ -706,7 +706,7 @@ if __name__ == '__main__':
             send_db()
 
         # Upload the calendar
-        if datetime.date.today().weekday() in [4]:  # Friday is 4.
+        if datetime.date.today().weekday() in [3]:  # Thursdays.
             sdate = datetime.date.today()
             edate = sdate + relativedelta(days=7)
             log.info("Sending Calendar Event Emails")
