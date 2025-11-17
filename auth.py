@@ -255,6 +255,7 @@ def profile():
                 current_user.pilot_tbl.email_bfr_warning = True
             else:
                 current_user.pilot_tbl.email_bfr_warning = False
+
         db.session.commit()
         return redirect(url_for('index'))
     else:
