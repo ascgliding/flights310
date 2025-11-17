@@ -247,8 +247,14 @@ def profile():
             # User.pilot_tbl.gnz_no = current_user.gnz_no
             print(f'mobile on form : {request.form["mobile"]} for {current_user.pilot_tbl.fullname}')
             current_user.pilot_tbl.mobile = request.form['mobile']
-            current_user.pilot_tbl.email_med_warning = request.form['email_med_warning']
-            current_user.pilot_tbl.email_bfr_warning = request.form['email_bfr_warning']
+            if 'email_med_warning' in request.form:
+                current_user.pilot_tbl.email_med_warning = True
+            else:
+                current_user.pilot_tbl.email_med_warning = False
+            if 'email_bfr_warning' in request.form:
+                current_user.pilot_tbl.email_bfr_warning = True
+            else:
+                current_user.pilot_tbl.email_bfr_warning = False
         db.session.commit()
         return redirect(url_for('index'))
     else:
