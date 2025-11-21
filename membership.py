@@ -76,7 +76,7 @@ class PilotForm(FlaskForm):
     mobile2 = StringField('Mobile 2', description="Add any second emobile number", render_kw={'autocomplete': 'dont'})
     committee = BooleanField('Committee Member', render_kw={'class': 'intable'})
     instructor = BooleanField('Instructor', render_kw={'class': 'intable'})
-    tow_pilot = BooleanField('Tow Pilot', render_kw={'class': 'intable'})
+    towpilot = BooleanField('Tow Pilot', render_kw={'class': 'intable'})
     oo = BooleanField('OO', render_kw={'class': 'intable'})
     duty_pilot = BooleanField('Duty Pilot', render_kw={'class': 'intable'})
     nok_name = StringField('Next of Kin')

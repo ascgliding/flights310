@@ -54,7 +54,7 @@
           <div style="display:table-row">
             <div style="display:table-cell;">{{ render_checkbox(form.committee) }}</div>
             <div style="display:table-cell;"> {{ render_checkbox(form.instructor) }}</div>
-            <div style="display:table-cell;">{{ render_checkbox(form.tow_pilot) }}</div>
+            <div style="display:table-cell;">{{ render_checkbox(form.towpilot) }}</div>
             <div style="display:table-cell;"> {{ render_checkbox(form.duty_pilot) }}</div>
             <div style="display:table-cell;">{{ render_checkbox(form.oo) }}</div>
           </div>
@@ -98,7 +98,10 @@
     {{ form.btnsubmit() }}
 
     {{ form.cancel() }}
-    <a class="textbtn" href="{{ url_for('membership.mntbasepass',memberid=form.id.data) }}" title="Maintain Base Pass." >Base Pass</a>
+    <!-- buttons only if not add mode -->
+    {% if form.id is defined and form.id.data is not none%}
+        <a class="textbtn" href="{{ url_for('membership.mntbasepass',memberid=form.id.data) }}" title="Maintain Base Pass." >Base Pass</a>
+    {% endif %}
 
 <!--    {{ form.print() }}-->
     {{ form.trans() }}
