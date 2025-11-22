@@ -550,6 +550,7 @@ class ACMaint:
                 and reading_date >= (select max(reading_date) 
                             from meterreadings 
                             where ac_id = :ac_id and meter_id = :meter_id)
+                order by id desc
                 ''')
             sql = sql.columns(reading_date=db.Date, meter_reading=SqliteDecimal(10, 2),
                               meter_delta=SqliteDecimal(10, 2))

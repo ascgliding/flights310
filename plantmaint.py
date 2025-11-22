@@ -1086,6 +1086,8 @@ def get_wt_meter_fld(thisac, id):
 @bp.route('acaddnewreading', methods=['GET', 'POST'])
 @login_required
 def acaddnewreading():
+    # we need a new form that inherits from the defined form because
+    # we add the meters at runtime.
     class ThisViewFrm(ACAddNewReadingForm):
         pass
 
@@ -1100,18 +1102,22 @@ def acaddnewreading():
         flash("Sorry, You do not have access to this function", "error")
         return render_template('plantmaint/index.html', ac=None)
     lastreadings = {}
+    # Add form components for each meter that we require the readings for
     for thismeter in thisac.meters:
         runtime_flds = get_wt_meter_fld(thisac, thismeter.id)
         thisfld = runtime_flds[0]
         setattr(ThisViewFrm, thisfld.kwargs['id'], thisfld)
         lastreadings[thisfld.kwargs['id']] = runtime_flds[1]
+    # display the form for get operations
     if request.method == 'GET':
         thisform = ThisViewFrm()
         return render_template('plantmaint/acaddnewreading.html', form=thisform, lastreadings=lastreadings, ac=thisac)
+    # process the form on post.
     if request.method == 'POST':
         if 'cancel' in request.form:
             return render_template('plantmaint/index.html', ac=thisac)
         thisform = ThisViewFrm(request.form)  # because we are inheriting from FORM and not FLASKFORM
+        # Validate and redisplay if there are errors
         if not thisform.validate():
             for e in thisform.errors:
                 flash("Error: {}".format(str(e)), "error")
@@ -1119,14 +1125,18 @@ def acaddnewreading():
         addedreadingcount = 0
         thisdate = thisform.reading_date.data
         error_occurred = False
+        # debugging:  list the meters we are going to process:
+        for thismeter in [m for m in thisac.meters if m.meter_name in thisform.data]:
+            print(f'Meter to process is : {thismeter.meter_name}')
+        # loop for each meter listed in the form
         for thismeter in [m for m in thisac.meters if m.meter_name in thisform.data]:
             # In this loop, thismeter is a meter from thisac.meters (but only if it appears on the form with data)
             # thisform.data is a list of the names (ie.e strings) of those attributes
             thisformfield = getattr(thisform, thismeter.meter_name)
             if hasattr(thisformfield, 'data'):
-                # then the form as this field somewhere
-                if thisformfield.data is not None:
-                    if thisformfield.data != 0:
+                # then the form has this field somewhere
+                if thisformfield.data is not None:  # do not add rows unless the user entered something.
+                    if thisformfield.data != 0:  # and the value has to be non-zero
                         if isinstance(thisformfield.data, decimal.Decimal) \
                                 or isinstance(thisformfield.data, int):
                             # thismeter = [m for m in thisac.meters if m.meter_name == f][0]
@@ -1181,7 +1191,8 @@ def acaddnewreading():
                     "error")
         flash(str(addedreadingcount) + ' Meter readings added successfully')
         applog.info(str(addedreadingcount) + ' Meter readings added successfully')
-        return render_template('plantmaint/index.html', ac=thisac)
+        #return render_template('plantmaint/index.html', ac=thisac)
+        return redirect(url_for('plantmaint.index', pregn=thisac))
 
 
 @bp.route('/acmeterreadinglist/<meter_id>', methods=['GET', 'POST'])
@@ -1259,7 +1270,7 @@ def acmeterreadingremove(reading_id):
                 "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
                 "error")
     flash("Meter Reading Removed")
-    return redirect(url_for('plantmaint.acmeterreadinglist', meter_id=thismeter))
+    return redirect(url_for('plantmaint.acmeterlist'))
 
 
 @bp.route('/acmaintainhist', methods=['GET'])
