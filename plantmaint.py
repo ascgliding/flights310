@@ -52,7 +52,7 @@ def mins2hrsdec(value) -> str:
 
 
 def hrsdec2mins(value) -> int:
-    return int(float(value) * 60)
+    return round((float(value) * 60),0)
 
 
 def mins2hrsmins(value) -> str:
