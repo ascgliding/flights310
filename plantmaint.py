@@ -60,6 +60,7 @@ def mins2hrsmins(value) -> str:
         return "0"
     hrs = int(value / 60)
     mins = int(value - (hrs * 60))
+    print(f'hrs={hrs}, mins={mins}, value={value}')
     return str(hrs) + ':' + str(mins).zfill(2)
 
 
@@ -1585,7 +1586,8 @@ def acmaintlogbook():
                 flash(str(e))
         else:
             try:
-                return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data),
+                # turns out the datetimes don't even work on windows.  You have to convert to a string.....
+                return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data, p_hrs_mins_as_string=True),
                                  as_attachment=True)
             except Exception as e:
                 flash(str(e))
