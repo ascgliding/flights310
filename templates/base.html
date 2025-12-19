@@ -219,8 +219,12 @@ function myLower(cObj)
           {% if current_user.is_member_of("PASSMGR") %}
             <p><a href="{{ url_for('misc.memberpasslist',active='ACTIVE') }}">Base Passes</a></p>
           {% endif %}
-          {% if 'regn' in session %}
-            <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
+          {% if 'regn' in session or current_user.has_maintenance_access %}
+              {% if 'regn' in session  %}
+                <p><a href="{{ url_for('plantmaint.index', pregn=session['regn']) }}">Scheduled Maintenance</a></p>
+              {% elif current_user.has_maintenance_access %}
+                <p><a href="{{ url_for('plantmaint.maintainedac') }}">Scheduled Maintenance</a></p>
+              {% endif %}
           {% endif %}
           {% if current_user.is_member_of("SYSADMIN") or current_user.is_member_of("TREASURER") or current_user.is_member_of("PLTADMIN") %}
           <div class="nophxone">

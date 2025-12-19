@@ -8,7 +8,7 @@ from dateutil.relativedelta import *
 from asc import db
 
 # Decimal support:
-from sqlalchemy import Integer, ForeignKey
+from sqlalchemy import Integer, ForeignKey, func
 from decimal import Decimal
 from sqlalchemy.orm import relationship
 
@@ -220,6 +220,14 @@ class User(db.Model):
             return False
         else:
             return True
+
+    @property
+    def has_maintenance_access(self):
+        ac_count = db.session.query(func.count(ACMaintUser.id)).filter(ACMaintUser.user_id==self.id).scalar() or 0
+        if ac_count > 0:
+            return True
+        else:
+            return False
 
     def get_id(self):
         """Return the id of a user to satisfy Flask-Login's requirements."""
