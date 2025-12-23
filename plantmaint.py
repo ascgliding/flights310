@@ -385,7 +385,7 @@ class ACTaskForm(FlaskForm):
 
 class ACAddNewReadingForm(Form):
     name = "Enter New Readings"
-    reading_date = DateField('Date', description='Date for these readings', default=datetime.date.today())
+    reading_date = DateField('Date', description='Date for these readings', default=datetime.date.today(), render_kw={'autofocus': True})
     note = StringField('Notes', description='Add any notes to describe the flying')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
