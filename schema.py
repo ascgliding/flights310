@@ -1,6 +1,7 @@
 import decimal
 
 import sqlalchemy.exc
+#from ics import event
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 from dateutil.relativedelta import *
@@ -8,9 +9,9 @@ from dateutil.relativedelta import *
 from asc import db
 
 # Decimal support:
-from sqlalchemy import Integer, ForeignKey, func
+from sqlalchemy import Integer, ForeignKey, func, event, select
 from decimal import Decimal
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 
 import sqlalchemy.types as types
 from sqlalchemy import text as sqltext
@@ -1135,6 +1136,12 @@ class ACTasks(db.Model):
 
 
 class MeterReadings(db.Model):
+
+    # Note the system wide before_flush event handler (at the bottom of this file)
+    # contains code to ensure that duplicate records are not allowed.
+    # Note that using the before_flush ensures it never reaches the database
+    # but no error is raised.  this way the rest of the code can run without change.
+    #
     __tablename__ = 'meterreadings'
 
     id = db.Column(db.Integer, db.Sequence('meterreadings_id_seq'), primary_key=True)
@@ -1222,6 +1229,9 @@ class MeterReadings(db.Model):
         except Exception as e:
             return str(self.meter_reading) + "(err)" + str(e)
 
+
+
+
 class ACMaintHistory(db.Model):
     __tablename__ = 'acmainthistory'
 
@@ -1307,4 +1317,71 @@ class Queries(db.Model):
 #     if object_session(target).is_modified(target, include_collections=False):
 #         thispilot = Pilot.query.filter(Pilot.gnz_no == target.gnz_no)
 #         set_committed_value(thispilot,'email',target.email_address)
+
+
+@event.listens_for(MeterReadings, "before_insert")
+def meterreadings_before_insert(mapper,connection,obj):
+        #
+        # This code is to ensure that we do not get duplicate meter readings.
+        # This occurs for example when we complete a 100 hour that also includes a 50
+        # hour and we don't want both of them to appear in readings
+        #
+        thismeter = db.session.query(ACMeters).filter(ACMeters.ac_id==obj.ac_id).filter(ACMeters.meter_id == obj.meter_id).first()
+        exists = connection.scalar(select(MeterReadings.id)
+                  .where(MeterReadings.ac_id == obj.ac_id,
+                    MeterReadings.meter_id == obj.meter_id,
+                    MeterReadings.reading_date == obj.reading_date,
+                    MeterReadings.meter_reading == obj.meter_reading))
+        if exists is not None:
+            raise ValueError(f'Duplicate Meter reading for {thismeter.std_meter_rec.meter_name} on {obj.reading_date} ')
+        # check if there is a greater value here?  or greater date?
+        else:
+            biggest_reading = (db.session.query(func.max(MeterReadings.meter_reading))
+                               .filter(MeterReadings.ac_id == obj.ac_id)
+                               .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or 0
+            if obj.meter_reading <= biggest_reading:
+                raise ValueError(f'There is already a larger reading for {thismeter.std_meter_rec.meter_name}')
+            else:
+                last_date = (db.session.query(func.max(MeterReadings.reading_date))
+                             .filter(MeterReadings.ac_id == obj.ac_id)
+                             .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or 0
+                if obj.reading_date < last_date:
+                    raise ValueError(f'There is already a reading for a later date for {thismeter.std_meter_rec.meter_name}')
+
+
+# @event.listens_for(Session, "before_flush")
+# def skip_duplicate(session, flush_context, instances):
+#     for obj in session.new:
+#         if isinstance(obj, MeterReadings):
+#             #
+#             # This code is to ensure that we do not get duplicate meter readings.
+#             # This occurs for example when we complete a 100 hour that also includes a 50
+#             # hour and we don't want both of them to appear in readings
+#             #
+#             exists = (session.query(MeterReadings)
+#                       .filter(MeterReadings.ac_id == obj.ac_id)
+#                       .filter(MeterReadings.meter_id == obj.meter_id)
+#                       .filter(MeterReadings.reading_date == obj.reading_date)
+#                       .filter(MeterReadings.meter_reading == obj.meter_reading)
+#                       .first())
+#             if exists:
+#                 print(f'Skipped Duplicate Meter reading {obj.ac_id}, {obj.meter_id}, {obj.reading_date}')
+#                 session.expunge(obj)
+#             # check if there is a greater value here?  or greater date?
+#             else:
+#                 biggest_reading = session.query(func.max(MeterReadings.meter_reading)
+#                     .filter(MeterReadings.ac_id == obj.ac_id)
+#                     .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or 0
+#                 if obj.meter_reading <= biggest_reading:
+#                     print(f'There is already a larger reading')
+#                     session.expunge(obj)
+#                 else:
+#                     last_date = session.query(func.max(MeterReadings.reading_date)
+#                                                     .filter(MeterReadings.ac_id == obj.ac_id)
+#                                                     .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or 0
+#                     if obj.reading_date <= last_date:
+#                         print(f'There is already a reading for a later date')
+#                         session.expunge(obj)
+
+
 

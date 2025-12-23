@@ -857,7 +857,7 @@ def actaskmaint(id):
                 if thisrec.last_done_reading > currenttask.last_meter_reading_value:
                     # we need to get the formatting correct for the error message:
                     acmeter = ACMeters.query.filter(ACMeters.ac_id == thisac.id).filter(
-                        ACMeters.meter_id == thisrec.meter_id).first()
+                        ACMeters.meter_id == thisrec.std_task_rec.std_meter_rec.id).first()
                     flash(
                         '{} has a last done reading of {} which is later than the last reading of {}. Is that right?'.format(
                             currenttask.description, format_reading(thisrec.last_done_reading, acmeter.entry_uom),
@@ -1127,8 +1127,8 @@ def acaddnewreading():
         thisdate = thisform.reading_date.data
         error_occurred = False
         # debugging:  list the meters we are going to process:
-        for thismeter in [m for m in thisac.meters if m.meter_name in thisform.data]:
-            print(f'Meter to process is : {thismeter.meter_name}')
+        # for thismeter in [m for m in thisac.meters if m.meter_name in thisform.data]:
+        #     print(f'Meter to process is : {thismeter.meter_name}')
         # loop for each meter listed in the form
         for thismeter in [m for m in thisac.meters if m.meter_name in thisform.data]:
             # In this loop, thismeter is a meter from thisac.meters (but only if it appears on the form with data)
@@ -1140,21 +1140,21 @@ def acaddnewreading():
                     if thisformfield.data != 0:  # and the value has to be non-zero
                         if isinstance(thisformfield.data, decimal.Decimal) \
                                 or isinstance(thisformfield.data, int):
-                            # thismeter = [m for m in thisac.meters if m.meter_name == f][0]
-                            if thismeter is not None and float(thisformfield.data) != 0:
-                                if thismeter.last_reading_date is not None:
-                                    if thisdate < thismeter.last_reading_date:
-                                        flash("Date for {} is earlier than last reading value".format(
-                                            thismeter.meter_name),
-                                            "error")
-                                        error_occurred = True
-                                    if thismeter.entry_uom != 'Delta':
-                                        if thismeter.entry_method == 'Reading':
-                                            if thismeter.last_meter_reading > float(thisformfield.data):
-                                                flash("{} Reading is less than last reading value".format(
-                                                    thismeter.meter_name),
-                                                    "error")
-                                                error_occurred = True
+                            # the checking below is done by a before_insert listener in schema.py
+                            # if thismeter is not None and float(thisformfield.data) != 0:
+                            #     if thismeter.last_reading_date is not None:
+                            #         if thisdate < thismeter.last_reading_date:
+                            #             flash("Date for {} is earlier than last reading value".format(
+                            #                 thismeter.meter_name),
+                            #                 "error")
+                            #             error_occurred = True
+                            #         if thismeter.entry_uom != 'Delta':
+                            #             if thismeter.entry_method == 'Reading':
+                            #                 if thismeter.last_meter_reading > float(thisformfield.data):
+                            #                     flash("{} Reading is less than last reading value".format(
+                            #                         thismeter.meter_name),
+                            #                         "error")
+                            #                     error_occurred = True
                                 # we have a valid meter
                                 newreading = MeterReadings()
                                 newreading.ac_id = thisac.id
@@ -1173,25 +1173,34 @@ def acaddnewreading():
                                         newreading.meter_delta = newreading.meter_reading - \
                                                                  thismeter.last_meter_reading
                                 newreading.note = thisform.note.data
-                                db.session.add(newreading)
-                                applog.info('ADD:' + repr(newreading))
-                                addedreadingcount += 1
-                            else:
-                                flash("Failed to locate meter for " + thismeter.meter_name, "error")
-                                error_occurred = True
+                                try:
+                                    db.session.add(newreading)
+                                    applog.info('ADD:' + repr(newreading))
+                                    addedreadingcount += 1
+                                except Exception as e:
+                                    flash(str(e))
+                                    error_occurred = True
+                        else:
+                            flash("Failed to locate meter for " + thismeter.meter_name, "error")
+                            error_occurred = True
         if error_occurred:
             return render_template('plantmaint/acaddnewreading.html', form=thisform,
                                    lastreadings=lastreadings, ac=thisac)
         else:
             try:
-                db.session.commit()
+                db.session.commit()  # this is when the before_insert error is raised....
+                flash(str(addedreadingcount) + ' Meter readings added successfully')
+                applog.info(str(addedreadingcount) + ' Meter readings added successfully')
             except Exception as e:
+                db.session.rollback()
+                flash(str(e),"error")
                 applog.error(str(e))
+                applog.error("Rollback Occurred")
                 flash(
-                    "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                    "An error cccurred while updating the database.  See Above.  No readings were written to the database.",
                     "error")
-        flash(str(addedreadingcount) + ' Meter readings added successfully')
-        applog.info(str(addedreadingcount) + ' Meter readings added successfully')
+                return render_template('plantmaint/acaddnewreading.html', form=thisform,
+                               lastreadings=lastreadings, ac=thisac)
         #return render_template('plantmaint/index.html', ac=thisac)
         return redirect(url_for('plantmaint.index', pregn=thisac))
 
@@ -1383,6 +1392,7 @@ def actaskcomplete(task):
         except Exception as e:
             db.session.rollback()
             applog.error(str(e))
+            flash(str(e))
             flash(
                 "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
                 "error")
