@@ -27,4 +27,23 @@ Add New reading to Aircraft
   {{ form.btnsubmit() }}
   {{ form.cancel(formnovalidate=true) }}
 </form>
+
+<script>
+    function replaceDecimalWithColon(inputField) {
+        // Get the current value of the input field
+        let currentValue = inputField.value;
+
+        // Replace all occurrences of a decimal point (.) with a colon (:)
+        // The 'g' flag in the regex ensures all instances are replaced
+        let newValue = currentValue.replace(/\./g, ':');
+
+        // Update the input field's value with the new value
+        inputField.value = newValue;
+
+        // Optional: Display the current value elsewhere on the page
+        document.getElementById('outputValue').textContent = newValue;
+    }
+</script>
+
+
 {% endblock %}

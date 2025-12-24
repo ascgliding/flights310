@@ -1072,7 +1072,8 @@ def get_wt_meter_fld(thisac, id):
             flddefn = HrsMinsField(thismeter.entry_prompt,
                                    [validators.optional()],
                                    description=help_line + "  (Hours:Minutes)"
-                                   , name=thismeter.meter_name, id=thismeter.meter_name)
+                                   , name=thismeter.meter_name, id=thismeter.meter_name,
+                                   render_kw={'onkeyup':'replaceDecimalWithColon(this)'})
         else:
             flddefn = HrsField(thismeter.entry_prompt,
                                [validators.optional()],
