@@ -1122,7 +1122,9 @@ def acaddnewreading():
         if not thisform.validate():
             for e in thisform.errors:
                 flash("Error: {}".format(str(e)), "error")
-            return redirect(url_for('plantmaint.index', ac=thisac))
+            return render_template('plantmaint/acaddnewreading.html', form=thisform, lastreadings=lastreadings,
+                                   ac=thisac)
+            # return redirect(url_for('plantmaint.index', ac=thisac))
         addedreadingcount = 0
         thisdate = thisform.reading_date.data
         error_occurred = False
