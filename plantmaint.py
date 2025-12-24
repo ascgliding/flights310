@@ -52,8 +52,14 @@ def mins2hrsdec(value) -> str:
 
 
 def hrsdec2mins(value) -> int:
-    return round((float(value) * 60),0)
-
+    # return round((float(value) * 60),0)
+    # Integer values are considered a number of miuntes
+    thevalue = 0
+    try:
+        thevalue = int(value)
+    except ValueError:
+        thevalue = round((float(value) * 60),0)
+    return thevalue
 
 def mins2hrsmins(value) -> str:
     if value is None:
@@ -1077,7 +1083,7 @@ def get_wt_meter_fld(thisac, id):
         else:
             flddefn = HrsField(thismeter.entry_prompt,
                                [validators.optional()],
-                               description=help_line + "  (Decimal Hours)",
+                               description=help_line + "  (Decimal Hours - Integers are considered total MINUTES i.e. 1.0 is one minute!  60 is one hour.)",
                                name=thismeter.meter_name, id=thismeter.meter_name)
             # name = thismeter.meter_name, id = fldid)
         # flddefn = IntegerField(thismeter.entry_prompt,description='Meter reading value',name=thismeter.meter_name,id=fldid)
@@ -1122,7 +1128,7 @@ def acaddnewreading():
         # Validate and redisplay if there are errors
         if not thisform.validate():
             for e in thisform.errors:
-                flash("Error: {}".format(str(e)), "error")
+                flash("Field Error: {}".format(str(e)), "error")
             return render_template('plantmaint/acaddnewreading.html', form=thisform, lastreadings=lastreadings,
                                    ac=thisac)
             # return redirect(url_for('plantmaint.index', ac=thisac))
@@ -1143,6 +1149,10 @@ def acaddnewreading():
                     if thisformfield.data != 0:  # and the value has to be non-zero
                         if isinstance(thisformfield.data, decimal.Decimal) \
                                 or isinstance(thisformfield.data, int):
+
+                            # Note that HRS:MINS fields returns datetime fields DECIMAL fields containing
+                            # the total number of minutes
+
                             # the checking below is done by a before_insert listener in schema.py
                             # if thismeter is not None and float(thisformfield.data) != 0:
                             #     if thismeter.last_reading_date is not None:
