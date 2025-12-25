@@ -34,6 +34,12 @@
                    title="Check to have the system email you weekly warnings before your medical expires"
                    {{ 'checked="checked"' if pilot.email_med_warning else "" }} />
           </li>
+          <li>
+            <label for="email_basepass_warning">Email Base Pass Warning</label>
+            <input type="checkbox" name="email_basepass_warning" id="email_basepass_warning"
+                   title="Check to have the system email you weekly warnings before your Base Pass expires"
+                   {{ 'checked="checked"' if pilot.email_basepass_warning else "" }} />
+          </li>
       {% endif %}
       {% if current_user.administrator %}
       <li>

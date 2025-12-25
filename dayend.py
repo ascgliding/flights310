@@ -260,18 +260,21 @@ def send_medical_reminders_to_members():
                 app.logger.info(f'Medical Reminder sent to {m.fullname}')
 
 def send_base_pass_reminders_to_members():
-    mems = Pilot.query.filter(Pilot.active == True).order_by(Pilot.surname).all()
+    mems = Pilot.query.filter(Pilot.active).order_by(Pilot.surname).all()
     for m in mems:
-        if m.email is not None and m.type != 'SOCIAL':
-            if m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today() + relativedelta(days=60):
+        if (m.email is not None and
+                    m.age >= 18 and
+                    m.base_pass_due < datetime.date.today() - relativedelta(months=2) and
+                    m.fullname not in ['OTHER CLUB MEMBER'] and
+                    m.email_basepass_warning):
                 msg = Mailer('Base Pass Reminder')
                 msg.add_body("<HTML>")
-                if m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today():
+                if m.base_pass_due is not None and m.base_pass_due < datetime.date.today():
                     msg.add_body('Our records show that your Base Pass has expired<br>')
-                    msg.add_body(f'It appears to have expired on {m.medical_due.strftime("%B %d, %Y")}<br>')
+                    msg.add_body(f'It appears to have expired on {m.base_pass_due.strftime("%B %d, %Y")}<br>')
                 else:
                     msg.add_body('Our records show that your Base Pass is nearly due.<br>')
-                    msg.add_body(f'It appears to be due  on {m.basepassexpirydate.strftime("%B %d, %Y")}.<br>')
+                    msg.add_body(f'It appears to be due  on {m.base_pass_due.strftime("%B %d, %Y")}.<br>')
                 msg.add_body('You are required to have a valid base pass to fly at NZWP.<br>')
                 msg.add_body('<ul>In order to renew your pass you must have:')
                 msg.add_body('<li>a valid MOJ clearance that is no less than 6 months old.</li>')
@@ -282,10 +285,10 @@ def send_base_pass_reminders_to_members():
                 msg.add_body(f'Once renewed please login to the system and update the pass details')
                 msg.add_body(f' using the profile button from the menu.<br>')
                 # debug:
-                # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
+                msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
                 msg.add_body('</html>')
-                msg.add_recipient(m.email)
-                # msg.add_recipient('ray@rayburns.nz')
+                #msg.add_recipient(m.email)
+                msg.add_recipient('ray@rayburns.nz')
                 #
                 msg.send()
                 app.logger.info(f'Base Pass Reminder sent to {m.fullname}')

@@ -85,9 +85,12 @@ class PilotForm(FlaskForm):
     nok_mobile = StringField('NOK Mobile', description='Next of kin Mobile Number')
     # glider = StringField('Glider', description='Registration of privately owned glider')
     # email_bfr_med = BooleanField('Email BFR and Med Warnings', description='Auto email when BFR''s and Emails are soon to expire')
-    email_bfr_warning = BooleanField('BFR', description='Auto email when BFR''s  soon to expire', render_kw={'class': 'intable'})
-    email_med_warning = BooleanField('Med', description='Auto email when Medicals are soon to expire', render_kw={'class': 'intable'})
-    email_mbrfrm_warning = BooleanField('Membership Form', description='Auto email when BFR''s and Emails are soon to expire', render_kw={'class': 'intable'})
+    email_bfr_warning = BooleanField('BFR', description='Auto email when BFR  soon to expire', render_kw={'class': 'intable'})
+    email_med_warning = BooleanField('Med', description='Auto email when Medical  soon to expire', render_kw={'class': 'intable'})
+    email_mbrfrm_warning = BooleanField('Membership Form', description='Auto email when Membership Form expires', render_kw={'class': 'intable'})
+    email_basepass_warning = BooleanField('Base Pass',
+                                        description='Auto email when BasePass is soon to expire',
+                                        render_kw={'class': 'intable'})
     user_id = SelectField('User key',description = "Key to the User Table")
     # transactions = relationship("MemberTrans", backref='memberid')
 

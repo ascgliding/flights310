@@ -1,6 +1,3 @@
-import urllib.request
-from os.path import basename
-
 import sendgrid
 from flask_sqlalchemy import __version__ as fsqa_version,model
 from flask_login import __version__ as flogin_version
@@ -8,63 +5,26 @@ from flask import __version__ as flask_version
 from flask_wtf import __version__ as flaskwtf_version
 from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
-
-import logging
 import inspect
-from asc.schema import *
 import unittest
 import sys
-from decimal import Decimal
 from asc import db, create_app
-# from asc.mailer import ascmailer
-from asc.oMetservice import MetService
-#from csv import DictWriter,DictReader
 import csv
 # In order to trap errors from the engine
 import sqlalchemy.exc
 from sqlalchemy import text as sqltext, func, __version__
-from sqlalchemy.sql import select
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail,Attachment,FileContent,FileName,FileType,Disposition
-from dateutil.relativedelta import relativedelta
 
-from asc.oMaint import ACMaint
-# from asc.oReadingTools import   ReadingTools
-from  asc.common import *
 
+
+
+from asc.common import *
 from asc.oMailerSmtp import *
 from asc.oBasePass import BasePass
-import os
 
-# accessing a calendar:
-from urllib.request import urlopen
-
-
-import base64
-
-
-# google email:
-
-import os.path
-
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
-
-
-# from google.auth.transport.requests import Request
-# from google.oauth2.credentials import Credentials
-# from google_auth_oauthlib.flow import InstalledAppFlow
-# from googleapiclient.discovery import build
-# from googleapiclient.errors import HttpError
-
-
-print('about to create app')
+# print('about to create app')
 app = create_app()
-print('defining logger')
-log = app.logger
-
+# print('defining logger')
+log =  app.logger
 
 def dict_factory(cursor, row):
     d = {}
@@ -168,22 +128,6 @@ class FSqlalchemyTst(unittest.TestCase):
             else:
                 self.printout(str(e))
                 log.info(str(e))
-
-    # def test000a(self):
-    #     "test001a success"
-    #     self.assertEquals(1, 1, msg="1 aint 1")
-    #
-    # def test000b(self):
-    #     "test001a fail"
-    #     self.assertEquals(1, 2, msg="1 aint 1")
-    #
-    # def test000c(self):
-    #     "test001c forece fail"
-    #     self.fail("test000c broke")
-    #
-    # def test000d(self):
-    #     "untrapped error"
-    #     ans = int('sdfd')
 
     def test001(self):
         """Can I access a flight"""
@@ -2251,42 +2195,13 @@ class sqlalchemy_read_tests(unittest.TestCase):
 
 class adhoc(unittest.TestCase):
     def test001(self):
-        __available_variables = [
-            "air.humidity.at-2m",
-            "air.temperature.at-2m",
-            "air.pressure.at-sea-level",
-            "air.visibility",
-            "atmosphere.convective.potential.energy",
-            "cloud.base.height",
-            "cloud.cover",
-            "precipitation.rate",
-            "wind.direction.at-10m",
-            "wind.direction.at-100m",
-            "wind.speed.at-10m",
-            "wind.speed.at-100m",
-            "wind.speed.gust.at-10m"]
-
-        thiswx = MetService(["air.pressure.at-sea-level","precipitation.rate"])
-        thiswx = MetService(__available_variables)
-        apikey = Slot.query.filter(Slot.slot_type=='SYSTEM').filter(Slot.slot_key=='METSERVICEKEY').first()
-        if apikey is not None:
-            # thiswx.ApiKey="EkwAkjmmhG58Ur6Tu1ntjU"
-            thiswx.ApiKey = apikey.slot_data
-
-        wxfile = os.path.join(app.instance_path, 'wx.json')
-        thiswx = MetService()
-        if os.path.isfile(wxfile):
-            thiswx.get_current_file(wxfile)
-        else:
-            thiswx.get_current(174.6131, -36.7928, savefilename=wxfile, reading_count=12)  # Whenuapai
-        print(thiswx.CurrentValues.keys())
-        print(thiswx.ForecastTimeUtc)
-        print(thiswx.ForecastTimeLocal)
-        print(thiswx.qnh)
-        print(thiswx.precipitation_rate)
-        print(thiswx.cape)
-        print(thiswx.cloud_base)
-        print(thiswx.wind_speed)
+        passes = db.session.query(Pilot).filter(Pilot.active).all()
+        for thispass in passes:
+            if (thispass.age >= 18 and
+                    thispass.base_pass_due < datetime.date.today() - relativedelta(months=2) and
+                    thispass.fullname not in ['OTHER CLUB MEMBER'] and
+                    thispass.email_basepass_warning):
+                print(f'{thispass} : {thispass.age} : {thispass.last_base_pass} : {thispass.base_pass_due}')
 
 # class soundex(unittest.TestCase):
 #
@@ -2482,7 +2397,7 @@ if __name__ == '__main__':
     case12 = unittest.TestLoader().loadTestsFromTestCase(google_email)
     case13 = unittest.TestLoader().loadTestsFromTestCase(basepass)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case7])
+    thissuite = unittest.TestSuite([case10])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
@@ -2490,6 +2405,7 @@ if __name__ == '__main__':
 
     # The next line is critical tomae the rest work.....
     with app.app_context():
+
         # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
         print('in appcontext thing')
         unittest.TextTestRunner(verbosity=2).run(thissuite)

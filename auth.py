@@ -255,6 +255,10 @@ def profile():
                 current_user.pilot_tbl.email_bfr_warning = True
             else:
                 current_user.pilot_tbl.email_bfr_warning = False
+            if 'email_basepass_warning' in request.form:
+                current_user.pilot_tbl.email_basepass_warning = True
+            else:
+                current_user.pilot_tbl.email_basepass_warning = False
 
         db.session.commit()
         return redirect(url_for('index'))
