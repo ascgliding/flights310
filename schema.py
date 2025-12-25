@@ -459,6 +459,7 @@ class Pilot(db.Model):
     email_med_warning = db.Column(db.Boolean, comment='Send warning emails for Medicals', default=True)
     email_bfr_warning = db.Column(db.Boolean, comment='Send warning emails for BFRs', default=True)
     email_mbrfrm_warning = db.Column(db.Boolean, comment='Send warning emails for Membership Forms', default=True)
+    email_basepass_warning = db.Column(db.Boolean, comment='Send warning emails for Base Pass', default=True)
     # next of Kin details
     nok_name = db.Column(db.String, comment="Next of Kin Name")
     nok_rship = db.Column(db.String, comment='Next of kin Relationship')
@@ -537,11 +538,22 @@ class Pilot(db.Model):
         else:
             return icr.transdate
 
+
     @property
     def bfr_due(self):
         if self.last_bfr is None:
             return None
         return self.last_bfr + relativedelta(years=2)
+
+    @property
+    def last_base_pass(self):
+        return db.session.query(func.max(MemberTrans.transdate)
+                                     .filter(MemberTrans.memberid == self.id)
+                                     .filter(MemberTrans.transtype == 'BPASS')).scalar() or datetime.date(1900,1,1)
+
+    @property
+    def base_pass_due(self):
+        return self.last_base_pass + relativedelta(years=2)
 
     @property
     def last_mem_form(self):
