@@ -11,6 +11,7 @@ from wtforms import Form, StringField, PasswordField, validators, SubmitField, S
 from wtforms.fields import EmailField, IntegerField, DateField
 from asc.wtforms_ext import MatButtonField, TextButtonField
 from asc.oMailerSmtp import MailerSmtp
+import markdown
 
 
 
@@ -18,11 +19,24 @@ app = current_app
 applog = app.logger
 #bootstrap = Bootstrap5()
 
+markdown_placeholder_text = """Enter the email text here.
+Markdown is supported.  For example:
+    
+# Welcome
+This is a **Markdown** example with a [link](https://example.com).
+
+* Item 1
+* Item 2
+
+To send attachments: Load to the google drive and use a link as shown above.
+"""
+
 bp = Blueprint('bulkemail', __name__, url_prefix='/bulkemail')
 
 class EmailContentForm(FlaskForm):
     subject = StringField('Subject', description='Subject', render_kw={'placeholder': 'Enter the Subject Text Here'})
-    email_text = TextAreaField('Emailtext', description='The content of the email', render_kw={'rows': 5, 'cols': 50, 'placeholder': 'Enter the email text here'})
+    email_text = TextAreaField('Emailtext', description='The content of the email', render_kw={'rows': 10, 'cols': 50, 'placeholder': markdown_placeholder_text})
+    single_email_per_recipient = BooleanField('Single Email per Recipient', description='Leave unchecked to send one single email with every recipient in the to section')
     btnsubmit = MatButtonField('done', id='matdonebtn', icon='email', help="Send the Email")
     cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
                             help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
@@ -150,10 +164,17 @@ def sendemail():
     try:
         thismail = Mailer(thisform.subject.data)
         thismail.replyto = current_user.email
-        thismail.body = "<html><pre>" + thisform.email_text.data + "</pre></html>"
-        for item in session['emaillist']:
-            thismail.add_recipient(item['email'])
-        thismail.send()
+        # thismail.body = "<html><pre>" + thisform.email_text.data + "</pre></html>"
+        # thismail.body = thisform.email_text.data.replace('\n', '<br>')
+        thismail.body = markdown.markdown(thisform.email_text.data)
+        if thisform.single_email_per_recipient.data:
+            for item in session['emaillist']:
+                thismail.recipients = [item['email']]  # a list of one entry
+                thismail.send()
+        else:
+            for item in session['emaillist']:
+                thismail.add_recipient(item['email'])
+            thismail.send()
         flash(f'The email was sent to {len(session["emaillist"])} recipients.', category='success')
     except Exception as e:
         flash(str(e),"error")

@@ -19,7 +19,9 @@
               <p><a href="{{ url_for('bulkemail.addcommittee') }}">Comittee Members</a></p>
               <p><a href="{{ url_for('bulkemail.addstudents') }}">Students</a></p>
               <p><a href="{{ url_for('bulkemail.clearlist') }}">Clear List</a></p>
-              <p><a href="{{ url_for('bulkemail.test') }}">testlist</a></p>
+              {% if current_user.name == "rayb" %}
+                <p><a href="{{ url_for('bulkemail.test') }}">testlist</a></p>
+              {% endif %}
           </div>
         </div>
 

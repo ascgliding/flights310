@@ -158,6 +158,18 @@ class MailerSmtp:
         return self.__response
 
     @property
+    def recipients(self):
+        return self.__recipients
+
+    @recipients.setter
+    def recipients(self, value):
+        if value is None:
+            raise AttributeError("Recipients cannot be set to None")
+        if not isinstance(value, list):
+            raise AttributeError("Recipients is not a list variable")
+        self.__recipients = value
+
+    @property
     def cc(self):
         return self.__cc
 

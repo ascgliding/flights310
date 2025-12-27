@@ -22,7 +22,6 @@
     <p><a class="notphone" href="{{ url_for('mastmaint.slotlist') }}">Slot Maintenance</a></p>
     <p><a href="{{ url_for('mastmaint.rosterlist') }}">Roster List</a></p>
     {% if current_user.administrator %}
-      <p><a href="{{ url_for('bulkemail.index') }}">Bulk Email</a></p>
       <p><a href="{{ url_for('qryviewer.qrylist') }}">Query Viewer</a></p>
     {% endif %}
   </div>

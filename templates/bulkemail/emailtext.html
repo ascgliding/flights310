@@ -9,7 +9,9 @@ EMail Text
   <fieldset>
     <legend>{{ form.name }} Email Text</legend>
     <ul>
+
       <li>{{ render_field(form.subject) }}</li>
+      <li>{{ render_field(form.single_email_per_recipient) }}</li>
       <li>{{ render_field(form.email_text) }}</li>
     </ul>
   </fieldset>
