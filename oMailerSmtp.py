@@ -109,6 +109,7 @@ class MailerSmtp:
         self.__recipients = [] # list of email addresses to send to
         self.__response = None
         self.__cc = []
+        self.__bcc = []
         self.__replyto = None
         app.logger.info('Mail item created.  Subject: ' + subject)
 
@@ -286,6 +287,13 @@ class MailerSmtp:
             raise AttributeError("cc is not a string variable")
         self.__cc.append(value)
 
+    def add_bcc(self,value):
+        if value is None:
+            raise AttributeError("bcc cannot be set to None")
+        if not isinstance(value, str):
+            raise AttributeError("bcc cannot be a string variable")
+        self.__bcc.append(value)
+
 
     def add_attachment(self,value):
         if value is None:
@@ -313,6 +321,7 @@ class MailerSmtp:
         thismsg.attach(MIMEText(self.__bodyhtml,'html'))
         thismsg['Cc']   = ",".join(self.__cc)
         thismsg['To']   = ",".join(self.__recipients)
+        thismsg['Bcc']   = ",".join(self.__bcc)
         thismsg['From']   = self.__smtp_mail_address
         if self.__replyto is not None and isinstance(self.__replyto,str):
             thismsg.add_header('reply-to',self.__replyto)

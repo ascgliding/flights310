@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+EMail Text
+{% endblock %}
+{% block content %}
+<form method="Post" autocomplete="off" action="{{ url_for('bulkemail.sendemail') }}">
+  {{ form.csrf_token }}
+  <fieldset>
+    <legend>{{ form.name }} Email Text</legend>
+    <ul>
+      <li>{{ render_field(form.subject) }}</li>
+      <li>{{ render_field(form.email_text) }}</li>
+    </ul>
+  </fieldset>
+    {{ form.btnsubmit() }}
+    {{ form.cancel() }}
+</form>
+{% endblock %}

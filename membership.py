@@ -168,7 +168,8 @@ def memberlist(active='ACTIVE'):
         if active=='ACTIVE':
             list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname).all()
         else:
-            list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname).all()
+            # list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname).all()
+            list = Pilot.query.order_by(Pilot.fullname).all()
         # for l in list:
         #     if l.type is None or l.type not in ['FLYING', 'JUNIOR', 'SOCIAL', 'VFP BULK']:
         #         l.type = 'FLYING'

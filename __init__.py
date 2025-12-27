@@ -340,6 +340,10 @@ def resgister_blueprints(app):
             from . import export
             app_for_log = 'export'
             app.register_blueprint(export.bp)
+            # Register the Bulk Emailer
+            from . import bulkemail
+            app_for_log = 'bulkemail'
+            app.register_blueprint(bulkemail.bp)
             # Register the Misc unsecured functions
             from . import misc
             app_for_log = 'misc'

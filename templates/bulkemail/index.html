@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Bulk Emailer{% endblock %}</h1>
+    </div>
+      <div  style="display:table-cell; text-align: right;" >
+      <a class="textbtn" href="{{ url_for('bulkemail.emailtext') }}">Send</a>
+
+      <div class="dropdown">
+          <span><button id="addbtn" ></button></span>
+          <div class="dropdown-content">
+              <p><a href="{{ url_for('bulkemail.addactivemembers') }}">Active Flying Members</a></p>
+              <p><a href="{{ url_for('bulkemail.addinstructors') }}">Instructors</a></p>
+              <p><a href="{{ url_for('bulkemail.addtowpilots') }}">Towpilots</a></p>
+              <p><a href="{{ url_for('bulkemail.addcommittee') }}">Comittee Members</a></p>
+              <p><a href="{{ url_for('bulkemail.addstudents') }}">Students</a></p>
+              <p><a href="{{ url_for('bulkemail.clearlist') }}">Clear List</a></p>
+              <p><a href="{{ url_for('bulkemail.test') }}">testlist</a></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+{% block content %}
+  <div class="table">
+    <div class="row">
+      <div class="heading" >Email</div>
+      <div class="heading" >Name</div>
+      <div class="heading">Action</div>
+    </div>
+  {% for l in list %}
+    <div class="row">
+      <div class="cell">{{ l['email'] }}</div>
+      <div class="cell">{{ l['name'] }}</div>
+      <div class="cell>"><a class="action" href="{{ url_for('bulkemail.delitem', email=l['email'] ) }}">Delete</a></div>
+    </div>
+  {% endfor %}
+  </div>
+{% endblock %}
