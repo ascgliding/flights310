@@ -1,21 +1,41 @@
 {% extends 'base.html' %}
 
 {% block header %}
-EMail Text
 {% endblock %}
 {% block content %}
-<form method="Post" autocomplete="off" action="{{ url_for('bulkemail.sendemail') }}">
+<!--<div id="processingMessage" style="display: none; color: red; background: url(/static/images/waiting-patiently.gif) no-repeat; cursor: wait; background-size: contain; align-items:center; justify-content:center ; height:160px"; >-->
+<div id="processingMessage" style="display: none; color: red; background: url(/static/images/loading.gif) no-repeat; cursor: wait; background-size: contain; align-items:center; justify-content:center ; height:160px"; >
+    <h1>
+    Sending Emails, please wait...
+        </h1>
+</div>
+<div id="content" >
+<form method="Post" autocomplete="off" action="{{ url_for('bulkemail.sendemail') }}" onsubmit="return showProcessingMessage();">
   {{ form.csrf_token }}
+  Note that one email is sent to each recipient in turn.  It will start with their first name followed by a comma, newline then the text entered here.
   <fieldset>
     <legend>{{ form.name }} Email Text</legend>
     <ul>
-
       <li>{{ render_field(form.subject) }}</li>
-      <li>{{ render_field(form.single_email_per_recipient) }}</li>
       <li>{{ render_field(form.email_text) }}</li>
     </ul>
   </fieldset>
     {{ form.btnsubmit() }}
     {{ form.cancel() }}
 </form>
+</div>
+
+
+<script>
+function showProcessingMessage() {
+    document.getElementById('content').style.display = 'none';
+    // Show the message immediately
+    console.log("step 1 complete");
+    document.getElementById('processingMessage').style.display = 'flex';
+    // The form submission will then proceed and redirect to the new page
+    console.log("step 2 complete");
+    return true;
+}
+</script>
+
 {% endblock %}

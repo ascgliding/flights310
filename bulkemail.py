@@ -1,3 +1,5 @@
+import time
+
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app, send_file,session
 )
@@ -36,7 +38,6 @@ bp = Blueprint('bulkemail', __name__, url_prefix='/bulkemail')
 class EmailContentForm(FlaskForm):
     subject = StringField('Subject', description='Subject', render_kw={'placeholder': 'Enter the Subject Text Here'})
     email_text = TextAreaField('Emailtext', description='The content of the email', render_kw={'rows': 10, 'cols': 50, 'placeholder': markdown_placeholder_text})
-    single_email_per_recipient = BooleanField('Single Email per Recipient', description='Leave unchecked to send one single email with every recipient in the to section')
     btnsubmit = MatButtonField('done', id='matdonebtn', icon='email', help="Send the Email")
     cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
                             help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
@@ -75,9 +76,9 @@ def test():
     else:
         thislist = []
     if len(thislist) == 0:
-        thislist.append({'email': 'ray.burns@velocityglobal.co.nz'})
-        thislist.append({'email': 'cfi@ascgliding.org'})
-        thislist.append({'email': 'maskthis-website@xtra.co.nz'})
+        thislist.append({'email': 'ray.burns@velocityglobal.co.nz', 'firstname': 'CIO'})
+        thislist.append({'email': 'cfi@ascgliding.org', 'firstname': 'CFI'})
+        thislist.append({'email': 'maskthis-website@xtra.co.nz', 'firstname': 'Ray'})
     session['emaillist'] = thislist
     return render_template('bulkemail/index.html', list=session['emaillist'])
 
@@ -97,7 +98,7 @@ def __addfromqry(qrylist):
         thislist = []
     for i in qrylist:
         if i.email not in [ p['email'] for p in thislist]:
-            thislist.append({'email': i.email, 'name':i.fullname})
+            thislist.append({'email': i.email, 'name':i.fullname, 'firstname': i.firstname})
     session['emaillist'] = thislist
 
 
@@ -139,7 +140,7 @@ def addstudents():
             if t.transtype == 'RTG' and t.transsubtype == 'QGP':
                 isstudent = False
         if isstudent:
-            thislist.append({'email': m.email, 'name':m.fullname})
+            thislist.append({'email': m.email, 'name':m.fullname, 'firstname': m.firstname})
     session['emaillist'] = thislist
     return render_template('bulkemail/index.html', list=session['emaillist'])
 
@@ -153,6 +154,7 @@ def emailtext():
     thisform = EmailContentForm()
     return render_template('bulkemail/emailtext.html', form=thisform)
 
+
 @bp.route('/sendemail', methods=['POST'])
 def sendemail():
     if 'emaillist' not in session:
@@ -164,16 +166,9 @@ def sendemail():
     try:
         thismail = Mailer(thisform.subject.data)
         thismail.replyto = current_user.email
-        # thismail.body = "<html><pre>" + thisform.email_text.data + "</pre></html>"
-        # thismail.body = thisform.email_text.data.replace('\n', '<br>')
-        thismail.body = markdown.markdown(thisform.email_text.data)
-        if thisform.single_email_per_recipient.data:
-            for item in session['emaillist']:
-                thismail.recipients = [item['email']]  # a list of one entry
-                thismail.send()
-        else:
-            for item in session['emaillist']:
-                thismail.add_recipient(item['email'])
+        for item in session['emaillist']:
+            thismail.recipients = [item['email']]  # a list of one entry
+            thismail.body = markdown.markdown(item['firstname'] + ",\n" + thisform.email_text.data)
             thismail.send()
         flash(f'The email was sent to {len(session["emaillist"])} recipients.', category='success')
     except Exception as e:
