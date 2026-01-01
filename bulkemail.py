@@ -36,9 +36,19 @@ To send attachments: Load to the google drive and use a link as shown above.
 bp = Blueprint('bulkemail', __name__, url_prefix='/bulkemail')
 
 class EmailContentForm(FlaskForm):
-    subject = StringField('Subject', description='Subject', render_kw={'placeholder': 'Enter the Subject Text Here'})
-    email_text = TextAreaField('Emailtext', description='The content of the email', render_kw={'rows': 10, 'cols': 50, 'placeholder': markdown_placeholder_text})
+    subject = StringField('Subject', description='Subject',validators=[validators.data_required()], render_kw={'placeholder': 'Enter the Subject Text Here'})
+    email_text = TextAreaField('Emailtext', description='The content of the email', validators=[validators.data_required()], render_kw={'rows': 10, 'cols': 50, 'placeholder': markdown_placeholder_text})
     btnsubmit = MatButtonField('done', id='matdonebtn', icon='email', help="Send the Email")
+    cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
+                            help="Press to exit and make no changes",
+                            render_kw={'formnovalidate':'', 'onclick': "window.location.href='/bulkemail/"}
+    )
+
+class AdHocAddressForm(FlaskForm):
+    email = StringField('email Address', description='Address' , validators=[validators.email()], render_kw={'placeholder': 'Email Address'})
+    fullname = StringField('Full Name', description='Name', render_kw={'placeholder': 'Full Name'})
+    salutation = StringField('Saluation', description='Salutation',validators=[validators.data_required()], render_kw={'placeholder': 'Saluation'})
+    btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Add to the list")
     cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
                             help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
 
@@ -67,7 +77,8 @@ def index():
         thislist = session['emaillist']
     else:
         session['emaillist']=[]
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    thisform = AdHocAddressForm()
+    return render_template('bulkemail/index.html', list=session['emaillist'], form=thisform)
 
 @bp.route('test', methods=['GET', 'POST'])
 def test():
@@ -80,7 +91,7 @@ def test():
         thislist.append({'email': 'cfi@ascgliding.org', 'firstname': 'CFI'})
         thislist.append({'email': 'maskthis-website@xtra.co.nz', 'firstname': 'Ray'})
     session['emaillist'] = thislist
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 @bp.route('delitem/<email>', methods=['GET', 'POST'])
 def delitem(email):
@@ -89,7 +100,7 @@ def delitem(email):
     else:
         thislist = []
     session['emaillist'] = [item for item in thislist if item['email'] != email]
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 def __addfromqry(qrylist):
     if 'emaillist' in session:
@@ -105,27 +116,27 @@ def __addfromqry(qrylist):
 @bp.route('addactivemembers', methods=['GET', 'POST'])
 def addactivemembers():
     __addfromqry(db.session.query(Pilot).filter(Pilot.active).filter(Pilot.member).all())
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 @bp.route('addtowpilots', methods=['GET', 'POST'])
 def addtowpilots():
     __addfromqry(db.session.query(Pilot).filter(Pilot.active).filter(Pilot.member).filter(Pilot.towpilot).all())
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 @bp.route('addcommittee', methods=['GET', 'POST'])
 def addcommittee():
     __addfromqry(db.session.query(Pilot).filter(Pilot.active).filter(Pilot.member).filter(Pilot.committee).all())
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 @bp.route('addinstructors', methods=['GET', 'POST'])
 def addinstructors():
     __addfromqry(db.session.query(Pilot).filter(Pilot.active).filter(Pilot.member).filter(Pilot.instructor).all())
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 @bp.route('clearlist', methods=['GET', 'POST'])
 def clearlist():
     session['emaillist'] = []
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 @bp.route('addstudents', methods=['GET', 'POST'])
 def addstudents():
@@ -142,16 +153,31 @@ def addstudents():
         if isstudent:
             thislist.append({'email': m.email, 'name':m.fullname, 'firstname': m.firstname})
     session['emaillist'] = thislist
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
+
+@bp.route('/addadhocaddress', methods=['POST'])
+def addadhocaddress():
+    if 'emaillist' in session:
+        thislist = session['emaillist']
+    else:
+        thislist = []
+    thisform = AdHocAddressForm()
+    if thisform.validate_on_submit():
+        thislist.append({'email':thisform.email.data, 'name': thisform.fullname.data, 'firstname': thisform.salutation.data })
+        session['emaillist'] = thislist
+        return redirect(url_for('bulkemail.index'))
+    else:
+        return render_template('bulkemail/index.html', list=session['emaillist'], form=thisform, reloadmodal=True)
 
 
 @bp.route('/emailtext', methods=['GET'])
 def emailtext():
     if 'emaillist' not in session:
         flash('You need to select recipients first')
-        return render_template('bulkemail/index.html', list=[])
+        return redirect(url_for('bulkemail.index'))
     thisform = EmailContentForm()
+
     return render_template('bulkemail/emailtext.html', form=thisform)
 
 
@@ -159,7 +185,7 @@ def emailtext():
 def sendemail():
     if 'emaillist' not in session:
         flash('You need to select recipients first')
-        return render_template('bulkemail/index.html', list=[])
+        return redirect(url_for('bulkemail.index'))
     thisform = EmailContentForm()
     if thisform.subject.data == '':
         flash('You must Enter a subject')
@@ -167,13 +193,17 @@ def sendemail():
         thismail = Mailer(thisform.subject.data)
         thismail.replyto = current_user.email
         for item in session['emaillist']:
-            thismail.recipients = [item['email']]  # a list of one entry
-            thismail.body = markdown.markdown(item['firstname'] + ",\n" + thisform.email_text.data)
-            thismail.send()
+            if item['email'] is None or item['email'] == "" or item['firstname'] is None or item['firstname'] == "":
+                flash('A row was skipped because either the email address or salutation were empty')
+            else:
+                thismail.recipients = [item['email']]  # a list of one entry
+                thismail.body = markdown.markdown(item['firstname'] + ",\n" + thisform.email_text.data)
+                thismail.send()
+            # time.sleep(1)
         flash(f'The email was sent to {len(session["emaillist"])} recipients.', category='success')
     except Exception as e:
         flash(str(e),"error")
-    return render_template('bulkemail/index.html', list=session['emaillist'])
+    return redirect(url_for('bulkemail.index'))
 
 
 

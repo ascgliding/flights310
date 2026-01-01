@@ -3,12 +3,18 @@
 {% block header %}
 {% endblock %}
 {% block content %}
-<!--<div id="processingMessage" style="display: none; color: red; background: url(/static/images/waiting-patiently.gif) no-repeat; cursor: wait; background-size: contain; align-items:center; justify-content:center ; height:160px"; >-->
-<div id="processingMessage" style="display: none; color: red; background: url(/static/images/loading.gif) no-repeat; cursor: wait; background-size: contain; align-items:center; justify-content:center ; height:160px"; >
-    <h1>
-    Sending Emails, please wait...
-        </h1>
-</div>
+<div class="modal" id="processingMessage" style="display:none">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <!-- The Close Button (also linked to the checkbox) -->
+<!--        <label for="modal-toggle" class="modal-close">&times;</label>-->
+        <div  class="wait-box">
+            <h1>
+            Sending Emails, please wait...
+                </h1>
+        </div>
+      </div> <!--model-content-->
+</div> <!-- modal -->
 <div id="content" >
 <form method="Post" autocomplete="off" action="{{ url_for('bulkemail.sendemail') }}" onsubmit="return showProcessingMessage();">
   {{ form.csrf_token }}
@@ -21,19 +27,16 @@
     </ul>
   </fieldset>
     {{ form.btnsubmit() }}
-    {{ form.cancel() }}
+    <a href="{{ url_for('bulkemail.index') }}" class="materialbtn" title="Send no emails; return to list.">cancel</a>
 </form>
 </div>
 
 
 <script>
 function showProcessingMessage() {
-    document.getElementById('content').style.display = 'none';
     // Show the message immediately
-    console.log("step 1 complete");
     document.getElementById('processingMessage').style.display = 'flex';
     // The form submission will then proceed and redirect to the new page
-    console.log("step 2 complete");
     return true;
 }
 </script>

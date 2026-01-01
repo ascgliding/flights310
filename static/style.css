@@ -520,6 +520,7 @@ select {
                 border-style: none ;
                 color: var(--main-fg-colour);
                 background-color: Transparent;
+                text-decoration: None; /* remove underscore */
                  }
 .materialbtn:hover    { background-color: var(--main-fg-colour) ;
                     color:var(--main-bg-colour);
@@ -540,6 +541,7 @@ select {
                 border: 2px solid var(--main-fg-colour);
                 margin: 5px 5px;
                 vertical-align: middle;
+                text-decoration: None; /* remove underscore */
 /*                float: right;  */
                 }
 .textbtn:hover    { background-color: var(--main-fg-colour);
@@ -624,3 +626,75 @@ select {
                 background:var(--main-fg-colour);
                 color:var(--main-bg-colour);
                 }
+
+
+/*  Modal Styling */
+
+      /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            background-color: rgba(100,100,100,0.8);  /* Black w/ opacity */
+            justify-content: center; /* Center modal content */
+            align-items: center;
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            max-width: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+        }
+
+        /* The Close Button */
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: black;
+            text-decoration: none;
+        }
+
+        /* Form Styling (optional) */
+        .modal-content input[type=text], .modal-content input[type=submit] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+        }
+        .modal-content input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        .modal-content input[type=submit]:hover {
+            background-color: #45a049;
+        }
+
+
+/* Wait box */
+        .wait-box { background: url(/static/images/loading.gif) no-repeat;
+                    cursor: wait;
+                    background-size: contain;
+                    background-position: center;
+                    align-items:center;
+                    justify-content:center ;
+                    min-height: 150px}

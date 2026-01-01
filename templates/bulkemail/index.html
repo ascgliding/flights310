@@ -19,6 +19,7 @@
               <p><a href="{{ url_for('bulkemail.addcommittee') }}">Comittee Members</a></p>
               <p><a href="{{ url_for('bulkemail.addstudents') }}">Students</a></p>
               <p><a href="{{ url_for('bulkemail.clearlist') }}">Clear List</a></p>
+              <a id="myLink" title="Add an adhoc email address" href="#" onclick="displayAdHoc();return false;">Add Ad-Hoc Address</a>
               {% if current_user.name == "rayb" %}
                 <p><a href="{{ url_for('bulkemail.test') }}">testlist</a></p>
               {% endif %}
@@ -30,23 +31,63 @@
 </div>
 {% endblock %}
 
-
-
 {% block content %}
+
+<!-- A Modal form containing the prompt -->
+<div class="modal" id="addAdHoc" style="display:none">
+      <!-- Modal content -->
+      <div class="modal-content">
+        <!-- The Close Button (also linked to the checkbox) -->
+<!--        <label for="modal-toggle" class="modal-close">&times;</label>-->
+        <form method="Post" autocomplete="off" action="{{ url_for('bulkemail.addadhocaddress') }}" >
+          {{ form.csrf_token }}
+          <fieldset>
+            <legend>{{ form.name }} Add Ad Hoc Address</legend>
+            <ul>
+              <li>{{ render_field(form.email) }}</li>
+              <li>{{ render_field(form.fullname) }}</li>
+              <li>{{ render_field(form.salutation) }}</li>
+            </ul>
+          </fieldset>
+            {{ form.btnsubmit() }}
+            <a href="{{ url_for('bulkemail.index') }}" class="materialbtn" title="Send no emails; return to list.">cancel</a>
+        </form>
+      </div> <!--model-content-->
+</div> <!-- modal -->
+
+
+<!--  The normal list -->
   <div class="table">
     <div class="row">
       <div class="heading" >Email</div>
-      <div class="heading" >Name</div>
+      <div class="heading  mobile_port_suppress mobile_land_suppress" >Name</div>
       <div class="heading" >Firstname</div>
       <div class="heading">Action</div>
     </div>
   {% for l in list %}
     <div class="row">
       <div class="cell">{{ l['email'] }}</div>
-      <div class="cell">{{ l['name'] }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress">{{ l['name'] }}</div>
       <div class="cell">{{ l['firstname'] }}</div>
       <div class="cell>"><a class="action" href="{{ url_for('bulkemail.delitem', email=l['email'] ) }}">Delete</a></div>
     </div>
   {% endfor %}
   </div>
+
+<script>
+function displayAdHoc() {
+    // Show the message immediately
+    document.getElementById('addAdHoc').style.display = 'flex';
+    // The form submission will then proceed and redirect to the new page
+    return true;
+}
+</script>
+
+{% if reloadmodal %}
+<script>
+    window.onload = function() {
+        document.getElementById('addAdHoc').style.display = 'flex';
+    };
+</script>
+{% endif %}
 {% endblock %}

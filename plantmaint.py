@@ -794,8 +794,7 @@ def actaskmaint(id):
                                                             description='Next task should be done at this reading.',
                                                             render_kw={'disabled': True})
                 ThisViewFrm.next_due_override = HrsMinsField('Override Next Due Reading in units',
-                                                             description='Override the next due reading with this value',
-                                                             render_kw={'placeholder':'Override next due'}
+                                                             description='Override the next due reading with this value'
                                                              )
             else:
                 ThisViewFrm.last_done_reading = HrsField('Last Done Meter Reading in Decimal Hrs',
@@ -805,8 +804,7 @@ def actaskmaint(id):
                                                             description='Next task should be done at this reading.',
                                                             render_kw={'disabled': True,'readonly':True})
                 ThisViewFrm.next_due_override = HrsField('Override Next Due Reading in units',
-                                                     description='Override the next due reading with this value',
-                                                         render_kw={'placeholder': 'Override next due'}
+                                                     description='Override the next due reading with this value'
                                                          )
         # Add a field for the override due basis depending on the type of task and type of meter
         if stdtask.task_basis == 'Calendar':

@@ -97,7 +97,10 @@ function myLower(cObj)
 {% macro render_field(field) %}
 
 {# field.label #}
+{% set has_placeholder = 'placeholder' in field.render_kw if field.render_kw else false %}
+{% if not has_placeholder or field.data %}
 <label for="{{ field.name }}" class="{{ field.render_kw['class'] }}">{{ field.label.text }}</label>
+{% endif %}
 <abbr title="{{ field.description }}">
   {{ field(**kwargs)|safe }}
   {% if field.errors %}
@@ -246,6 +249,7 @@ function myLower(cObj)
   </nav>
   <section class="content">
     <header>
+{#      {{ bootstrap.load_css() }}  #}
       {% block header %}{% endblock %}
     </header>
     <noscript align="center" style="font-size:300%;color:red;"></br>>This site will not work without Javascript. Please
@@ -265,6 +269,7 @@ function myLower(cObj)
   </section>
 
 <script>
+
     function replaceDecimalWithColon(inputField) {
         // Get the current value of the input field
         let currentValue = inputField.value;
