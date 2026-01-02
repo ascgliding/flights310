@@ -101,8 +101,7 @@ class HrsMinsWidget(object):
     def __call__(self, field, **kwargs):
         field_id = kwargs.pop('id', field.id)
         # work through the render kw dictonary
-        renderkw = ''
-        render_kw = [{'onkeyup': 'replaceDecimalWithColon(this)'}]
+        renderkw = "onkeyup=replaceDecimalWithColon(this)"
         if kwargs is not None:
             for k in kwargs:
                 if isinstance(kwargs[k], bool):
@@ -110,7 +109,6 @@ class HrsMinsWidget(object):
                         renderkw = ' '.join([renderkw, k])
                 elif isinstance(kwargs[k], str):
                     renderkw = ' '.join([renderkw, f'{k}="{kwargs[k]}"'])
-
         html = []
         html.append(
             '<input style="text-align:right;color:#2277FF" id="{}" name="{}" value="{}" {}>'.format(field_id, field_id,
@@ -1078,7 +1076,6 @@ def get_wt_meter_fld(thisac, id):
                                    [validators.optional()],
                                    description=help_line + "  (Hours:Minutes)"
                                    , name=thismeter.meter_name, id=thismeter.meter_name
-                                   # ,render_kw={'onkeyup':'replaceDecimalWithColon(this)}'
                                    )
         else:
             flddefn = HrsField(thismeter.entry_prompt,
