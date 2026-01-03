@@ -127,6 +127,7 @@ def create_readings_from_flights(p_ac_regn,p_start_date=None,p_end_date=None, p_
     """
     # get the Aircraft
     thisac = ACMaint(p_ac_regn)
+    global_log.debug(f'create_readings_from_flights called with {p_ac_regn}, {p_start_date}, {p_end_date}, {p_meter_id}')
     if thisac is None:
         raise AttributeError('A/c Regn invalid')
     if p_start_date is not None:
@@ -143,34 +144,42 @@ def create_readings_from_flights(p_ac_regn,p_start_date=None,p_end_date=None, p_
     listofdates = list_of_dates_for_flights(p_start_date,p_end_date)
     rowsadded = 0
     for day in listofdates:
-        deltas = flight_summary_for_day(thisac.regn,day)
-        if deltas['count'] != 0:
-            for m in meters_to_update:
-                if m.last_reading_date is None or day > m.last_reading_date:
-                    if m.uom == 'Qty':
-                        # print("Qty updating  {} for {}".format(m,day))
-                        reading = MeterReadings(ac_id=thisac.id,meter_id=m.meter_id,
-                                                reading_date = day,
-                                                meter_reading=0,
-                                                meter_delta=deltas['count'],
-                                                note='Auto Inserted')
-                        db.session.add(reading)
-                        rowsadded += 1
-                        db.session.flush
-        if deltas['minutes'] != 0:
-            for m in meters_to_update:
-                if m.last_reading_date is None or day > m.last_reading_date:
-                    if m.uom == 'Time':
-                        # print("timne updating  {}".format(m))
-                        reading = MeterReadings(ac_id=thisac.id,meter_id=m.meter_id,
-                                                reading_date = day,
-                                                meter_reading=0,
-                                                meter_delta=deltas['minutes'],
-                                                note='Auto Inserted')
-                        db.session.add(reading)
-                        rowsadded += 1
-                        db.session.flush
-        db.session.commit()
+        try:
+            deltas = flight_summary_for_day(thisac.regn,day)
+            if deltas['count'] != 0:
+                for m in meters_to_update:
+                    if m.last_reading_date is None or day > m.last_reading_date:
+                        if m.uom == 'Qty':
+                            global_log.debug(f'Meter update {thisac.regn} on {day} {m.meter_name},  {deltas}')
+                            # print("Qty updating  {} for {}".format(m,day))
+                            reading = MeterReadings(ac_id=thisac.id,meter_id=m.meter_id,
+                                                    reading_date = day,
+                                                    meter_reading=0,
+                                                    meter_delta=deltas['count'],
+                                                    note='Auto Inserted')
+                            db.session.add(reading)
+                            rowsadded += 1
+                            db.session.flush
+                            global_log.info(f'Meter readings for {thisac.regn} on {day} updated.')
+            if deltas['minutes'] != 0:
+                for m in meters_to_update:
+                    if m.last_reading_date is None or day > m.last_reading_date:
+                        if m.uom == 'Time':
+                            global_log.debug(f'Meter update {thisac.regn} on {day} {m.meter_name},  {deltas}')
+                            # print("timne updating  {}".format(m))
+                            reading = MeterReadings(ac_id=thisac.id,meter_id=m.meter_id,
+                                                    reading_date = day,
+                                                    meter_reading=0,
+                                                    meter_delta=deltas['minutes'],
+                                                    note='Auto Inserted')
+                            db.session.add(reading)
+                            rowsadded += 1
+                            db.session.flush
+                            global_log.info(f'Meter readings for {thisac.regn} on {day} updated.')
+            db.session.commit()
+        except Exception as e:
+            print(type(e), e)
+            global_log.error(str(e))
     for m in meters_to_update:
         reset_readings_from_start(p_ac_regn,m.meter_id)
     return rowsadded
@@ -227,7 +236,7 @@ def reset_readings_from_start(p_ac_regn,p_meter_id,p_initial_value=None):
         db.session.flush()
     db.session.commit()
     if global_log is not None:
-        global_log.info('{} Values changed'.format(changecount))
+        global_log.info(f'{changecount} End meter readins changed from deltas')
     return changecount
 
 def reset_readings_from_end(p_ac_regn,p_meter_id,p_latest_value=None):

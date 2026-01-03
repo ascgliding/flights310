@@ -1351,8 +1351,11 @@ def meterreadings_before_insert(mapper,connection,obj):
             biggest_reading = (db.session.query(func.max(MeterReadings.meter_reading))
                                .filter(MeterReadings.ac_id == obj.ac_id)
                                .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or 0
-            if obj.meter_reading <= biggest_reading:
-                raise ValueError(f'There is already a larger reading for {thismeter.std_meter_rec.meter_name}')
+            # Note that during the day end meter readings are added with deltas only (therefore
+            # obj.meter_reading is zero,  following that process a second process then resets
+            # the end meter readings from the deltas
+            if obj.meter_reading < biggest_reading and obj.meter_reading != 0:
+                raise ValueError(f'There is already a larger reading for {thismeter.std_meter_rec.meter_name} ({obj.meter_reading} < {biggest_reading})')
             else:
                 last_date = (db.session.query(func.max(MeterReadings.reading_date))
                              .filter(MeterReadings.ac_id == obj.ac_id)
