@@ -547,13 +547,21 @@ class Pilot(db.Model):
 
     @property
     def last_base_pass(self):
+        # The issue date is the transaction date.
         return db.session.query(func.max(MemberTrans.transdate)
                                      .filter(MemberTrans.memberid == self.id)
                                      .filter(MemberTrans.transtype == 'BPASS')).scalar() or datetime.date(1900,1,1)
 
     @property
-    def base_pass_due(self):
-        return self.last_base_pass + relativedelta(years=2)
+    def basepassexpirydate(self):
+        # The expiry date is stored in the notes....
+        last_pass = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
+            filter(MemberTrans.transtype == 'BPASS'). \
+            order_by(MemberTrans.inserted.desc()).first()
+        if last_pass is not None:
+            parts = last_pass.transnotes.split('/')
+            return datetime.datetime.strptime(parts[2], "%Y-%m-%d").date()
+        return None
 
     @property
     def last_mem_form(self):
@@ -646,15 +654,6 @@ class Pilot(db.Model):
             return 0
         return round(((results[0] / 41 + results[1] / 32) / 2) * 100, 0)
 
-    @property
-    def basepassexpirydate(self):
-        last_pass = MemberTrans.query.filter(MemberTrans.memberid == self.id). \
-            filter(MemberTrans.transtype == 'BPASS'). \
-            order_by(MemberTrans.inserted.desc()).first()
-        if last_pass is not None:
-            parts = last_pass.transnotes.split('/')
-            return datetime.datetime.strptime(parts[2], "%Y-%m-%d").date()
-        return None
 
 class Slot(db.Model):
     __tablename__ = "slots"

@@ -264,17 +264,17 @@ def send_base_pass_reminders_to_members():
     for m in mems:
         if (m.email is not None and
                     m.age >= 18 and
-                    m.base_pass_due < datetime.date.today() - relativedelta(months=2) and
+                    m.basepassexpirydate < datetime.date.today() - relativedelta(months=2) and
                     m.fullname not in ['OTHER CLUB MEMBER'] and
                     m.email_basepass_warning):
                 msg = Mailer('Base Pass Reminder')
                 msg.add_body("<HTML>")
-                if m.base_pass_due is not None and m.base_pass_due < datetime.date.today():
+                if m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today():
                     msg.add_body('Our records show that your Base Pass has expired<br>')
-                    msg.add_body(f'It appears to have expired on {m.base_pass_due.strftime("%B %d, %Y")}<br>')
+                    msg.add_body(f'It appears to have expired on {m.basepassexpirydate.strftime("%B %d, %Y")}<br>')
                 else:
                     msg.add_body('Our records show that your Base Pass is nearly due.<br>')
-                    msg.add_body(f'It appears to be due  on {m.base_pass_due.strftime("%B %d, %Y")}.<br>')
+                    msg.add_body(f'It appears to be due  on {m.basepassexpirydate.strftime("%B %d, %Y")}.<br>')
                 msg.add_body('You are required to have a valid base pass to fly at NZWP.<br>')
                 msg.add_body('<ul>In order to renew your pass you must have:')
                 msg.add_body('<li>a valid MOJ clearance that is no less than 6 months old.</li>')
