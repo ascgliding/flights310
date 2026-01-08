@@ -330,10 +330,14 @@ class MailerSmtp:
             raise self.mailerError("The subject cannot be empty")
         # Create the mail
         thismsg['Subject'] = self.__subject
+        if 'MAIL_DEBUG' in app.config:
+            thismsg['To'] = app.config['MAIL_DEBUG']
+            self.__bodyhtml = self.__bodyhtml + "<BR><BR>Would have gone to {} <BR> cc {}".format(",".join(self.__recipients), ",".join(self.__cc))
+        else:
+            thismsg['Cc']   = ",".join(self.__cc)
+            thismsg['To']   = ",".join(self.__recipients)
+            thismsg['Bcc']   = ",".join(self.__bcc)
         thismsg.attach(MIMEText(self.__bodyhtml,'html'))
-        thismsg['Cc']   = ",".join(self.__cc)
-        thismsg['To']   = ",".join(self.__recipients)
-        thismsg['Bcc']   = ",".join(self.__bcc)
         thismsg['From']   = self.__smtp_mail_address
         if self.__replyto is not None and isinstance(self.__replyto,str):
             thismsg.add_header('reply-to',self.__replyto)
