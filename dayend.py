@@ -654,7 +654,12 @@ def clubemails(events):
             thisinstr = getpilot(thismatch.group(2))
             log.info(f'Found Instructor for day: {thisinstr.fullname}')
             thistp = getpilot(thismatch.group(4))
-            thisdp = getpilot(thismatch.group(6))
+            try:
+                thisdp = getpilot(thismatch.group(6))
+            except Exception as e:
+                if str(e) == 'list index out of range':
+                    # The duty pilot may not be defined (esp in the xmas hols)
+                    thisdp = None
             date_has_roster = True
             update_roster(event.begin.to('local').date(), thisinstr, thistp, thisdp)
         else:
@@ -684,7 +689,10 @@ def get_metforecast(long,lat):
 if __name__ == '__main__':
     with app.app_context():
         # The execution time is 0400.
-        # try:
+        try:
+            if 'MAIL_DEBUGX' in app.config:
+                log.info("checkiung I don't get this")
+            log.info("But I do get this")
         #     log.info("Dayend started")
         #     print("starting in test")
         #     log.info("Updating Readings")
@@ -705,14 +713,15 @@ if __name__ == '__main__':
         #     # log.info("Updating Readings")
         #     # update_auto_readings()
         #     # exit()
-        #     # sdate = datetime.date(2025,11,13)
-        #     # edate = sdate + relativedelta(days=7)
-        #     # events = eventlist(sdate, edate)
-        #     # clubemails(events)
-        #     # exit()
-        # except Exception as e:
-        #     print(f'**** an error occured: {str(e)}')
-        #     exit()
+        #     sdate = datetime.date(2026,1,9)
+        #     edate = sdate + relativedelta(days=7)
+        #     events = eventlist(sdate, edate)
+        #     clubemails(events)
+        # the final exit is here
+            exit()
+        except Exception as e:
+            print(f'**** an error occured: {str(e)}')
+            exit()
 
         try:
             # ---------------------------------------------------------------------------------------------------
@@ -766,6 +775,6 @@ if __name__ == '__main__':
             print(f'**** DAYEND: an error occured: {str(e)}')
             msg = Mailer('A Problem occurred with the Flying Club Dayend')
             msg.add_body('<html>The following error occurred:')
-            msg.add_body(f'<br>str(e)<br>')
+            msg.add_body(f'<br>{str(e)}<br>')
             msg.add_recipient('ray@rayburns.nz')
             msg.send()
