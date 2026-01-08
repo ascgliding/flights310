@@ -38,12 +38,14 @@ class Config(object):
 
 class development(Config):
     # Note that this config assumes windows.
+    MAIL_DEBUG = 'ray@rayburns.nz'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(app.instance_path, 'asc.sqlite')
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=3)
     LOGCLEAR = True
     LOGLEVEL = 'DEBUG'
 
 class dayend(Config):
+    MAIL_DEBUG = 'ray@rayburns.nz'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(app.instance_path, 'asc.sqlite')
     LOGCLEAR = False
     LOGLEVEL = 'DEBUG'
