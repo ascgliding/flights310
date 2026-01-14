@@ -75,7 +75,7 @@ def create_app(test_config=None):
     # -----------------------------------------------------------------------------------------------------
     # print("create_app being called with Flask {}".format(flask_version))
 
-    if sys.platform == 'win32':
+    if sys.platform == 'win32':  # returns "linux" on pythonanywhere
         inst_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
         inst_path = os.path.join(inst_path, 'instance')
         app = Flask(__name__, instance_path=inst_path)
@@ -128,6 +128,7 @@ def create_app(test_config=None):
     establish_logging(app)
 
     app.logger.info("ASC Application Started")
+    app.logger.info(f'Running on platform {sys.platform}')
     app.logger.info("Create_app called with Flask {}".format(flask_version))
     app.logger.info("Python Version {}".format(sys.version))
     # -----------------------------------------------------------------------------------------------------
