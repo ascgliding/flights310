@@ -689,11 +689,11 @@ def get_metforecast(long,lat):
 if __name__ == '__main__':
     with app.app_context():
         # The execution time is 0400.
-        try:
-            if 'MAIL_DEBUGX' in app.config:
-                log.info("checkiung I don't get this")
-            log.info("But I do get this")
-        #     log.info("Dayend started")
+        # try:
+        #     if 'MAIL_DEBUGX' in app.config:
+        #         log.info("checkiung I don't get this")
+        #     log.info("But I do get this")
+        # #     log.info("Dayend started")
         #     print("starting in test")
         #     log.info("Updating Readings")
         #     update_auto_readings()
@@ -717,11 +717,16 @@ if __name__ == '__main__':
         #     edate = sdate + relativedelta(days=7)
         #     events = eventlist(sdate, edate)
         #     clubemails(events)
-        # the final exit is here
-            exit()
-        except Exception as e:
-            print(f'**** an error occured: {str(e)}')
-            exit()
+
+        # except Exception as e:
+        #     print(f'**** an error occured: {str(e)}')
+        #
+        # msg = Mailer('The Dayend is in debug mode')
+        # msg.add_body('<html>is that right?</html>')
+        # msg.add_recipient('ray@rayburns.nz')
+        # msg.send()
+        #
+        # exit()
 
         try:
             # ---------------------------------------------------------------------------------------------------
