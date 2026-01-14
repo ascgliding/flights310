@@ -689,97 +689,102 @@ def get_metforecast(long,lat):
 if __name__ == '__main__':
     with app.app_context():
         # The execution time is 0400.
-        # try:
-        #     if 'MAIL_DEBUGX' in app.config:
-        #         log.info("checkiung I don't get this")
-        #     log.info("But I do get this")
-        # #     log.info("Dayend started")
-        #     print("starting in test")
-        #     log.info("Updating Readings")
-        #     update_auto_readings()
-        #     exit()
-        #     # testmailer()
-        #     # send_med_bfr_to_cfi()
-        #     # exit()
-        #     # print("finished med and bfr")
-        #     # sdate = datetime.date(2024,10,11)
-        #     # edate = sdate + relativedelta(days=7)
-        #     # processcalendar(sdate, edate)
-        #     # send_bfr_reminders_to_members()
-        #     # send_medical_reminders_to_members()
-        #     # send_base_pass_reminders_to_members()
-        #     # exit()
-        #     # get_metforecast(174.6131,-36.7928)
-        #     # log.info("Updating Readings")
-        #     # update_auto_readings()
-        #     # exit()
-        #     sdate = datetime.date(2026,1,9)
-        #     edate = sdate + relativedelta(days=7)
-        #     events = eventlist(sdate, edate)
-        #     clubemails(events)
-
-        # except Exception as e:
-        #     print(f'**** an error occured: {str(e)}')
-        #
-        # msg = Mailer('The Dayend is in debug mode')
-        # msg.add_body('<html>is that right?</html>')
-        # msg.add_recipient('ray@rayburns.nz')
-        # msg.send()
-        #
-        # exit()
-
-        try:
-            # ---------------------------------------------------------------------------------------------------
-            # send me the database on Saturdays and Sundays.
-            if datetime.datetime.today().weekday() in [6, 0]:
-                log.info("Database Emailed during Dayend")
-                send_db()
-
-            # Upload the calendar
-            if datetime.date.today().weekday() in [4]:  # Fridays.
-                sdate = datetime.date.today()
+        # we use sys.platform to ensure that we don't leave debugs in live code.
+        # sys.platform returns 'win32' on windows and 'linux' that pythonanywhere
+        if sys.platform == 'win32':
+            try:
+                if 'MAIL_DEBUGX' in app.config:
+                    log.info("checkiung I don't get this")
+                log.info("But I do get this")
+            #     log.info("Dayend started")
+                print("starting in test")
+                log.info("Updating Readings")
+                update_auto_readings()
+                exit()
+                # testmailer()
+                # send_med_bfr_to_cfi()
+                # exit()
+                # print("finished med and bfr")
+                # sdate = datetime.date(2024,10,11)
+                # edate = sdate + relativedelta(days=7)
+                # processcalendar(sdate, edate)
+                # send_bfr_reminders_to_members()
+                # send_medical_reminders_to_members()
+                # send_base_pass_reminders_to_members()
+                # exit()
+                # get_metforecast(174.6131,-36.7928)
+                # log.info("Updating Readings")
+                # update_auto_readings()
+                # exit()
+                sdate = datetime.date(2026,1,9)
                 edate = sdate + relativedelta(days=7)
-                log.info("Sending Calendar Event Emails")
                 events = eventlist(sdate, edate)
                 clubemails(events)
-                send_summary_event_email(events)
 
-            # Send statistics on the first of the month
-            if datetime.date.today().day == 1 and (datetime.date.today().month == 1 or datetime.date.today().month == 7):
-                log.info("Sending Statistic Emails")
-                send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
+            except Exception as e:
+                print(f'**** an error occured: {str(e)}')
 
-            # Update maintenance readings
-            log.info("Updating Readings")
-            update_auto_readings()
-
-            # Maintenance emails
-            if datetime.date.today().weekday() in [0]:  # 0 is Monday
-                log.info("Sending Maintenance Emails")
-                send_maintenance_emails()
-
-            # medicals and BFR to members
-            if datetime.date.today().weekday() in [1]:  # 1 is Tuesday ... just to balance the number of emails.
-                log.info("Sending Medical and BFR Emails to Members")
-                send_bfr_reminders_to_members()
-                send_medical_reminders_to_members()
-
-            # Base Pass remindders
-            if datetime.date.today().weekday() in [2]:  # 1 is Wednesday ... just to balance the number of emails.
-                log.info("Sending Base Pass Emails")
-                send_base_pass_reminders_to_members()
-
-            # send Peter, Lionel and me medical and BFR data on Friday Mornings.
-            if datetime.datetime.today().weekday() in [4]:
-                log.info("Sending Medical and BFR Summary details to CFIs")
-                send_med_bfr_to_cfi()
-
-            print("Dayend completed successfully")
-
-        except Exception as e:
-            print(f'**** DAYEND: an error occured: {str(e)}')
-            msg = Mailer('A Problem occurred with the Flying Club Dayend')
-            msg.add_body('<html>The following error occurred:')
-            msg.add_body(f'<br>{str(e)}<br>')
+            msg = Mailer('The Dayend is in debug mode')
+            msg.add_body('<html>is that right?</html>')
             msg.add_recipient('ray@rayburns.nz')
             msg.send()
+
+            exit()
+
+        # will never run on windows.....
+        if sys.platform == 'linux':  # For pythonanywhere
+            try:
+                # ---------------------------------------------------------------------------------------------------
+                # send me the database on Saturdays and Sundays.
+                if datetime.datetime.today().weekday() in [6, 0]:
+                    log.info("Database Emailed during Dayend")
+                    send_db()
+
+                # Upload the calendar
+                if datetime.date.today().weekday() in [4]:  # Fridays.
+                    sdate = datetime.date.today()
+                    edate = sdate + relativedelta(days=7)
+                    log.info("Sending Calendar Event Emails")
+                    events = eventlist(sdate, edate)
+                    clubemails(events)
+                    send_summary_event_email(events)
+
+                # Send statistics on the first of the month
+                if datetime.date.today().day == 1 and (datetime.date.today().month == 1 or datetime.date.today().month == 7):
+                    log.info("Sending Statistic Emails")
+                    send_stats_to_gnz(datetime.date.today() - relativedelta(days=1))
+
+                # Update maintenance readings
+                log.info("Updating Readings")
+                update_auto_readings()
+
+                # Maintenance emails
+                if datetime.date.today().weekday() in [0]:  # 0 is Monday
+                    log.info("Sending Maintenance Emails")
+                    send_maintenance_emails()
+
+                # medicals and BFR to members
+                if datetime.date.today().weekday() in [1]:  # 1 is Tuesday ... just to balance the number of emails.
+                    log.info("Sending Medical and BFR Emails to Members")
+                    send_bfr_reminders_to_members()
+                    send_medical_reminders_to_members()
+
+                # Base Pass remindders
+                if datetime.date.today().weekday() in [2]:  # 1 is Wednesday ... just to balance the number of emails.
+                    log.info("Sending Base Pass Emails")
+                    send_base_pass_reminders_to_members()
+
+                # send Peter, Lionel and me medical and BFR data on Friday Mornings.
+                if datetime.datetime.today().weekday() in [4]:
+                    log.info("Sending Medical and BFR Summary details to CFIs")
+                    send_med_bfr_to_cfi()
+
+                print("Dayend completed successfully")
+
+            except Exception as e:
+                print(f'**** DAYEND: an error occured: {str(e)}')
+                msg = Mailer('A Problem occurred with the Flying Club Dayend')
+                msg.add_body('<html>The following error occurred:')
+                msg.add_body(f'<br>{str(e)}<br>')
+                msg.add_recipient('ray@rayburns.nz')
+                msg.send()
