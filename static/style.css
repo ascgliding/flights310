@@ -698,3 +698,43 @@ select {
                     align-items:center;
                     justify-content:center ;
                     min-height: 150px}
+/* Method 2 - dialog boxes */
+.dialog {
+    margin: auto;
+    padding: 1rem;
+    border: none;
+    border-radius: 6px;
+    max-width: 50ch;
+}
+
+.dialog::backdrop {
+    background-color: rgba(100,100,100,0.4);
+}
+
+.dialog-close {
+    background-color: var(--main-bg-colour);
+    color: var(--main-fg-colour);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.dialog-wait { 
+                background-image: url('/static/images/loading.gif');
+                background-repeat:no-repeat;
+                background-size: contain;
+                background-position: center;
+                color:red;
+                font-size: 1.5em;
+                font-weight: bold;
+                margin: auto;
+                padding: 1rem;
+                border: none;
+                border-radius: 6px;
+                max-width: 50ch;
+                cursor: wait;
+                align-items:center;
+                justify-content:center ;
+                min-height: 150px}

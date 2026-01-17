@@ -249,7 +249,6 @@ function myLower(cObj)
   </nav>
   <section class="content">
     <header>
-{#      {{ bootstrap.load_css() }}  #}
       {% block header %}{% endblock %}
     </header>
     <noscript align="center" style="font-size:300%;color:red;"></br>>This site will not work without Javascript. Please
@@ -264,7 +263,18 @@ function myLower(cObj)
     {% endfor %}
     {% endwith %}
     <body onload="checkcookie()">
-    {% block content %}{% endblock %}
+        <!-- this is a work in progress.  Not really sure about this yet -->
+        <dialog class="dialog-wait" id="modal_message" >
+<!--            <div>-->
+<!--                <a class="dialog-close" href="#" onclick="modal_message.close(); return false;"-->
+<!--                   autofocus>&times;</a>-->
+<!--            </div>-->
+            <div id="modal_content" style="background-color:white; opacity:0.8">
+                {{ modal_message }}
+            </div>
+        </dialog>
+    {% block content %}
+    {% endblock %}
     </body>
   </section>
 
@@ -283,5 +293,71 @@ function myLower(cObj)
 
         // Optional: Display the current value elsewhere on the page
         document.getElementById('outputValue').textContent = newValue;
+    }
+
+
+    async function downloadFileWithProgress(url, fileName, messageText) {
+        const modalscr = document.getElementById("modal_message");
+        var modalmsg = document.getElementById("modal_content");
+        modalmsg.textContent = messageText;
+        modalscr.showModal();
+
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Download failed: ${response.statusText}`);
+        }
+
+        const totalLength = response.headers.get('content-length');
+        const reader = response.body.getReader();
+        let receivedLength = 0;
+        const chunks = [];
+
+        // Loop until the download is done
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+                break; // Download complete
+            }
+            chunks.push(value);
+            receivedLength += value.length;
+
+            // Optional: Update a progress bar or log progress
+            if (totalLength) {
+                const progress = Math.round((receivedLength / totalLength) * 100);
+                console.log(`Download progress: ${progress}%`);
+            }
+        }
+
+        // Combine chunks into a single Blob
+        const blob = new Blob(chunks);
+
+        // Trigger the file save dialog
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href); // Clean up the object URL
+
+        // Code here runs AFTER the file data is fully received by the browser
+        console.log('File download has completed in the browser and the save dialog initiated.');
+        modalscr.close();
+    }
+
+    // Usage example:
+    // downloadFileWithProgress('https://example.com/path/to/largefile.pdf', 'my_document.pdf');
+
+</script>
+
+    <!-- this is a work in progress I couldn't really make it work in conjunction with file send -->
+<script>
+
+    function openDialogWithText(message) {
+        dt = document.getElementById('modal_content');
+        dt.textContent = message;
+        thedialog = document.getElementById('modal_message');
+        thedialog.showModal();
     }
 </script>
