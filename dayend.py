@@ -264,12 +264,15 @@ def send_base_pass_reminders_to_members():
     for m in mems:
         if (m.email is not None and
                     m.age >= 18 and
-                    m.basepassexpirydate < datetime.date.today() - relativedelta(months=2) and
+                    (m.basepassexpirydate is None or
+                    m.basepassexpirydate < datetime.date.today() - relativedelta(months=2) ) and
                     m.fullname not in ['OTHER CLUB MEMBER'] and
                     m.email_basepass_warning):
                 msg = Mailer('Base Pass Reminder')
                 msg.add_body("<HTML>")
-                if m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today():
+                if m.basepassexpirydate is  None:
+                    msg.add_body('We do not appear to have a record of your base pass.<br>')
+                elif m.basepassexpirydate is not None and m.basepassexpirydate < datetime.date.today():
                     msg.add_body('Our records show that your Base Pass has expired<br>')
                     msg.add_body(f'It appears to have expired on {m.basepassexpirydate.strftime("%B %d, %Y")}<br>')
                 else:
@@ -698,8 +701,9 @@ if __name__ == '__main__':
                 log.info("But I do get this")
             #     log.info("Dayend started")
                 print("starting in test")
-                log.info("Updating Readings")
-                update_auto_readings()
+                # log.info("Updating Readings")
+                # update_auto_readings()
+                send_base_pass_reminders_to_members()
                 exit()
                 # testmailer()
                 # send_med_bfr_to_cfi()
@@ -710,7 +714,6 @@ if __name__ == '__main__':
                 # processcalendar(sdate, edate)
                 # send_bfr_reminders_to_members()
                 # send_medical_reminders_to_members()
-                # send_base_pass_reminders_to_members()
                 # exit()
                 # get_metforecast(174.6131,-36.7928)
                 # log.info("Updating Readings")
