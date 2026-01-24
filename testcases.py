@@ -1,5 +1,5 @@
 import sendgrid
-from flask_sqlalchemy import __version__ as fsqa_version,model
+from flask_sqlalchemy import __version__ as fsqa_version, model
 from flask_login import __version__ as flogin_version
 from flask import __version__ as flask_version
 from flask_wtf import __version__ as flaskwtf_version
@@ -14,9 +14,6 @@ import csv
 import sqlalchemy.exc
 from sqlalchemy import text as sqltext, func, __version__
 
-
-
-
 from asc.common import *
 from asc.oMailerSmtp import *
 from asc.oBasePass import BasePass
@@ -24,13 +21,15 @@ from asc.oBasePass import BasePass
 # print('about to create app')
 app = create_app()
 # print('defining logger')
-log =  app.logger
+log = app.logger
+
 
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
+
 
 class TestTbl(db.Model):
     """This is a test table cor check create and delete"""
@@ -48,6 +47,7 @@ class TestTbl(db.Model):
     @db.validates('test_type', 'test_key')
     def convert_upper(self, key, value):
         return value.upper()
+
 
 class FSqlalchemyTst(unittest.TestCase):
 
@@ -232,7 +232,7 @@ class FSqlalchemyTst(unittest.TestCase):
         """A user cannot be added with a blank name"""
         try:
             oneuser = User(None)
-            oneuser.administrator=False
+            oneuser.administrator = False
             db.session.add(oneuser)
             db.session.commit()
             self.fail("No error detected n duplicate key")
@@ -447,7 +447,6 @@ class FSqlalchemyTst(unittest.TestCase):
         except Exception as e:
             self.fail(e)
 
-
     def test018(self):
         """Can I run direct sql, specifying parameters"""
         try:
@@ -467,7 +466,7 @@ class FSqlalchemyTst(unittest.TestCase):
                     ON t2.slot_type = t1.slot_desc  AND t2.slot_key = t0.transsubtype 
                 WHERE t0.memberid = :member"""
             sql_to_execute = sqlalchemy.sql.text(sqlstmt)
-            recs = db.engine.execute(sql_to_execute,member=8).fetchall()
+            recs = db.engine.execute(sql_to_execute, member=8).fetchall()
             print(recs)
             for f in recs:
                 print('{}\t{}\t{}'.format(f['transdate'], f['typedesc'], f['subtypedesc']))
@@ -475,7 +474,6 @@ class FSqlalchemyTst(unittest.TestCase):
         except Exception as e:
             self.logerror(e)
             self.fail("Error raised :{}".format(str(e)))
-
 
     def test019(self):
         """Can I run joins, specifying parameters"""
@@ -499,7 +497,7 @@ class FSqlalchemyTst(unittest.TestCase):
                 WHERE t0.memberid = :member"""
             sql_to_execute = sqlalchemy.sql.text(sqlstmt)
             sql_to_execute = sql_to_execute.columns(transdate=db.Date)
-            recs = db.engine.execute(sql_to_execute,member=8).fetchall()
+            recs = db.engine.execute(sql_to_execute, member=8).fetchall()
             print(recs)
             for f in recs:
                 print('{}\t{}\t{}'.format(f['transdate'], type(f['transdate']), f['subtypedesc']))
@@ -511,7 +509,7 @@ class FSqlalchemyTst(unittest.TestCase):
     def test020(self):
         """ Verify data types"""
         f = db.session.query(Flight).get(8224)
-        self.assertIsInstance(f.landed,datetime.datetime,'Landed is not a datetime')
+        self.assertIsInstance(f.landed, datetime.datetime, 'Landed is not a datetime')
 
     def test021(self):
         """ Using sql text but mapping to a class"""
@@ -524,15 +522,15 @@ class FSqlalchemyTst(unittest.TestCase):
                           Flight.landed
                           )
         thisset = db.session.query(Flight).from_statement(sql).params(pid=8224).all()
-        self.assertIsInstance(thisset,list,'Query did not return  a list')
+        self.assertIsInstance(thisset, list, 'Query did not return  a list')
         f = thisset[0]
-        self.assertIsInstance(f,Flight,'Query did not return  a Flight')
-        self.assertIsInstance(f.landed,datetime.datetime, 'Landed is not a datetime')
+        self.assertIsInstance(f, Flight, 'Query did not return  a Flight')
+        self.assertIsInstance(f.landed, datetime.datetime, 'Landed is not a datetime')
 
     def test022(self):
         """ Using query to return datetime using mapper"""
-        thisdate = datetime.date(2019,1,13)
-        thisset = db.session.query(Flight).filter(func.date(Flight.takeoff)==thisdate).all()
+        thisdate = datetime.date(2019, 1, 13)
+        thisset = db.session.query(Flight).filter(func.date(Flight.takeoff) == thisdate).all()
         self.assertIsInstance(thisset, list, 'Query did not return  a list')
         f = thisset[0]
         self.assertIsInstance(f, Flight, 'Query did not return  a Flight')
@@ -544,7 +542,7 @@ class FSqlalchemyTst(unittest.TestCase):
         lastdate = db.session.query(func.max(Flight.takeoff).label("maxdate")).scalar()
         # for l in lastdate:
         #     print(l)
-        print("{}:{}".format(lastdate,type(lastdate)))
+        print("{}:{}".format(lastdate, type(lastdate)))
         self.assertIsInstance(lastdate, datetime.datetime, 'takeoff is not a datetime')
 
     def test024(self):
@@ -560,7 +558,7 @@ class FSqlalchemyTst(unittest.TestCase):
               where date(takeoff) = :date
               and p2 <> ''
               """)
-        thisset = [r[0] for r in (db.engine.execute(sql, date=datetime.date(2019,1,13)).fetchall())]
+        thisset = [r[0] for r in (db.engine.execute(sql, date=datetime.date(2019, 1, 13)).fetchall())]
         for f in thisset:
             print(f)
         self.assertIsInstance(thisset, list, 'Query did not return  a list')
@@ -585,6 +583,7 @@ class FSqlalchemyTst(unittest.TestCase):
             db.session.rollback
             self.logerror(e)
             self.fail("Invalid Error Raised")
+
 
 class CSVTst(unittest.TestCase):
 
@@ -666,7 +665,6 @@ class CSVTst(unittest.TestCase):
                 self.printout(str(e))
                 log.info(str(e))
 
-
     def test001(self):
         """Can I access a flight"""
         try:
@@ -681,15 +679,17 @@ class CSVTst(unittest.TestCase):
         try:
             flights = db.session.query(Flight).filter(Flight.pic == 'Ray Burns').all()
             print(len(flights))
-            with open('gnutest.csv','w',newline=chr(10)) as csvf:
-                fieldnames = ['id','date_opened','owner_id','billing_id','notes','date','desc','action','account','quantity',
-                                'price','disc_type','disc_how','discount','taxable','taxincluded','tax_table','date_posted',
-                                'due_date','account_posted','memo_posted','accu_splits']
-                w = csv.DictWriter(csvf,fieldnames=fieldnames)
+            with open('gnutest.csv', 'w', newline=chr(10)) as csvf:
+                fieldnames = ['id', 'date_opened', 'owner_id', 'billing_id', 'notes', 'date', 'desc', 'action',
+                              'account', 'quantity',
+                              'price', 'disc_type', 'disc_how', 'discount', 'taxable', 'taxincluded', 'tax_table',
+                              'date_posted',
+                              'due_date', 'account_posted', 'memo_posted', 'accu_splits']
+                w = csv.DictWriter(csvf, fieldnames=fieldnames)
                 w.writeheader()
                 id = 1
                 for f in flights:
-#                    if f.glider_charge != 0 or f.other_charge != 0 or f.tow_charge != 0:
+                    #                    if f.glider_charge != 0 or f.other_charge != 0 or f.tow_charge != 0:
                     if f.tow_charge != 0:
                         thisrec = {}
                         thisrec['id'] = "FL-" + str(id).zfill(6)
@@ -699,7 +699,7 @@ class CSVTst(unittest.TestCase):
                         thisrec['account'] = 'Income:Flying Income:RDW Income:RDW Aerotows'
                         thisrec['quantity'] = '1'
                         thisrec['price'] = str(f.tow_charge)
-                        thisrec['taxable'] =  'X'
+                        thisrec['taxable'] = 'X'
                         thisrec['taxincluded'] = 'X'
                         w.writerow(thisrec)
                     if f.glider_charge != 0 and f.tow_charge != 0:
@@ -716,6 +716,7 @@ class CSVTst(unittest.TestCase):
         except Exception as e:
             self.logerror(e)
             self.fail("Error raised :{}".format(e))
+
 
 class sendgridtest(unittest.TestCase):
 
@@ -795,7 +796,6 @@ class sendgridtest(unittest.TestCase):
             else:
                 self.printout(str(e))
                 log.info(str(e))
-
 
     # def test001(self):
     #     """
@@ -878,7 +878,7 @@ class sendgridtest(unittest.TestCase):
             print(dictlist)
             print(list(dictlist))
             print(type(dictlist[0]))
-            dictlist.insert(0,['ID','PIC','Landed'])
+            dictlist.insert(0, ['ID', 'PIC', 'Landed'])
             msg.add_body_list(dictlist)
             msg.add_recipient('ray@rayburns.nz')
             msg.send()
@@ -908,6 +908,7 @@ class sendgridtest(unittest.TestCase):
     #     print(type(f))
     #     self.assertIsInstance(f, tuple, 'Query did not return  a tuple')
 
+
 class maintenance_test(unittest.TestCase):
 
     @classmethod
@@ -927,8 +928,6 @@ class maintenance_test(unittest.TestCase):
         print("Flask SQLAlchemy version {}".format(fsqa_version))
         print("SQL Alchemy version {}".format(sqa_version))
 
-
-
         Tasks.__table__.drop(db.engine)
         Meters.__table__.drop(db.engine)
         ACMeters.__table__.drop(db.engine)
@@ -939,13 +938,13 @@ class maintenance_test(unittest.TestCase):
         ACMaintHistory.__table__.drop(db.engine)
         db.create_all()
         print('adding meters')
-        thismeter = Meters(meter_name = 'Landings', uom='Qty')  #, entry_uom = 'Units')
+        thismeter = Meters(meter_name='Landings', uom='Qty')  # , entry_uom = 'Units')
         db.session.add(thismeter)
-        thismeter = Meters(meter_name = 'Tachometer', uom='Time')  # , entry_uom = 'Hours:Minutes')
+        thismeter = Meters(meter_name='Tachometer', uom='Time')  # , entry_uom = 'Hours:Minutes')
         db.session.add(thismeter)
-        thismeter = Meters(meter_name = 'AirFrame', uom='Time')  #, entry_uom = 'Decimal Hours')
+        thismeter = Meters(meter_name='AirFrame', uom='Time')  # , entry_uom = 'Decimal Hours')
         db.session.add(thismeter)
-        thismeter = Meters(meter_name = 'Motor Glider Engine Hrs', uom='Time')  #, entry_uom = 'Decimal Hours')
+        thismeter = Meters(meter_name='Motor Glider Engine Hrs', uom='Time')  # , entry_uom = 'Decimal Hours')
         db.session.add(thismeter)
         db.session.flush()
         db.session.commit()
@@ -957,31 +956,39 @@ class maintenance_test(unittest.TestCase):
 
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         # A/C meters
-        thisrow = ACMeters(ac_id = oRDW.id, meter_id = oAirframe.id, entry_uom="Decimal Hours", entry_prompt="Enter the incremental hours for the event")
+        thisrow = ACMeters(ac_id=oRDW.id, meter_id=oAirframe.id, entry_uom="Decimal Hours",
+                           entry_prompt="Enter the incremental hours for the event")
         db.session.add(thisrow)
-        thisrow = ACMeters(ac_id = oRDW.id, meter_id = oTach.id, entry_uom="Hours:Minutes", entry_prompt="Enter the final Meter Reading")
+        thisrow = ACMeters(ac_id=oRDW.id, meter_id=oTach.id, entry_uom="Hours:Minutes",
+                           entry_prompt="Enter the final Meter Reading")
         db.session.add(thisrow)
-        thisrow = ACMeters(ac_id = oRDW.id, meter_id = oLandings.id, entry_uom="Qty", entry_prompt="Enter the number of landings for the day")
+        thisrow = ACMeters(ac_id=oRDW.id, meter_id=oLandings.id, entry_uom="Qty",
+                           entry_prompt="Enter the number of landings for the day")
         db.session.add(thisrow)
         oGBU = db.session.query(Aircraft).filter(Aircraft.regn == 'GBU').first()
-        thisrow = ACMeters(ac_id = oGBU.id, meter_id = oAirframe.id, entry_uom="Hours:Minutes", entry_prompt="Enter the final Meter Reading")
+        thisrow = ACMeters(ac_id=oGBU.id, meter_id=oAirframe.id, entry_uom="Hours:Minutes",
+                           entry_prompt="Enter the final Meter Reading")
         db.session.add(thisrow)
-        thisrow = ACMeters(ac_id = oGBU.id, meter_id = oLandings.id, entry_uom="Qty", entry_prompt="Enter the number of landings for the day")
+        thisrow = ACMeters(ac_id=oGBU.id, meter_id=oLandings.id, entry_uom="Qty",
+                           entry_prompt="Enter the number of landings for the day")
         db.session.add(thisrow)
         db.session.flush()
-        oRDWTach = db.session.query(ACMeters).filter(ACMeters.meter_id == oTach.id).filter(ACMeters.ac_id == oRDW.id).first()
-        oRDWAirframe = db.session.query(ACMeters).filter(ACMeters.meter_id == oTach.id).filter(ACMeters.ac_id == oRDW.id).first()
-        oRDWTach = db.session.query(ACMeters).filter(ACMeters.meter_id == oTach.id).filter(ACMeters.ac_id == oRDW.id).first()
+        oRDWTach = db.session.query(ACMeters).filter(ACMeters.meter_id == oTach.id).filter(
+            ACMeters.ac_id == oRDW.id).first()
+        oRDWAirframe = db.session.query(ACMeters).filter(ACMeters.meter_id == oTach.id).filter(
+            ACMeters.ac_id == oRDW.id).first()
+        oRDWTach = db.session.query(ACMeters).filter(ACMeters.meter_id == oTach.id).filter(
+            ACMeters.ac_id == oRDW.id).first()
         # Readings
 
         # These need to be able to be relateive to today and create both 90 day and 465 day equivalents.
         # 3mth avg = ((3 * 40)/90 = 1.3333, 12 mth = ((3*40)+(9*80)) / (12*30)  = 2.333
         # 6 mth avg = ((3*40)+(3*80)) / (6*30)  = 2.000
-        cls.add_meter_readings(oRDW.id,oLandings.id,40,80)
+        cls.add_meter_readings(oRDW.id, oLandings.id, 40, 80)
         # 3mth avg = ((3 * 200)/90 = 6.666hrs, 400 mins, 12 mth = ((3*200)+(9*20)) / (12*30)  = 2.166hr, 130min
-        cls.add_meter_readings(oRDW.id,oAirframe.id,12000,1200)
+        cls.add_meter_readings(oRDW.id, oAirframe.id, 12000, 1200)
         # 3mth avg = ((3 * 100)/90 = 3.3333hrs, 200 mins, 12 mth = ((3*200)+(9*20)) / (12*30)  = 1.083333hr, 65min
-        cls.add_meter_readings(oRDW.id,oTach.id,6000,600)
+        cls.add_meter_readings(oRDW.id, oTach.id, 6000, 600)
         # Create some tasks here and assign them to GBU so that the general test cases for RDW
         # will not have the same ACTask.id as Task.id
         oGBU = db.session.query(Aircraft).filter(Aircraft.regn == 'GBU').first()
@@ -989,17 +996,17 @@ class maintenance_test(unittest.TestCase):
         oLandings = db.session.query(Meters).filter(Meters.meter_name == 'Landings').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oAirframe.id).first()
         oLandings = db.session.query(Meters).filter(Meters.meter_name == 'Landings').first()
-        thistask = Tasks(task_description = 'test001', task_basis='Calendar',
-                         task_calendar_uom = 'Years', task_calendar_period=2)
+        thistask = Tasks(task_description='test001', task_basis='Calendar',
+                         task_calendar_uom='Years', task_calendar_period=2)
         db.session.add(thistask)
-        thistask = Tasks(task_description = 'test002', task_basis='Calendar',
-                         task_calendar_uom = 'Years', task_calendar_period=1)
+        thistask = Tasks(task_description='test002', task_basis='Calendar',
+                         task_calendar_uom='Years', task_calendar_period=1)
         db.session.add(thistask)
-        thistask = Tasks(task_description = 'test003', task_basis='Meter',
-                         task_meter_id=oAirframe.id, task_meter_period=50 )
+        thistask = Tasks(task_description='test003', task_basis='Meter',
+                         task_meter_id=oAirframe.id, task_meter_period=50)
         db.session.add(thistask)
-        thistask = Tasks(task_description = 'test004', task_basis='Meter',
-                         task_meter_id=oAirframe.id, task_meter_period=50 )
+        thistask = Tasks(task_description='test004', task_basis='Meter',
+                         task_meter_id=oAirframe.id, task_meter_period=50)
         db.session.add(thistask)
         db.session.commit()
         test001 = db.session.query(Tasks).filter(Tasks.task_description == 'test001').first()
@@ -1007,64 +1014,63 @@ class maintenance_test(unittest.TestCase):
         test003 = db.session.query(Tasks).filter(Tasks.task_description == 'test003').first()
         test004 = db.session.query(Tasks).filter(Tasks.task_description == 'test004').first()
         lastdone = datetime.date.today() - relativedelta(months=6)
-        thisactask = ACTasks(ac_id=oGBU.id, task_id=test001.id, estimate_days=365,last_done=lastdone,
+        thisactask = ACTasks(ac_id=oGBU.id, task_id=test001.id, estimate_days=365, last_done=lastdone,
                              note='Tasks to ensure ACTask.id is not the same as Task.id for RDW tests')
         db.session.add(thisactask)
-        thisactask = ACTasks(ac_id=oGBU.id, task_id=test002.id, estimate_days=365,last_done=lastdone,
+        thisactask = ACTasks(ac_id=oGBU.id, task_id=test002.id, estimate_days=365, last_done=lastdone,
                              note='Tasks to ensure ACTask.id is not the same as Task.id for RDW tests')
         db.session.add(thisactask)
-        thisactask = ACTasks(ac_id=oGBU.id, task_id=test003.id, estimate_days=90,last_done_reading=150 * 60,
+        thisactask = ACTasks(ac_id=oGBU.id, task_id=test003.id, estimate_days=90, last_done_reading=150 * 60,
                              note='Tasks to ensure ACTask.id is not the same as Task.id for RDW tests')
         db.session.add(thisactask)
-        thisactask = ACTasks(ac_id=oGBU.id, task_id=test004.id, estimate_days=90,last_done_reading=9100,
+        thisactask = ACTasks(ac_id=oGBU.id, task_id=test004.id, estimate_days=90, last_done_reading=9100,
                              note='Tasks to ensure ACTask.id is not the same as Task.id for RDW tests')
         db.session.add(thisactask)
         db.session.commit()
         # Landings = 90 day avg = 12/90=0.1333, 360 = 12+9*5 = 57/360 = 0.15833333
-        cls.add_meter_readings(oGBU.id,oLandings.id,4,5)
+        cls.add_meter_readings(oGBU.id, oLandings.id, 4, 5)
         # Airframe - 90 day avg = 36/90=0.4, 360 day = 36+9*8=0.3
-        cls.add_meter_readings(oGBU.id,oAirframe.id,12,8)
+        cls.add_meter_readings(oGBU.id, oAirframe.id, 12, 8)
 
-
-        #users
+        # users
         me = User.query.filter_by(name='rayb').first()
         peter = User.query.filter_by(name='peebee89').first()
         oGHU = Aircraft.query.filter_by(regn='GHU').first()
 
-        db.session.add(ACMaintUser(ac_id = oGBU.id, user_id = me.id, maint_level='All'))
-        db.session.add(ACMaintUser(ac_id = oRDW.id, user_id = me.id, maint_level='All'))
-        db.session.add(ACMaintUser(ac_id = oGHU.id, user_id = me.id, maint_level='Readings'))
-        db.session.add(ACMaintUser(ac_id = oRDW.id, user_id = peter.id, maint_level='All'))
+        db.session.add(ACMaintUser(ac_id=oGBU.id, user_id=me.id, maint_level='All'))
+        db.session.add(ACMaintUser(ac_id=oRDW.id, user_id=me.id, maint_level='All'))
+        db.session.add(ACMaintUser(ac_id=oGHU.id, user_id=me.id, maint_level='Readings'))
+        db.session.add(ACMaintUser(ac_id=oRDW.id, user_id=peter.id, maint_level='All'))
 
         db.session.commit()
 
-
     @classmethod
-    def string_to_duration(cls,timestr):
+    def string_to_duration(cls, timestr):
         print('timestr {}'.format(timestr))
-        if not isinstance(timestr,str):
+        if not isinstance(timestr, str):
             return 0
         bits = timestr.split(':')
         hrs = int(bits[0])
         mins = int(bits[1])
-        print("hrs: {}, mins: {}".format(hrs,mins))
-        return hrs + ((mins / 60)/ 100)
+        print("hrs: {}, mins: {}".format(hrs, mins))
+        return hrs + ((mins / 60) / 100)
 
     @classmethod
-    def add_meter_readings(cls,pac_id,pmeter_id,avg90,avg365):
+    def add_meter_readings(cls, pac_id, pmeter_id, avg90, avg365):
         daysbetweenreadings = 30
         periods = 18
-        thisreadingdate = datetime.date.today() - relativedelta(days=(daysbetweenreadings * periods)) # must be a multiple of 30
+        thisreadingdate = datetime.date.today() - relativedelta(
+            days=(daysbetweenreadings * periods))  # must be a multiple of 30
         this_meter_reading = 10000
         prev_reading = 0
-        while thisreadingdate <= datetime.date.today() :
-            #add readng
+        while thisreadingdate <= datetime.date.today():
+            # add readng
             thisreading = MeterReadings()
             thisreading.ac_id = pac_id
             thisreading.meter_id = pmeter_id
             thisreading.reading_date = thisreadingdate
             thisreading.meter_reading = this_meter_reading
-            thisreading.meter_delta =  this_meter_reading - prev_reading
+            thisreading.meter_delta = this_meter_reading - prev_reading
             thisreading.note = 'Test Data'
             db.session.add(thisreading)
             prev_reading = this_meter_reading
@@ -1080,19 +1086,19 @@ class maintenance_test(unittest.TestCase):
         ''' Calendar Based Task'''
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test001').first()
-        lastdone=datetime.date.today() - relativedelta(months=6)
+        lastdone = datetime.date.today() - relativedelta(months=6)
         expected_due = datetime.date.today() - relativedelta(months=6) + relativedelta(years=2)
-        thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id, estimate_days=365,last_done=lastdone,
+        thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id, estimate_days=365, last_done=lastdone,
                              note='Plain unexpired calendar task')
         db.session.add(thisactask)
         # get the object
         omaint = ACMaint(oRDW.id)
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test001:{} Last Done :{} Falls due:{} ({})  Expected {}".format(
             otask.recurrence_description, lastdone,
-            otask.next_due_date, otask.next_due_message,expected_due))
-        self.assertEqual(expected_due,otask.next_due_date,"Calendar based task incorrect date")
-        self.assertEqual("Estimate Based on Calendar",otask.next_due_message,"Incorrect Message")
+            otask.next_due_date, otask.next_due_message, expected_due))
+        self.assertEqual(expected_due, otask.next_due_date, "Calendar based task incorrect date")
+        self.assertEqual("Estimate Based on Calendar", otask.next_due_message, "Incorrect Message")
         self.assertEqual(thisactask.std_task_rec.recurrence_description, "Every 2 Years",
                          "Invalid Recurrence Description")
 
@@ -1100,22 +1106,22 @@ class maintenance_test(unittest.TestCase):
         ''' Calendar Based Task expired'''
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test002').first()
-        lastdone=datetime.date.today() - relativedelta(months=15)
+        lastdone = datetime.date.today() - relativedelta(months=15)
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done=lastdone,
+                             estimate_days=365, last_done=lastdone,
                              note='plain expired calendar task')
         db.session.add(thisactask)
         db.session.commit()
         expected_due = lastdone + relativedelta(years=1)
         # get the object
         omaint = ACMaint(oRDW.id)
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test002:{} Last Done :{} Falls due:{} ({})  Expected {}".format(
             otask.recurrence_description, lastdone, otask.next_due_date,
-            otask.next_due_message,expected_due))
-        self.assertEqual(expected_due,otask.next_due_date,"Calendar based task incorrect date")
+            otask.next_due_message, expected_due))
+        self.assertEqual(expected_due, otask.next_due_date, "Calendar based task incorrect date")
         self.assertEqual("Calendar Based Task Expired",
-                         otask.next_due_message,"Calendar based task incorrect date")
+                         otask.next_due_message, "Calendar based task incorrect date")
 
     def test003(self):
         '''Meter Based Task - Time'''
@@ -1124,11 +1130,11 @@ class maintenance_test(unittest.TestCase):
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test003').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=1040 * 60
+        lastdone = 1040 * 60
         # Annual Airframe avg 2.166hr /day
-        expected_due = datetime.date.today() + relativedelta(days=int((1090-1066.6666)/2.16666))  # 10.7 days
+        expected_due = datetime.date.today() + relativedelta(days=int((1090 - 1066.6666) / 2.16666))  # 10.7 days
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              note="Unexpired Meter Based Task")
         db.session.add(thisactask)
         db.session.commit()
@@ -1138,12 +1144,12 @@ class maintenance_test(unittest.TestCase):
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test003:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Estimate Based on Meter', otask.next_due_message,
                          'Incorrect Message')
         self.assertEqual(thisactask.std_task_rec.recurrence_description, "Every 50 AirFrame (Time)",
@@ -1156,17 +1162,17 @@ class maintenance_test(unittest.TestCase):
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test004').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=500 * 60 # 30000 Minutes
+        lastdone = 500 * 60  # 30000 Minutes
         # Annual Airframe avg 2.166hr /day
-        current_reading = 64000 # minutes
-        expected_done = lastdone + (50 * 60) # 50 hours * 60 minutes
+        current_reading = 64000  # minutes
+        expected_done = lastdone + (50 * 60)  # 50 hours * 60 minutes
         # how many days?
         expected_days = int((current_reading - expected_done) / 130)
         expected_due = datetime.date.today() - relativedelta(days=expected_days)
         # therefore expected due is today
         # expected_due = datetime.date.today()
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              note="Expired Meter Based Task")
         db.session.add(thisactask)
         db.session.commit()
@@ -1176,44 +1182,43 @@ class maintenance_test(unittest.TestCase):
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test004:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual("Meter Based Task Expired",
-                         otask.next_due_message,"Incorrect Message")
-
+                         otask.next_due_message, "Incorrect Message")
 
     def test005(self):
         '''Calendar and Meter - Calendar wins not yet due '''
         oAirframe = db.session.query(Meters).filter(Meters.meter_name == 'AirFrame').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oAirframe.id).first()
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        thistask = Tasks(task_description = 'test005', task_basis='Calendar',
-                         task_calendar_uom = 'Months', task_calendar_period=3,
-                         task_meter_id = oAirframe.id, task_meter_period = (500))
+        thistask = Tasks(task_description='test005', task_basis='Calendar',
+                         task_calendar_uom='Months', task_calendar_period=3,
+                         task_meter_id=oAirframe.id, task_meter_period=(500))
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test005').first()
-        lastdone=datetime.date.today() - relativedelta(months=2)
+        lastdone = datetime.date.today() - relativedelta(months=2)
         expected_due = lastdone + relativedelta(months=3)
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
                              estimate_days=90,
-                             last_done=lastdone,last_done_reading=64000,
+                             last_done=lastdone, last_done_reading=64000,
                              note="Calendar based task with Meter, Calendar date wins")
         db.session.add(thisactask)
         db.session.commit()
         # get the object
         omaint = ACMaint(oRDW.id)
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("tes005: {} Last Done :{} Falls due:{} ({})  Expected {}".format(
             otask.recurrence_description, lastdone, otask.next_due_date,
-            otask.next_due_message,expected_due))
-        self.assertEqual(expected_due,otask.next_due_date,"Incorrect Date")
+            otask.next_due_message, expected_due))
+        self.assertEqual(expected_due, otask.next_due_date, "Incorrect Date")
         self.assertEqual("Calendar basis earlier than meter estimate",
-                         otask.next_due_message,"Calendar based task incorrect date")
+                         otask.next_due_message, "Calendar based task incorrect date")
         self.assertEqual(thisactask.std_task_rec.recurrence_description,
                          "Every 3 Months or Every 500 AirFrame(Time)",
                          "Invalid Recurrence Description")
@@ -1223,55 +1228,55 @@ class maintenance_test(unittest.TestCase):
         oAirframe = db.session.query(Meters).filter(Meters.meter_name == 'AirFrame').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oAirframe.id).first()
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        thistask = Tasks(task_description = 'test006', task_basis='Calendar',
-                         task_calendar_uom = 'Years', task_calendar_period=1,
-                         task_meter_id = oAirframe.id, task_meter_period = (50))
+        thistask = Tasks(task_description='test006', task_basis='Calendar',
+                         task_calendar_uom='Years', task_calendar_period=1,
+                         task_meter_id=oAirframe.id, task_meter_period=(50))
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test006').first()
-        lastdone=datetime.date.today() - relativedelta(months=1)
+        lastdone = datetime.date.today() - relativedelta(months=1)
         # 90 day average: 6.666 hrs = 400 mins
         # 1066:40 = 64000 mins
         # 50 hour check at 400 mins / day comes up every 7.5 days.
         # make last done reading the max reading (64000) less (2.5*400) = 1000 s.b. 5days away
-        expected_due = datetime.date.today() + relativedelta(days = 5)
+        expected_due = datetime.date.today() + relativedelta(days=5)
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
                              estimate_days=90,
-                             last_done=lastdone,last_done_reading=63000,
+                             last_done=lastdone, last_done_reading=63000,
                              note="Calendar based task with Meter, Meter date wins")
         db.session.add(thisactask)
         db.session.commit()
         # get the object
         omaint = ACMaint(oRDW.id)
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
-        print("tes006: {} Last Done :{} Falls due:{} ({})  Expected {} togo {} Avg {}" .format(
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
+        print("tes006: {} Last Done :{} Falls due:{} ({})  Expected {} togo {} Avg {}".format(
             otask.recurrence_description,
             lastdone, otask.next_due_date,
-            otask.next_due_message,expected_due,
+            otask.next_due_message, expected_due,
             otask.days_to_go, otask.daily_use))
         print("tes006: Last Done Reading:{} ".format(otask.last_done_reading))
-        self.assertEqual(expected_due,otask.next_due_date,'Incorrect due date')
+        self.assertEqual(expected_due, otask.next_due_date, 'Incorrect due date')
         self.assertEqual("Meter estimate earlier than calendar date",
-                         otask.next_due_message,"Meter estimate earlier than calendar date")
+                         otask.next_due_message, "Meter estimate earlier than calendar date")
 
     def test007(self):
         ''' Meter based - qty '''
         oLandings = db.session.query(Meters).filter(Meters.meter_name == 'Landings').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oLandings.id).first()
-        thistask = Tasks(task_description = 'test007', task_basis='Meter',
-                         task_meter_id=oLandings.id, task_meter_period=100 )
+        thistask = Tasks(task_description='test007', task_basis='Meter',
+                         task_meter_id=oLandings.id, task_meter_period=100)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test007').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=11300
+        lastdone = 11300
         # Annual Airframe avg 2.333 /day
         # s.b. due at 11400, last reading is 11320. Therfore 80 to go.
         # 80 / 2.33 = 34.33 days
         expected_due = datetime.date.today() + relativedelta(days=34)
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              note="Unexpired Meter Based Task - not time")
         db.session.add(thisactask)
         db.session.commit()
@@ -1281,34 +1286,33 @@ class maintenance_test(unittest.TestCase):
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("Test007:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Estimate Based on Meter', otask.next_due_message,
                          'Incorrect Message')
-
 
     def test008(self):
         ''' Meter based - qty - Expired '''
         oLandings = db.session.query(Meters).filter(Meters.meter_name == 'Landings').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oLandings.id).first()
-        thistask = Tasks(task_description = 'test008', task_basis='Meter',
-                         task_meter_id=oLandings.id, task_meter_period=100 )
+        thistask = Tasks(task_description='test008', task_basis='Meter',
+                         task_meter_id=oLandings.id, task_meter_period=100)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test008').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=10300
+        lastdone = 10300
         # Annual Airframe avg 2.333 /day
         # s.b. due at 10400, last reading is 11320. Therfore 10400 - 11320 = -920
         # -920 / 2.33 = 394 days late
         expected_due = datetime.date.today() - relativedelta(days=394)
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              note="expired Meter Based Task - not time")
         db.session.add(thisactask)
         db.session.commit()
@@ -1318,125 +1322,124 @@ class maintenance_test(unittest.TestCase):
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("Test008:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Meter Based Task Expired', otask.next_due_message,
                          'Incorrect Message')
 
     def test009(self):
         '''Validate the Four GBU test cases'''
-        GBU=ACMaint('GBU')
+        GBU = ACMaint('GBU')
         for t in GBU.tasks:
             if str(t) == 'test001':
                 expected = datetime.date.today() - relativedelta(months=6) + relativedelta(years=2)
-                self.assertEqual(t.next_due_date,expected,"task test001 Invalid Due Date")
+                self.assertEqual(t.next_due_date, expected, "task test001 Invalid Due Date")
             if str(t) == 'test002':
                 expected = datetime.date.today() - relativedelta(months=6) + relativedelta(years=1)
-                self.assertEqual(t.next_due_date,expected,"task test002 Invalid Due Date")
+                self.assertEqual(t.next_due_date, expected, "task test002 Invalid Due Date")
             if str(t) == 'test003':
                 # last done : 150 hrs, Avg 0.4, last reading = 169:16 10,140 mins, 169.26666 hrs
                 # last reading is today
-                expected = datetime.date.today() + relativedelta(days=((((150 + 50) - 169.26666) * 60 ) / 0.4))
+                expected = datetime.date.today() + relativedelta(days=((((150 + 50) - 169.26666) * 60) / 0.4))
                 self.assertEqual(t.next_due_date, expected, "task test003 Invalid Due Date")
             if str(t) == 'test004':
                 # last done : 151:40 hrs, Avg 0.4, last reading = 169:16 10,140 mins, 169.26666 hrs
                 # last reading is today
-                expected = datetime.date.today() + relativedelta(days=((((151.666666 + 50) - 169.26666) * 60 ) / 0.4))
+                expected = datetime.date.today() + relativedelta(days=((((151.666666 + 50) - 169.26666) * 60) / 0.4))
                 self.assertEqual(t.next_due_date, expected, "task test004 Invalid Due Date")
-
 
     def test020(self):
         '''Test Regeneration function - 0 on Calendar Based Task'''
-        thistask = Tasks(task_description = 'test020', task_basis='Calendar',
-                         task_calendar_uom = 'Years', task_calendar_period=2)
+        thistask = Tasks(task_description='test020', task_basis='Calendar',
+                         task_calendar_uom='Years', task_calendar_period=2)
         db.session.add(thistask)
         db.session.commit()
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test020').first()
-        lastdone=datetime.date.today()
-        expected_due = datetime.date(2020,1,1)
+        lastdone = datetime.date.today()
+        expected_due = datetime.date(2020, 1, 1)
         while expected_due < lastdone:
             expected_due += relativedelta(years=2)
-        thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id, estimate_days=365,last_done=lastdone,
-                             due_basis_date=datetime.date(2020,1,1),
+        thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id, estimate_days=365, last_done=lastdone,
+                             due_basis_date=datetime.date(2020, 1, 1),
                              note='Task with calendar regeneration basis unexpired ')
         db.session.add(thisactask)
         # get the object
         omaint = ACMaint(oRDW.id)
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test020:{} Last Done :{} Falls due:{} ({})  Expected {}".format(
             otask.recurrence_description, lastdone,
-            otask.next_due_date, otask.next_due_message,expected_due))
+            otask.next_due_date, otask.next_due_message, expected_due))
         for m in otask.messages:
             print("test020: {}".format(m))
-        self.assertEqual(expected_due,otask.next_due_date,"Calendar based task incorrect date")
-        self.assertEqual("Estimate Based on Calendar (R)",otask.next_due_message,"Incorrect Message")
+        self.assertEqual(expected_due, otask.next_due_date, "Calendar based task incorrect date")
+        self.assertEqual("Estimate Based on Calendar (R)", otask.next_due_message, "Incorrect Message")
 
     def test021(self):
         '''Test Regeneration function Calendar Based Task - Expired'''
-        thistask = Tasks(task_description = 'test021', task_basis='Calendar',
-                         task_calendar_uom = 'Years', task_calendar_period=2)
+        thistask = Tasks(task_description='test021', task_basis='Calendar',
+                         task_calendar_uom='Years', task_calendar_period=2)
         db.session.add(thistask)
         db.session.commit()
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test021').first()
-        lastdone=datetime.date.today() - relativedelta(years=3)
-        expected_due = datetime.date(2020,1,1)
+        lastdone = datetime.date.today() - relativedelta(years=3)
+        expected_due = datetime.date(2020, 1, 1)
         while expected_due < lastdone:
             expected_due += relativedelta(years=2)
-        thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id, estimate_days=365,last_done=lastdone,
-                             due_basis_date=datetime.date(2020,1,1),
+        thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id, estimate_days=365, last_done=lastdone,
+                             due_basis_date=datetime.date(2020, 1, 1),
                              note='Task with calendar regeneration basis unexpired ')
         db.session.add(thisactask)
         # get the object
         omaint = ACMaint(oRDW.id)
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test021:{} Last Done :{} Falls due:{} ({})  Expected {}".format(
             otask.recurrence_description, lastdone,
-            otask.next_due_date, otask.next_due_message,expected_due))
+            otask.next_due_date, otask.next_due_message, expected_due))
         for m in otask.messages:
             print("test021: {}".format(m))
-        self.assertEqual(expected_due,otask.next_due_date,"Calendar based task incorrect date")
-        self.assertEqual("Calendar Based Task Expired (R)",otask.next_due_message,"Incorrect Message")
+        self.assertEqual(expected_due, otask.next_due_date, "Calendar based task incorrect date")
+        self.assertEqual("Calendar Based Task Expired (R)", otask.next_due_message, "Incorrect Message")
 
     def test022(self):
         '''Meter Based Task - Time'''
         oAirframe = db.session.query(Meters).filter(Meters.meter_name == 'AirFrame').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oAirframe.id).first()
-        thistask = Tasks(task_description = 'test022', task_basis='Meter',
-                         task_meter_id=oAirframe.id, task_meter_period=50 )
+        thistask = Tasks(task_description='test022', task_basis='Meter',
+                         task_meter_id=oAirframe.id, task_meter_period=50)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test022').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=1055 * 60
+        lastdone = 1055 * 60
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              due_basis_reading=(500 * 60),
                              note="Unexpired Meter Based Task with regneration from")
         db.session.add(thisactask)
         db.session.commit()
         # Annual Airframe avg 2.166hr /day
-        expected_due = datetime.date.today() + relativedelta(days=int((1100-1066.6666)/2.16666))  # 15.3 days
+        expected_due = datetime.date.today() + relativedelta(days=int((1100 - 1066.6666) / 2.16666))  # 15.3 days
         # get the object
         try:
             omaint = ACMaint(oRDW.id)
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test022:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
         for m in otask.messages:
             print('test022:{}'.format(m))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Estimate Based on Meter (R)', otask.next_due_message,
                          'Incorrect Message')
 
@@ -1444,36 +1447,36 @@ class maintenance_test(unittest.TestCase):
         '''Meter Based Task - Time - with regneration'''
         oAirframe = db.session.query(Meters).filter(Meters.meter_name == 'AirFrame').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oAirframe.id).first()
-        thistask = Tasks(task_description = 'test022', task_basis='Meter',
-                         task_meter_id=oAirframe.id, task_meter_period=50 )
+        thistask = Tasks(task_description='test022', task_basis='Meter',
+                         task_meter_id=oAirframe.id, task_meter_period=50)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test022').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=1055 * 60
+        lastdone = 1055 * 60
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              due_basis_reading=(500 * 60),
                              note="Unexpired Meter Based Task with regneration from")
         db.session.add(thisactask)
         db.session.commit()
         # Annual Airframe avg 2.166hr /day
-        expected_due = datetime.date.today() + relativedelta(days=int((1100-1066.6666)/2.16666))  # 15.3 days
+        expected_due = datetime.date.today() + relativedelta(days=int((1100 - 1066.6666) / 2.16666))  # 15.3 days
         # get the object
         try:
             omaint = ACMaint(oRDW.id)
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test022:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
         for m in otask.messages:
             print('test022:{}'.format(m))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Estimate Based on Meter (R)', otask.next_due_message,
                          'Incorrect Message')
 
@@ -1481,36 +1484,36 @@ class maintenance_test(unittest.TestCase):
         '''Meter Based Task - Time Regnerate from 500 - expired'''
         oAirframe = db.session.query(Meters).filter(Meters.meter_name == 'AirFrame').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oAirframe.id).first()
-        thistask = Tasks(task_description = 'test023', task_basis='Meter',
-                         task_meter_id=oAirframe.id, task_meter_period=50 )
+        thistask = Tasks(task_description='test023', task_basis='Meter',
+                         task_meter_id=oAirframe.id, task_meter_period=50)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test023').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=1040 * 60
+        lastdone = 1040 * 60
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              due_basis_reading=(500 * 60),
                              note="Unexpired Meter Based Task with regneration from")
         db.session.add(thisactask)
         db.session.commit()
         # Annual Airframe avg 2.166hr /day
-        expected_due = datetime.date.today() + relativedelta(days=int((1050-1066.6666)/2.16666))  # 7 days
+        expected_due = datetime.date.today() + relativedelta(days=int((1050 - 1066.6666) / 2.16666))  # 7 days
         # get the object
         try:
             omaint = ACMaint(oRDW.id)
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test023:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
         for m in otask.messages:
             print('test023:{}'.format(m))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Meter Based Task Expired (R)', otask.next_due_message,
                          'Incorrect Message')
 
@@ -1518,37 +1521,37 @@ class maintenance_test(unittest.TestCase):
         '''  Qty meter based task with regeneration'''
         oLandings = db.session.query(Meters).filter(Meters.meter_name == 'Landings').first()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oLandings.id).first()
-        thistask = Tasks(task_description = 'test024', task_basis='Meter',
-                         task_meter_id=oLandings.id, task_meter_period=200 )
+        thistask = Tasks(task_description='test024', task_basis='Meter',
+                         task_meter_id=oLandings.id, task_meter_period=200)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test024').first()
         #
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        lastdone=11230  # next one is 11350
+        lastdone = 11230  # next one is 11350
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              due_basis_reading=(750),
                              note="Unexpired Meter Based Task - Qty - with regneration from")
         db.session.add(thisactask)
         db.session.commit()
 
         # Annual Airframe avg 1.3333hr /day  (2.333 for 12 mth)
-        expected_due = datetime.date.today() + relativedelta(days=int((11350-11320)/2.3333))  #  12.8days
+        expected_due = datetime.date.today() + relativedelta(days=int((11350 - 11320) / 2.3333))  # 12.8days
         # get the object
         try:
             omaint = ACMaint(oRDW.id)
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test024:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
         for m in otask.messages:
             print('test024:{}'.format(m))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Estimate Based on Meter (R)', otask.next_due_message,
                          'Incorrect Message')
 
@@ -1594,28 +1597,26 @@ class maintenance_test(unittest.TestCase):
         # I have not allowed for this.  Will need to check with Peter.
         pass
 
-
-
     def test100(self):
         ''' Meter Based task with no readings'''
         oMGE = db.session.query(Meters).filter(Meters.meter_name == 'Motor Glider Engine Hrs').first()
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
-        thisrow = ACMeters(ac_id = oRDW.id, meter_id = oMGE.id, entry_uom="Decimal Hours",
+        thisrow = ACMeters(ac_id=oRDW.id, meter_id=oMGE.id, entry_uom="Decimal Hours",
                            entry_prompt="Enter the incremental hours for the event")
         db.session.add(thisrow)
         db.session.commit()
         oACMeter = db.session.query(ACMeters).filter(ACMeters.meter_id == oMGE.id).first()
-        thistask = Tasks(task_description = 'test100', task_basis='Meter',
+        thistask = Tasks(task_description='test100', task_basis='Meter',
                          task_meter_id=oMGE.id, task_meter_period=50)
         db.session.add(thistask)
         db.session.commit()
         otest = db.session.query(Tasks).filter(Tasks.task_description == 'test100').first()
         #
-        lastdone=1040
+        lastdone = 1040
         # Annual Airframe avg 2.166hr /day
-        expected_due = datetime.date.today() # It doesn't matter - it is an error condition
+        expected_due = datetime.date.today()  # It doesn't matter - it is an error condition
         thisactask = ACTasks(ac_id=oRDW.id, task_id=otest.id,
-                             estimate_days=365,last_done_reading=lastdone,
+                             estimate_days=365, last_done_reading=lastdone,
                              note='A task with no readings initially')
         db.session.add(thisactask)
         db.session.commit()
@@ -1625,12 +1626,12 @@ class maintenance_test(unittest.TestCase):
         except Exception as e:
             self.assertFalse(str(e))
 
-        otask = [t for t in omaint.tasks if t.task_id==otest.id][0]
+        otask = [t for t in omaint.tasks if t.task_id == otest.id][0]
         print("test100:{} Last Done :{} Falls due:{} ({})  Expected {} Average {} Togo {}".
               format(otask.recurrence_description, lastdone,
-                     otask.next_due_date, otask.next_due_message,expected_due,
-                     otask.daily_use,otask.days_to_go))
-        self.assertEqual(expected_due,otask.next_due_date,"Meter based task incorrect date")
+                     otask.next_due_date, otask.next_due_message, expected_due,
+                     otask.daily_use, otask.days_to_go))
+        self.assertEqual(expected_due, otask.next_due_date, "Meter based task incorrect date")
         self.assertEqual('Insufficient meter readings to determine an average', otask.next_due_message,
                          'Incorrect Message')
 
@@ -1653,7 +1654,7 @@ class maintenance_test(unittest.TestCase):
         db.session.add(thisactask)
         db.session.commit()
         # get the object
-        with self.assertRaises(ACMaint.ACMaintError) :
+        with self.assertRaises(ACMaint.ACMaintError):
             x = ACMaint(oRDW.id)
         # now remove it otherwise it will interfere with following tests
         db.session.delete(thisactask)
@@ -1675,7 +1676,7 @@ class maintenance_test(unittest.TestCase):
         db.session.add(thisactask)
         db.session.commit()
         # get the object
-        with self.assertRaises(ACMaint.ACMaintError) :
+        with self.assertRaises(ACMaint.ACMaintError):
             x = ACMaint(oRDW.id)
         db.session.delete(thisactask)
         db.session.delete(thistask)
@@ -1684,8 +1685,8 @@ class maintenance_test(unittest.TestCase):
     def test200(self):
         ''' SQL Alchemy Relationship testing'''
         oLandings = db.session.query(Meters).filter(Meters.meter_name == 'Landings').first()
-        thistask = Tasks(task_description = 'test200', task_basis='Meter',
-                         task_meter_id=oLandings.id, task_meter_period=100 )
+        thistask = Tasks(task_description='test200', task_basis='Meter',
+                         task_meter_id=oLandings.id, task_meter_period=100)
         db.session.add(thistask)
         db.session.commit()
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
@@ -1696,13 +1697,13 @@ class maintenance_test(unittest.TestCase):
         db.session.add(thisactask)
         db.session.commit()
         # The following tests the str functions
-        self.assertEqual(str(oLandings),"Landings","str function for meter failed")
-        self.assertEqual(str(thistask),"test200","str function for task failed")
+        self.assertEqual(str(oLandings), "Landings", "str function for meter failed")
+        self.assertEqual(str(thistask), "test200", "str function for task failed")
         # The following assert tests that the relationship works and that the __STR__ function works on the
         # relationship
-        self.assertEqual(str(thisactask.std_task_rec),"test200","Failed- correct string description of task")
+        self.assertEqual(str(thisactask.std_task_rec), "test200", "Failed- correct string description of task")
         # The following tests that you can chain from one relationship to another in the schema.
-        self.assertEqual(thisactask.std_task_rec.std_meter_rec.uom,"Qty","Incorrect description of meter uom")
+        self.assertEqual(thisactask.std_task_rec.std_meter_rec.uom, "Qty", "Incorrect description of meter uom")
 
     def test201(self):
         ''' Test time meter readings'''
@@ -1710,21 +1711,21 @@ class maintenance_test(unittest.TestCase):
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         # for r in db.session.query(MeterReadings).filter(MeterReadings.meter_id==oAirframe.id):
         #     print(r, r.Hours, ":" ,r.HrsMins, ":", r.HrsMinsTD)
-        lastreading = db.session.query(MeterReadings)\
-            .filter(MeterReadings.meter_id==oAirframe.id)\
-            .order_by(MeterReadings.reading_date.desc())\
+        lastreading = db.session.query(MeterReadings) \
+            .filter(MeterReadings.meter_id == oAirframe.id) \
+            .order_by(MeterReadings.reading_date.desc()) \
             .first()
         correct_last_reading = datetime.date.today().strftime("%a %d %b %Y")
         correct_last_reading += " : 1066.67 (AirFrame)"
-        self.assertEqual(str(lastreading),correct_last_reading
-                         ,"Invalid str object of last reading")
-        self.assertEqual(lastreading.HrsMins,"1066:40","Invalid HrsMins conversion")
+        self.assertEqual(str(lastreading), correct_last_reading
+                         , "Invalid str object of last reading")
+        self.assertEqual(lastreading.HrsMins, "1066:40", "Invalid HrsMins conversion")
         self.assertEqual(lastreading.Hours,
                          Decimal(1066.67).quantize(Decimal('.01')),
                          "Invalid Hours conversion")
-        self.assertEqual(lastreading.HrsMinsTD,datetime.timedelta(hours=1066,minutes=40),"Invalid TimeDelta conversion")
-        self.assertEqual(lastreading.meter_reading,64000,"Incorrect last reading")
-
+        self.assertEqual(lastreading.HrsMinsTD, datetime.timedelta(hours=1066, minutes=40),
+                         "Invalid TimeDelta conversion")
+        self.assertEqual(lastreading.meter_reading, 64000, "Incorrect last reading")
 
     def test202(self):
         ''' Test non-time meter readings'''
@@ -1733,19 +1734,18 @@ class maintenance_test(unittest.TestCase):
         # for r in db.session.query(MeterReadings).filter(MeterReadings.meter_id==oLandings.id):
         # #     print(r, r.Hours, ":" ,r.HrsMins, ":", r.HrsMinsTD)
         #     print(r)
-        lastreading = db.session.query(MeterReadings)\
-            .filter(MeterReadings.meter_id==oLandings.id)\
-            .order_by(MeterReadings.reading_date.desc())\
+        lastreading = db.session.query(MeterReadings) \
+            .filter(MeterReadings.meter_id == oLandings.id) \
+            .order_by(MeterReadings.reading_date.desc()) \
             .first()
         correct_last_reading = datetime.date.today().strftime("%a %d %b %Y")
         correct_last_reading += " : 11320 (Landings)"
-        self.assertEqual(str(lastreading),correct_last_reading
-                         ,"Invalid str object of last reading")
-        self.assertIsNone(lastreading.HrsMins,"Hours Mins sb None for Qty basis")
-        self.assertIsNone(lastreading.Hours,"Hours Mins sb None for Qty basis")
-        self.assertIsNone(lastreading.HrsMinsTD,"Hours Mins sb None for Qty basis")
-        self.assertEqual(lastreading.meter_reading,11320,"Incorrect last reading")
-
+        self.assertEqual(str(lastreading), correct_last_reading
+                         , "Invalid str object of last reading")
+        self.assertIsNone(lastreading.HrsMins, "Hours Mins sb None for Qty basis")
+        self.assertIsNone(lastreading.Hours, "Hours Mins sb None for Qty basis")
+        self.assertIsNone(lastreading.HrsMinsTD, "Hours Mins sb None for Qty basis")
+        self.assertEqual(lastreading.meter_reading, 11320, "Incorrect last reading")
 
     def test300(self):
         ''' UI - Create a deletable task'''
@@ -1756,18 +1756,19 @@ class maintenance_test(unittest.TestCase):
 
     def test301(self):
         ''' UI - Create a deletable Meter'''
-        thismeter = Meters(meter_name = 'test301 - Unsed Meter - deletable', uom='Time')  #, entry_uom = 'Decimal Hours')
+        thismeter = Meters(meter_name='test301 - Unsed Meter - deletable', uom='Time')  # , entry_uom = 'Decimal Hours')
         db.session.add(thismeter)
         db.session.commit()
 
     def test302(self):
         ''' UI - Create a undeletable Meter - on task but not on ac'''
-        thismeter = Meters(meter_name='test302 - Unsed Meter - undeletable', uom='Time')  # , entry_uom = 'Decimal Hours')
+        thismeter = Meters(meter_name='test302 - Unsed Meter - undeletable',
+                           uom='Time')  # , entry_uom = 'Decimal Hours')
         db.session.add(thismeter)
-        db.session.flush # to get id
+        db.session.flush  # to get id
         oRDW = db.session.query(Aircraft).filter(Aircraft.regn == 'RDW').first()
         thismeter = db.session.query(Meters).filter(Meters.meter_name == 'test302 - Unsed Meter - undeletable').first()
-        thisrow = ACMeters(ac_id = oRDW.id, meter_id = thismeter.id,
+        thisrow = ACMeters(ac_id=oRDW.id, meter_id=thismeter.id,
                            entry_uom="Decimal Hours", entry_prompt="Enter the incremental hours for the event")
         db.session.add(thisrow)
         db.session.commit()
@@ -1775,17 +1776,17 @@ class maintenance_test(unittest.TestCase):
     def test900(self):
         ''' Verify some obect data by now'''
         oMaint = ACMaint('RDW')
-        self.assertEqual(len(oMaint.meters),5,"There should be 5 meters at the end of the test process")
-        self.assertEqual(len(oMaint.tasks),16,"There should be 16 meters at the end of the test process")
+        self.assertEqual(len(oMaint.meters), 5, "There should be 5 meters at the end of the test process")
+        self.assertEqual(len(oMaint.tasks), 16, "There should be 16 meters at the end of the test process")
         correct_current_readings = "AirFrame:1066.67 (" + datetime.date.today().strftime("%d-%m-%y") + ")"
         correct_current_readings += ",Tachometer:616:40 (" + datetime.date.today().strftime("%d-%m-%y") + ")"
         correct_current_readings += ",Landings:11320 (" + datetime.date.today().strftime("%d-%m-%y") + ")"
         correct_current_readings += ",Motor Glider Engine Hrs:No Readings"
         correct_current_readings += ",test302 - Unsed Meter - undeletable:No Readings"
-        self.assertEqual(oMaint.currentreadings,correct_current_readings,"Invalid current readings string")
+        self.assertEqual(oMaint.currentreadings, correct_current_readings, "Invalid current readings string")
+
 
 class maintenance_test_ac_obj(unittest.TestCase):
-
 
     def test001(self):
         """ Instantiage object by id"""
@@ -1820,7 +1821,7 @@ class maintenance_test_ac_obj(unittest.TestCase):
     def test005(self):
         """ Correct Regn"""
         thismnt = ACMaint('RDW')
-        self.assertEqual(thismnt.regn,"RDW","Wrong Regn")
+        self.assertEqual(thismnt.regn, "RDW", "Wrong Regn")
 
     def test006(self):
         """ Count of tasks"""
@@ -1831,7 +1832,7 @@ class maintenance_test_ac_obj(unittest.TestCase):
         """ lsit of tasks"""
         thismnt = ACMaint('RDW')
         for t in thismnt.tasks:
-            print("{} : {}".format(t.id,t.description))
+            print("{} : {}".format(t.id, t.description))
             # print("------------------------")
             # for a in [a for a in dir(t) if not a.startswith('_')]:
             #     print("{} : {} : {}".format(t,a,getattr(t,a)))
@@ -1852,44 +1853,43 @@ class maintenance_test_ac_obj(unittest.TestCase):
             print("------------------------")
             print(dir(t))
             for a in [a for a in dir(t) if not a.startswith('_')]:
-                print("{} : {} : {}".format(t,a,getattr(t,a)))
+                print("{} : {} : {}".format(t, a, getattr(t, a)))
         self.assertGreater(len(thismnt.tasks), 2, "there should be more than two tasks defined")
 
     def test010(self):
         """ Add a new task with incorrect None parameter """
-        thisac  = ACMaint('RDW')
+        thisac = ACMaint('RDW')
         with self.assertRaises(ValueError):
             thisac.add_new_task(None)
 
     def test011(self):
         """ Add a new task with incorrect invalid number parameter """
-        thisac  = ACMaint('RDW')
+        thisac = ACMaint('RDW')
         with self.assertRaises(ValueError):
             thisac.add_new_task('not a number')
 
     def test012(self):
         """ Add a new task with incorrect not a task parameter """
-        thisac  = ACMaint('RDW')
+        thisac = ACMaint('RDW')
         with self.assertRaises(ValueError):
             thisac.add_new_task(6567)
 
     def test013(self):
         """ Add a new task with incorrect task already there parameter """
-        thisac  = ACMaint('RDW')
+        thisac = ACMaint('RDW')
         with self.assertRaises(ValueError):
             thisac.add_new_task(1)
 
     def test014(self):
         """ Add a new task with valid parameter """
-        thisac  = ACMaint('RDW')
+        thisac = ACMaint('RDW')
         # This test can only be performed once after that data is loaded
-        if 20  in [a.task_id for a in thisac.tasks]:
+        if 20 in [a.task_id for a in thisac.tasks]:
             print('Test 14 skipped')
             return
         thisac.add_new_task(20)
-        if 20  not in [a.task_id for a in thisac.tasks]:
+        if 20 not in [a.task_id for a in thisac.tasks]:
             self.fail('Newly added task missing')
-
 
     def test025(self):
         """ Count of meters"""
@@ -1900,18 +1900,18 @@ class maintenance_test_ac_obj(unittest.TestCase):
         """ lsit of meters"""
         thismnt = ACMaint('RDW')
         # for t in thismnt.meters:
-            # print("{} : {}".format(t.id,t.meter_name))
+        # print("{} : {}".format(t.id,t.meter_name))
         self.assertGreater(len(thismnt.tasks), 2, "there should be more than two meters defined")
 
     def test027(self):
         """ Add a new meter with valid parameter """
-        thisac  = ACMaint('GHU')
+        thisac = ACMaint('GHU')
         # This test can only be performed once after that data is loaded
-        if 2  in [a.meter_id for a in thisac.meters]:
+        if 2 in [a.meter_id for a in thisac.meters]:
             self.skipTest('Skipped dur meter already existing')
         # otherwise
         thisac.add_new_meter(2)
-        if 2  not in [a.meter_id for a in thisac.meters]:
+        if 2 not in [a.meter_id for a in thisac.meters]:
             self.fail('Newly added meter missing')
 
     def test029(self):
@@ -1921,13 +1921,13 @@ class maintenance_test_ac_obj(unittest.TestCase):
             print("------------------------")
             print(dir(t))
             for a in [a for a in dir(t) if not a.startswith('_')]:
-                print("{} : {} : {}".format(t,a,getattr(t,a)))
+                print("{} : {} : {}".format(t, a, getattr(t, a)))
 
     def test030(self):
         """Test that an existing reading has correct last reading date"""
         thisac = ACMaint('RDW')
         airframe = [m for m in thisac.meters if m.meter_name == 'AirFrame'][0]
-        self.assertEqual(airframe.last_reading_date, datetime.date(2024,4,6), 'Incorrect Last reading date')
+        self.assertEqual(airframe.last_reading_date, datetime.date(2024, 4, 6), 'Incorrect Last reading date')
 
     def test031(self):
         """Test that an existing reading has correct last reading value"""
@@ -1945,43 +1945,41 @@ class maintenance_test_ac_obj(unittest.TestCase):
         """ Test that last task avg days correct for 365 days"""
         thisac = ACMaint('RDW')
         ReplaceEngine = [t for t in thisac.tasks if str(t) == 'Replace All rubber hoses for fuel, oil and cooling'][0]
-        self.assertEqual(round(ReplaceEngine.daily_use,3), 20.468, "Incorrect last meter delta")
+        self.assertEqual(round(ReplaceEngine.daily_use, 3), 20.468, "Incorrect last meter delta")
 
     def test033(self):
         """ Test that last task avg days correct for 90 days"""
         thisac = ACMaint('RDW')
         hr50 = [t for t in thisac.tasks if str(t) == '50 Hour Service'][0]
-        self.assertEqual(round(hr50.daily_use,3), 20.489, "Incorrect last meter delta")
-
-
+        self.assertEqual(round(hr50.daily_use, 3), 20.489, "Incorrect last meter delta")
 
     def test040(self):
         """ Test users"""
         thisac = ACMaint('RDW')
         for u in thisac.users:
-            print(u.maint_level,u.fullname)
+            print(u.maint_level, u.fullname)
         me = User.query.filter_by(name='rayb').one_or_none()
         print(thisac.get_security_level(me.id))
 
     def test041(self):
         """ Test Meter based task"""
         thisac = ACMaint('RDW')
-        thistask = [ t for t in thisac.tasks if str(t) == 'Replace Undercarriage Beam Bolts' ][0]
+        thistask = [t for t in thisac.tasks if str(t) == 'Replace Undercarriage Beam Bolts'][0]
         # set the last done value
         dbrec = ACTasks.query.get(thistask.id)
         thetask = Tasks.query.get(thistask.task_id)
         print(dbrec.id)
         print(thetask.task_description)
-        dbrec.last_done = datetime.date(2024,6,1)
+        dbrec.last_done = datetime.date(2024, 6, 1)
         dbrec.last_done_reading = 10000
         db.session.commit()
         thisac = ACMaint('RDW')
-        thistask = [ t for t in thisac.tasks if str(t) == 'Replace Undercarriage Beam Bolts' ][0]
+        thistask = [t for t in thisac.tasks if str(t) == 'Replace Undercarriage Beam Bolts'][0]
         print("Avg Daily use {}".format(thistask.daily_use))
         daysaway = (thistask.next_due_date - datetime.date.today()).days
         print(daysaway)
         print(thistask.next_due_date)
-        self.assertLess(daysaway,3650,"Target meter value incorrect")
+        self.assertLess(daysaway, 3650, "Target meter value incorrect")
 
     def test042(self):
         """
@@ -1996,6 +1994,7 @@ class maintenance_test_ac_obj(unittest.TestCase):
                 print(t.days_to_go)
         except Exception as e:
             self.fail('Did not load:{}'.format(str(e)))
+
 
 class maintenance_time_values(unittest.TestCase):
 
@@ -2013,19 +2012,20 @@ class maintenance_time_values(unittest.TestCase):
 
     def test001(self):
         # thisrdg = MeterReadings(ac_id = 2, meter_id = 2, reading_date = datetime.date.today(),meter_reading = '23.45')
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = 10, note='Integer hours')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading=10, note='Integer hours')
         db.session.add(thisrdg)
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = 10.3, note='float')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading=10.3, note='float')
         db.session.add(thisrdg)
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = "5:30", note='string in hrs mins')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading="5:30", note='string in hrs mins')
         db.session.add(thisrdg)
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = "5.75", note='string in decimal hours')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading="5.75", note='string in decimal hours')
         db.session.add(thisrdg)
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = datetime.timedelta(hours=3,minutes=14), note='timedelta')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading=datetime.timedelta(hours=3, minutes=14),
+                                note='timedelta')
         db.session.add(thisrdg)
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = 0.83, note='should be 50 mins')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading=0.83, note='should be 50 mins')
         db.session.add(thisrdg)
-        thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = 0.81, note='should be 49 mins')
+        thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading=0.81, note='should be 49 mins')
         db.session.add(thisrdg)
         thisrdg = MeterReadings()
         thisrdg.ac_id = 2
@@ -2039,7 +2039,7 @@ class maintenance_time_values(unittest.TestCase):
     def test002(self):
         # thisrdg = MeterReadings(ac_id = 2, meter_id = 2, reading_date = datetime.date.today(),meter_reading = '23.45')
         try:
-            thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = "5:3rap", note='Error in string in hrs mins')
+            thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading="5:3rap", note='Error in string in hrs mins')
             db.session.add(thisrdg)
             db.session.commit()
         except Exception as e:
@@ -2049,27 +2049,27 @@ class maintenance_time_values(unittest.TestCase):
     def test003(self):
         # thisrdg = MeterReadings(ac_id = 2, meter_id = 2, reading_date = datetime.date.today(),meter_reading = '23.45')
         try:
-            thisrdg = MeterReadings(ac_id = 2, meter_id = 2, meter_reading = "", note='Empty String')
+            thisrdg = MeterReadings(ac_id=2, meter_id=2, meter_reading="", note='Empty String')
             db.session.add(thisrdg)
             db.session.commit()
         except Exception as e:
             print('ERror in #3 {}'.format(e))
 
-
     def test010(self):
         list = MeterReadings.query.all()
         for l in list:
-            print(l.id, l.meter_reading, l.Hours(),l.HrsMins())
+            print(l.id, l.meter_reading, l.Hours(), l.HrsMins())
+
 
 class sqlalchemy_read_tests(unittest.TestCase):
-
     """ this set of tests will perform only db reads and therefore
         is safe to run at any time.
     """
+
     @classmethod
     def setUpClass(cls):
         common_set_log(log)
-        delqry = MeterReadings.__table__.delete().where(MeterReadings.ac_id==1)
+        delqry = MeterReadings.__table__.delete().where(MeterReadings.ac_id == 1)
         db.session.execute(delqry)
         db.session.commit()
 
@@ -2092,13 +2092,15 @@ class sqlalchemy_read_tests(unittest.TestCase):
             Flight.ac_regn,
             Flight.flt_date,
             func.count(Flight.flt_date).label('movements'),
-            ).filter(Flight.linetype=='FL'
-            ).group_by(Flight.flt_date
-                       ).all()
+        ).filter(Flight.linetype == 'FL'
+                 ).group_by(Flight.flt_date
+                            ).all()
         for r in rows[1:5]:
             thissummary = flight_summary_for_day(r.ac_regn, r.flt_date)
             # thisimport = ReadingTools.flight_summary_for_day(r.ac_regn, r.flt_date)
-            print("A/c: {} date: {} mins :{} count {}".format(r.ac_regn,r.flt_date,thissummary['minutes'], thissummary['count']))
+            print("A/c: {} date: {} mins :{} count {}".format(r.ac_regn, r.flt_date, thissummary['minutes'],
+                                                              thissummary['count']))
+
     #
     # def test003(self):
     #     create_readings_from_flights("GNF",None,datetime.date(2023,3,2))
@@ -2111,10 +2113,9 @@ class sqlalchemy_read_tests(unittest.TestCase):
     #     """ s.b. error for flight time"""
     #     reset_readings_from_end('GNF',5,4)
 
-
     def test006(self):
-        start = datetime.date(2025,7,1)
-        end = datetime.date(2025,7,30)
+        start = datetime.date(2025, 7, 1)
+        end = datetime.date(2025, 7, 30)
         sql = sqltext("""
             select t0.pic, t0.p2,t0.flt_date
             from flights t0
@@ -2123,13 +2124,13 @@ class sqlalchemy_read_tests(unittest.TestCase):
             and t0.flt_date <= :enddate
             """)
         sql = sql.columns(flt_date=db.Date)
-        list = db.engine.execute(sql,startdate = start, enddate=end).fetchall()
+        list = db.engine.execute(sql, startdate=start, enddate=end).fetchall()
         for f in list:
             print(f)
 
     def test007(self):
-        start = datetime.date(2025,7,1)
-        end = datetime.date(2025,7,30)
+        start = datetime.date(2025, 7, 1)
+        end = datetime.date(2025, 7, 30)
         thispilot = 'Ivor Woodfield'
         sql = sqltext("""
             SELECT
@@ -2166,19 +2167,19 @@ class sqlalchemy_read_tests(unittest.TestCase):
                 and ac_regn != 'TUG ONLY'
             """)
         sql = sql.columns(id=db.Integer,
-                         flt_date=db.Date,
-                         pic=db.String,
-                         p2=db.String,
-                         actype=db.String,
-                         regn=db.String,
-                         takeoff=db.Time,
-                         landed=db.Time,
-                         totalmins=db.Integer,
-                         seat_count=db.Integer,
-                         crew_capacity=db.String,
-                         due=SqliteDecimal(10,2),
-                         paid=db.Boolean
-                         )
+                          flt_date=db.Date,
+                          pic=db.String,
+                          p2=db.String,
+                          actype=db.String,
+                          regn=db.String,
+                          takeoff=db.Time,
+                          landed=db.Time,
+                          totalmins=db.Integer,
+                          seat_count=db.Integer,
+                          crew_capacity=db.String,
+                          due=SqliteDecimal(10, 2),
+                          paid=db.Boolean
+                          )
         print(f'{start} to {end} for {thispilot}')
         print(str(sql))
         flights = db.engine.execute(sql, startdate=start, enddate=end, pilot=thispilot).fetchall()
@@ -2195,13 +2196,61 @@ class sqlalchemy_read_tests(unittest.TestCase):
 
 class adhoc(unittest.TestCase):
     def test001(self):
-        passes = db.session.query(Pilot).filter(Pilot.active).all()
-        for thispass in passes:
-            if (thispass.age >= 18 and
-                    thispass.base_pass_due < datetime.date.today() - relativedelta(months=2) and
-                    thispass.fullname not in ['OTHER CLUB MEMBER'] and
-                    thispass.email_basepass_warning):
-                print(f'{thispass} : {thispass.age} : {thispass.last_base_pass} : {thispass.base_pass_due}')
+        dates = (db.session.query(MeterReadings.reading_date, func.count().label('reading_count')).
+                 filter(MeterReadings.ac_id == 2).
+                 filter(MeterReadings.reading_date >= datetime.date(2025,12,13)).
+                 filter(MeterReadings.reading_date <= datetime.date(2025,12,17)).
+                 group_by(MeterReadings.reading_date).all())
+        for d in dates:
+            print(f'{d.reading_date} count:  {d.reading_count}')
+            # on this day which note has the most number of readings?
+            meter_reading_counts = (db.session.query(MeterReadings.meter_id,func.count().label('readings_count')).
+                            filter(MeterReadings.ac_id == 2).
+                            filter(MeterReadings.reading_date == d.reading_date).
+                            group_by(MeterReadings.meter_id).all())
+            meter_to_use = 0
+            meter_counts = 0
+            for mrc in meter_reading_counts:
+                if mrc.readings_count > meter_counts:
+                    meter_to_use = mrc.meter_id
+                    meter_counts = mrc.readings_count
+                print(f'->{mrc.meter_id} count:  {mrc.readings_count}')
+            print(f'Use meter : {meter_to_use}')
+            order_of_notes = (db.session.query(MeterReadings.note, MeterReadings.meter_reading).
+                            filter(MeterReadings.ac_id == 2).
+                            filter(MeterReadings.meter_id == meter_to_use).
+                            filter(MeterReadings.reading_date == d.reading_date).
+                            order_by(MeterReadings.meter_reading).all())
+            for o in order_of_notes:
+                print(f'-->{o.note} : {o.meter_reading}')
+                # final_readings_entries = (db.session.query(MeterReadings.reading_date, MeterReadings.meter_id, MeterReadings.meter_reading).
+                #             join(MeterReadings.std_meter_rec).
+                #             filter(MeterReadings.ac_id == 2).
+                #             # filter(MeterReadings.meter_id == meter_to_use).
+                #             filter(MeterReadings.reading_date == d.reading_date).
+                #             filter(MeterReadings.note == o.note).
+                #             order_by(MeterReadings.meter_id).all())
+                final_readings_entries = db.session.execute(select(MeterReadings).
+                            join(MeterReadings.std_meter_rec).
+                            filter(MeterReadings.ac_id == 2).
+                            # filter(MeterReadings.meter_id == meter_to_use).
+                            filter(MeterReadings.reading_date == d.reading_date).
+                            filter(MeterReadings.note == o.note).
+                            order_by(MeterReadings.meter_id)).all()
+
+                print(final_readings_entries)
+
+                for fre in final_readings_entries:
+                    print(fre, type(fre))
+                    print(fre[0].ac_id, fre[0].std_meter_rec.meter_name)
+                    tr = fre[0]
+                    print(tr.meter_id)
+
+
+
+
+
+
 
 # class soundex(unittest.TestCase):
 #
@@ -2372,14 +2421,13 @@ class google_email(unittest.TestCase):
         except Exception as e:
             print(str(e))
 
+
 class basepass(unittest.TestCase):
 
     def test001(self):
         thispass = BasePass()
         print('something')
         print(thispass.reference)
-
-
 
 
 if __name__ == '__main__':
@@ -2405,7 +2453,6 @@ if __name__ == '__main__':
 
     # The next line is critical tomae the rest work.....
     with app.app_context():
-
         # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
         print('in appcontext thing')
         unittest.TextTestRunner(verbosity=2).run(thissuite)

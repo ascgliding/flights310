@@ -58,8 +58,9 @@ def hrsdec2mins(value) -> int:
     try:
         thevalue = int(value)
     except ValueError:
-        thevalue = round((float(value) * 60),0)
+        thevalue = round((float(value) * 60), 0)
     return thevalue
+
 
 def mins2hrsmins(value) -> str:
     if value is None:
@@ -112,10 +113,10 @@ class HrsMinsWidget(object):
         html = []
         html.append(
             '<input style="text-align:right;color:#2277FF" id="{}" name="{}" value="{}" {}>'.format(field_id, field_id,
-                                                                                                 mins2hrsmins(
-                                                                                                     field.data),
-                                                                                                renderkw)
-                    )
+                                                                                                    mins2hrsmins(
+                                                                                                        field.data),
+                                                                                                    renderkw)
+        )
         return ' '.join(html)
 
 
@@ -368,7 +369,7 @@ class ACTaskForm(FlaskForm):
     logbook_include = BooleanField('Include in Logbook',
                                    description='Include this item as a counter in the logbook spreadsheet')
     logbook_column_title = StringField('Spreadsheet Title',
-                                       description='Title to be used as a column title in the logbook'    )
+                                       description='Title to be used as a column title in the logbook')
     logbook_start_date = DateField('Starting Date',
                                    description='The date that you have a reference counter for this field')
     logbook_start_value = IntegerField('Starting Value',
@@ -390,7 +391,8 @@ class ACTaskForm(FlaskForm):
 
 class ACAddNewReadingForm(Form):
     name = "Enter New Readings"
-    reading_date = DateField('Date', description='Date for these readings', default=datetime.date.today(), render_kw={'autofocus': True})
+    reading_date = DateField('Date', description='Date for these readings', default=datetime.date.today(),
+                             render_kw={'autofocus': True})
     note = StringField('Notes', description='Add any notes to describe the flying')
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
@@ -406,6 +408,7 @@ class ACTaskComplete(FlaskForm):
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
 
+
 class ACTaskHistoryMaint(FlaskForm):
     name = "Task history Edit"
     id = IntegerField('Ac MaintHistory', description='not displayed')
@@ -415,6 +418,7 @@ class ACTaskHistoryMaint(FlaskForm):
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
+
 
 class ACImportReading(FlaskForm):
     name = "Import Readings from Flight Details"
@@ -479,7 +483,6 @@ def maintpagecheck(checkpagename=None):
         return None
 
 
-
 # Aircraft with maintenance Schedules
 @bp.route('/maintainedac', methods=['GET'])
 @login_required
@@ -496,7 +499,7 @@ def maintainedac():
         """
         sql_to_execute = sqlalchemy.sql.text(sqlstmt)
         # sql_to_execute = sql_to_execute.columns(transdate=db.Date)
-        list = db.engine.execute(sql_to_execute,{'current_user':current_user.id}).fetchall()
+        list = db.engine.execute(sql_to_execute, {'current_user': current_user.id}).fetchall()
         if len(list) == 1:
             print(list[0][0])
             return redirect(url_for('plantmaint.index', pregn=list[0][0]))
@@ -780,10 +783,10 @@ def actaskmaint(id):
                                                              description='The QTY meter reading when this was last done')
                 ThisViewFrm.next_due_reading = IntegerField('Next Due Meter Reading in units',
                                                             description='Next task should be done at this reading.',
-                                                            render_kw={'disabled':True,'readonly':True})
+                                                            render_kw={'disabled': True, 'readonly': True})
                 ThisViewFrm.next_due_override = IntegerField('Override Next Due Reading in units',
-                                                            description='Override the next due reading with this value',
-                                                            )
+                                                             description='Override the next due reading with this value',
+                                                             )
             elif thisrec.ac_meter_rec.entry_uom == 'Hours:Minutes':
                 ThisViewFrm.last_done_reading = HrsMinsField('Last Done Meter Reading in Hrs:Mins',
                                                              [validators.optional()],
@@ -799,10 +802,10 @@ def actaskmaint(id):
                                                          [validators.optional()],
                                                          description='The meter reading when this was last done in Decimal Hours')
                 ThisViewFrm.next_due_reading = HrsField('Next Due Meter Reading in Decimal Hrs',
-                                                            description='Next task should be done at this reading.',
-                                                            render_kw={'disabled': True,'readonly':True})
+                                                        description='Next task should be done at this reading.',
+                                                        render_kw={'disabled': True, 'readonly': True})
                 ThisViewFrm.next_due_override = HrsField('Override Next Due Reading in units',
-                                                     description='Override the next due reading with this value'
+                                                         description='Override the next due reading with this value'
                                                          )
         # Add a field for the override due basis depending on the type of task and type of meter
         if stdtask.task_basis == 'Calendar':
@@ -878,7 +881,7 @@ def actaskmaint(id):
         return redirect(url_for('plantmaint.actasklist'))
     # Not a POST operation......
     # now find the task
-    if hasattr(thisform,"next_due_reading"):
+    if hasattr(thisform, "next_due_reading"):
         thistask = [t for t in thisac.tasks if t.id == thisrec.id]
         if len(thistask) > 0:
             thisform.next_due_reading.data = thistask[0].next_due_reading
@@ -1165,31 +1168,31 @@ def acaddnewreading():
                             #                         thismeter.meter_name),
                             #                         "error")
                             #                     error_occurred = True
-                                # we have a valid meter
-                                newreading = MeterReadings()
-                                newreading.ac_id = thisac.id
-                                newreading.meter_id = thismeter.meter_id
-                                newreading.reading_date = thisdate
-                                if thismeter.last_meter_reading is None:
+                            # we have a valid meter
+                            newreading = MeterReadings()
+                            newreading.ac_id = thisac.id
+                            newreading.meter_id = thismeter.meter_id
+                            newreading.reading_date = thisdate
+                            if thismeter.last_meter_reading is None:
+                                newreading.meter_delta = decimal.Decimal(thisformfield.data)
+                                newreading.meter_reading = decimal.Decimal(thisformfield.data)
+                            else:
+                                if thismeter.entry_method == 'Delta':
                                     newreading.meter_delta = decimal.Decimal(thisformfield.data)
-                                    newreading.meter_reading = decimal.Decimal(thisformfield.data)
+                                    newreading.meter_reading = thismeter.last_meter_reading + \
+                                                               decimal.Decimal(newreading.meter_delta)
                                 else:
-                                    if thismeter.entry_method == 'Delta':
-                                        newreading.meter_delta = decimal.Decimal(thisformfield.data)
-                                        newreading.meter_reading = thismeter.last_meter_reading + \
-                                                                   decimal.Decimal(newreading.meter_delta)
-                                    else:
-                                        newreading.meter_reading = decimal.Decimal(thisformfield.data)
-                                        newreading.meter_delta = newreading.meter_reading - \
-                                                                 thismeter.last_meter_reading
-                                newreading.note = thisform.note.data
-                                try:
-                                    db.session.add(newreading)
-                                    applog.info('ADD:' + repr(newreading))
-                                    addedreadingcount += 1
-                                except Exception as e:
-                                    flash(str(e))
-                                    error_occurred = True
+                                    newreading.meter_reading = decimal.Decimal(thisformfield.data)
+                                    newreading.meter_delta = newreading.meter_reading - \
+                                                             thismeter.last_meter_reading
+                            newreading.note = thisform.note.data
+                            try:
+                                db.session.add(newreading)
+                                applog.info('ADD:' + repr(newreading))
+                                addedreadingcount += 1
+                            except Exception as e:
+                                flash(str(e))
+                                error_occurred = True
                         else:
                             flash("Failed to locate meter for " + thismeter.meter_name, "error")
                             error_occurred = True
@@ -1203,16 +1206,70 @@ def acaddnewreading():
                 applog.info(str(addedreadingcount) + ' Meter readings added successfully')
             except Exception as e:
                 db.session.rollback()
-                flash(str(e),"error")
+                flash(str(e), "error")
                 applog.error(str(e))
                 applog.error("Rollback Occurred")
                 flash(
                     "An error cccurred while updating the database.  See Above.  No readings were written to the database.",
                     "error")
                 return render_template('plantmaint/acaddnewreading.html', form=thisform,
-                               lastreadings=lastreadings, ac=thisac)
-        #return render_template('plantmaint/index.html', ac=thisac)
+                                       lastreadings=lastreadings, ac=thisac)
+        # return render_template('plantmaint/index.html', ac=thisac)
         return redirect(url_for('plantmaint.index', pregn=thisac))
+
+
+@bp.route('/recalc_readings/<reading_id>', methods=['GET'])
+@login_required
+def recalc_readings(reading_id):
+    # This code recalculates the closing meter_readings from the deltas.
+    # It is a support function only available to ray....
+    try:
+        thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.maintainedac'))
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('plantmaint.maintainedac'))
+    if thisac is None:
+        flash("Sorry, You do not have access to this function", "error")
+        return render_template('plantmaint/index.html', ac=None)
+    # check that this row exists.
+    thisreadingrow = db.session.query(MeterReadings).filter_by(id=reading_id).first()
+    if thisreadingrow is None:
+        flash("Routine passed an invalid id", "error")
+        return render_template('plantmaint/index.html', ac=None)
+    # the set of readings to change includes the immediate prior reading (which is not changed)
+    # because we need the starting point to re-calculate all subsequent readings.
+    prior_row = db.session.query(MeterReadings).filter(MeterReadings.ac_id == thisac.id).filter(
+        MeterReadings.meter_id == thisreadingrow.meter_id).filter(
+        MeterReadings.meter_reading < thisreadingrow.meter_reading).order_by(MeterReadings.meter_reading.desc() ).first()
+    readings_to_change = db.session.query(MeterReadings).filter(MeterReadings.ac_id == thisac.id).filter(
+        MeterReadings.meter_id == thisreadingrow.meter_id).filter(
+        MeterReadings.meter_reading >= thisreadingrow.meter_reading).order_by(MeterReadings.meter_reading).all()
+    prevreading = None
+    try:
+        # this is an all-or-nothing.  We only want to commit all the changes or none or them.
+        for rtc in readings_to_change:
+            # Remember, the first one we don't change
+            if prevreading is None:
+                # this is the starting point
+                if prior_row is None:
+                    prevreading = 0
+                else:
+                    prevreading = prior_row.meter_reading
+            thisreading = prevreading + rtc.meter_delta
+            print(f'Changed reading on row {rtc.id}, on {rtc.reading_date} changed from {mins2hrsdec(rtc.meter_reading)} to {mins2hrsdec(thisreading)}')
+            # change the row and update the db here.....
+            rtc.meter_reading = thisreading
+            prevreading = thisreading
+        db.session.commit()
+        flash('All rows successfully updated','info')
+    except Exception as e:
+        db.session.rollback()
+        flash('The following error occurred while trying to reset the meter_reading values','error')
+        flash(str(e), "error")
+    return redirect(url_for('plantmaint.acmeterreadinglist', meter_id = thisreadingrow.meter_id))
+
 
 
 @bp.route('/acmeterreadinglist/<meter_id>', methods=['GET', 'POST'])
@@ -1434,6 +1491,7 @@ def achistorylist(task):
             .order_by(ACMaintHistory.history_date.desc()).all()
     return render_template("plantmaint/achistorylist.html", list=list, ac=thisac)
 
+
 @bp.route('/actaskhistorymaint/<acmainthistory_id>', methods=['GET', 'POST'])
 @login_required
 def actaskhistorymaint(acmainthistory_id):
@@ -1481,8 +1539,7 @@ def actaskhistorymaint(acmainthistory_id):
                 "error")
         return redirect(url_for('plantmaint.achistorylist', task=0))
     # This bit is what happens for the "GET"
-    return render_template('plantmaint/actaskhistorymaint.html', form=thisform, ac=thisac    )
-
+    return render_template('plantmaint/actaskhistorymaint.html', form=thisform, ac=thisac)
 
 
 @bp.route('/acimportreading/<acmeters_id>', methods=['GET', 'POST'])
@@ -1607,7 +1664,8 @@ def acmaintlogbook():
         else:
             try:
                 # turns out the datetimes don't even work on windows.  You have to convert to a string.....
-                return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data, p_hrs_mins_as_string=True),
+                return send_file(createmntlogbookxlsx(thisac, thisform.start_date.data, thisform.end_date.data,
+                                                      p_hrs_mins_as_string=True),
                                  as_attachment=True)
             except Exception as e:
                 flash(str(e))
@@ -1642,19 +1700,19 @@ def build_lifed_item_dict(thisac, m):
     for r in readings:
         onereading = {'reading_date': r.reading_date}
         onereading["meter_delta"] = r.meter_delta
-        closingreading +=  r.meter_delta
-        onereading["meter_reading"]  = closingreading
+        closingreading += r.meter_delta
+        onereading["meter_reading"] = closingreading
         readinglist.append(onereading)
     thisdict['readinglist'] = readinglist
     return thisdict
 
-def get_readings(readingdict,date):
+
+def get_readings(readingdict, date):
     for r in readingdict["readinglist"]:
         if r["reading_date"] == date:
             return r["meter_delta"], r["meter_reading"]
     # if we get to here then we didn't find it.
-    return None,None
-
+    return None, None
 
 
 def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
@@ -1684,16 +1742,14 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
             and (task_meter_id   is not null)
             and t0.logbook_include
         """)
-    sql = sql.columns(last_done_reading=SqliteDecimal(10, 2), logbook_start_value=SqliteDecimal(10,2))
+    sql = sql.columns(last_done_reading=SqliteDecimal(10, 2), logbook_start_value=SqliteDecimal(10, 2))
     meter_based_tasks = db.engine.execute(sql, ac_id=thisac.id).fetchall()
     task_based_columns = []
     for m in meter_based_tasks:
         task_based_columns.append(build_lifed_item_dict(thisac, m))
-    # for i in task_based_columns:
-    #     print(i["description"])
-    #     print("---------------------------------------")
-    #     for r in i["readinglist"]:
-    #         print(r)
+
+    # we first have to determine a day, and a note name ensuring we get those in a ascending
+    # meter reading value
 
     sql = sqltext("""
     select 
@@ -1713,7 +1769,7 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
     where t0.ac_id = :ac_id
     and t0.reading_date >= :start
     and t0.reading_date <= :end
-    order by reading_date, t1.meter_name 
+    order by reading_date, t0.meter_reading, t0.note, t1.meter_name 
     """)
     sql = sql.columns(reading_date=db.Date, meter_reading=SqliteDecimal(10, 2), meter_delta=SqliteDecimal(10, 2))
     readings = db.engine.execute(sql, ac_id=thisac.id, start=pstart, end=pend).fetchall()
@@ -1726,16 +1782,9 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
                                 "downloads/" + thisac.regn + "_LOGBOOK" + ".xlsx")
         workbook = xlsxwriter.Workbook(filename)
         if len(readings) > 0:
-            ws = workbook.add_worksheet("Meter Readings")
-            ws.set_landscape()
-            ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
-            ws.set_footer('&L&A&CPage &P of &N')
-            ws.fit_to_pages(1, 0)  # fit all columns on page
-            ws.repeat_rows(2)
-            ws.set_paper(9)
             borderdict = {'border': 1}
             noborderdict = {'border': 0}
-            datedict = {'num_format': 'dd-mmm-yy', 'align':'Top'}
+            datedict = {'num_format': 'dd-mmm-yy', 'align': 'Top'}
             timedict = {'num_format': 'h:mm'}
             dollardict = {'num_format': '$#, ##0.00'}
             merge_format = workbook.add_format(
@@ -1755,68 +1804,203 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
             dollar_fmt = workbook.add_format(dict(dollardict, **noborderdict))
             time_fmt = workbook.add_format(dict(timedict, **noborderdict))
             hrsmins_fmt = workbook.add_format({'num_format': '[h]:mm'})
-            history_fmt = workbook.add_format({'align':'Top', 'text_wrap': True})
-            row = 3
-            ws.write(row, 0, "Date", border_fmt)
-            nextcol = 1
-            metercol = []
-            for i in installed_meters:
-                ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading', border_fmt)
-                ws.write(row, nextcol + 1, i.std_meter_rec.meter_name + ' Change', border_fmt)
-                metercol.append({"col": nextcol, "meter_name": i.std_meter_rec.meter_name})
-                nextcol += 2
-            notecol = (len(metercol) * 2) + 1
-            ws.write(row, nextcol, "Note", border_fmt)
-            nextcol += 1
-            for i in task_based_columns:
-                i["col"] = nextcol
-                ws.write(row, nextcol, i["title"] + 'Reading', border_fmt)
-                ws.write(row, nextcol + 1, i["title"] + ' Change', border_fmt)
-                nextcol += 2
-            row += 2
-            last_row_reading_date = datetime.date(1900, 1, 1)
-            for r in readings:
-                if r.reading_date != last_row_reading_date:
-                    # new line in logbook
-                    row += 1
-                    ws.write(row, 0, r.reading_date, date_format)
-                    last_row_reading_date = r.reading_date
-                # find which column to add this record
-                mcol = [c for c in metercol if c["meter_name"] == r.meter_name][0]
-                if mcol is not None:
-                    if r.entry_uom == 'Hours:Minutes':
-                        if p_hrs_mins_as_string:
-                            ws.write(row, mcol["col"], mins2hrsmins(r.meter_reading))
-                            ws.write(row, mcol["col"] + 1, mins2hrsmins(r.meter_delta))
+            history_fmt = workbook.add_format({'align': 'Top', 'text_wrap': True})
+            #
+            # MEter Readings
+            #
+            # ws = workbook.add_worksheet("Meter Readings")
+            # ws.set_landscape()
+            # ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+            # ws.set_footer('&L&A&CPage &P of &N')
+            # ws.fit_to_pages(1, 0)  # fit all columns on page
+            # ws.repeat_rows(2)
+            # ws.set_paper(9)
+            # row = 3
+            # ws.write(row, 0, "Date", border_fmt)
+            # nextcol = 1
+            # metercol = []
+            # for i in installed_meters:
+            #     ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading', border_fmt)
+            #     ws.write(row, nextcol + 1, i.std_meter_rec.meter_name + ' Change', border_fmt)
+            #     metercol.append({"col": nextcol, "meter_name": i.std_meter_rec.meter_name})
+            #     nextcol += 2
+            # notecol = (len(metercol) * 2) + 1
+            # ws.write(row, nextcol, "Note", border_fmt)
+            # nextcol += 1
+            # for i in task_based_columns:
+            #     i["col"] = nextcol
+            #     ws.write(row, nextcol, i["title"] + 'Reading', border_fmt)
+            #     ws.write(row, nextcol + 1, i["title"] + ' Change', border_fmt)
+            #     nextcol += 2
+            # row += 2
+            # last_row_reading_date = datetime.date(1900, 1, 1)
+            # for r in readings:
+            #     # TODO:  There is a problem here as it assumes there is only one
+            #     # row returned for each day and that is not necessarily the case.....
+            #     # the trouble is going to be what we do about notes.  Could change
+            #     # the query to sum the readings....
+            #     if r.reading_date != last_row_reading_date or r.note != last_row_note:
+            #         # new line in logbook
+            #         row += 1
+            #         ws.write(row, 0, r.reading_date, date_format)
+            #         last_row_reading_date = r.reading_date
+            #         last_row_note = r.note
+            #     # find which column to add this record
+            #     mcol = [c for c in metercol if c["meter_name"] == r.meter_name][0]
+            #     if mcol is not None:
+            #         if r.entry_uom == 'Hours:Minutes':
+            #             if p_hrs_mins_as_string:
+            #                 ws.write(row, mcol["col"], mins2hrsmins(r.meter_reading))
+            #                 ws.write(row, mcol["col"] + 1, mins2hrsmins(r.meter_delta))
+            #             else:
+            #                 ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
+            #                 # in excel this has to be a decimal of one day.  There are 24*60 minutes
+            #                 # in a day
+            #                 ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
+            #         elif r.entry_uom == 'Decimal Hours':
+            #             ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
+            #             ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))
+            #         else:
+            #             ws.write(row, mcol["col"], r.meter_reading)
+            #             ws.write(row, mcol["col"] + 1, r.meter_delta)
+            #     # Now find the meter_based_tasks columns
+            #     for tbc in task_based_columns:
+            #         delta, reading = get_readings(tbc, r.reading_date)
+            #         ws.write(row, tbc["col"], reading)
+            #         ws.write(row, tbc["col"] + 1, delta)
+            #     ws.write(row, notecol, r.note)
+            # # col widths
+            # ws.autofit()
+            # # autfit overrides
+            # # ws.set_column(0, 0, 12)
+            # col = 1
+            # for i in range(len(installed_meters)):
+            #     ws.set_column(col, col, 12)
+            #     ws.set_column(col + 1, col + 1, 12)
+            #     col += 2
+            # # Put in the title last so that the autofit works nicely
+            # row = 1
+            # ws.merge_range("A1:H1", "Aircraft Meter Readings for " + thisac.regn, merge_format)
+        #
+        # Readings 2
+        #
+        ws = workbook.add_worksheet("Meter Readings")
+        ws.set_landscape()
+        ws.set_margins(left=0.3, right=0.3, bottom=0.5, top=0.3)
+        ws.set_footer('&L&A&CPage &P of &N')
+        ws.fit_to_pages(1, 0)  # fit all columns on page
+        ws.repeat_rows(2)
+        ws.set_paper(9)
+        maintobj = ACMaint(thisac.id)
+        # Add Headings
+        row = 3
+        ws.write(row, 0, "Date", border_fmt)
+        nextcol = 1
+        metercol = []
+        for i in installed_meters:
+            ws.write(row, nextcol, i.std_meter_rec.meter_name + ' Reading', border_fmt)
+            ws.write(row, nextcol + 1, i.std_meter_rec.meter_name + ' Change', border_fmt)
+            metercol.append({"col": nextcol, "meter_name": i.std_meter_rec.meter_name})
+            nextcol += 2
+        notecol = (len(metercol) * 2) + 1
+        ws.write(row, nextcol, "Note", border_fmt)
+        nextcol += 1
+        for i in task_based_columns:
+            i["col"] = nextcol
+            ws.write(row, nextcol, i["title"] + 'Reading', border_fmt)
+            ws.write(row, nextcol + 1, i["title"] + ' Change', border_fmt)
+            nextcol += 2
+        row += 2
+        #
+        # the logic for listing the readings in order is quite complex because
+        # for any given, day there may be one or more readings.
+        # There is a SET of readings for each note and we need to work out the correct
+        # sequence of listing the readings.
+        # we start with a list of dates (the dates list), In each day we work out which meter
+        # has the most readings (meter_reading_counts list) and we pick the meter with the most
+        # number of readings.  We then order the readings for the selected meter by
+        # the actual meter_reading (order_of_notes_list), then we process ALL the readings
+        # for a given note (final_readings_entries list).
+        #
+        # Step 1 : the dates for wich readings exist:
+        dates = (db.session.query(MeterReadings.reading_date, func.count().label('reading_count')).
+                 filter(MeterReadings.ac_id == thisac.id).
+                 filter(MeterReadings.reading_date >= pstart).
+                 filter(MeterReadings.reading_date <= pend).
+                 group_by(MeterReadings.reading_date).all())
+        for d in dates:
+            # Step 2 : for a given date which meter has the most readings (it does not matter
+            # if there is more than one meter with the same number of readings)
+            meter_to_use = 0
+            meter_counts = 0
+            meter_reading_counts = (db.session.query(MeterReadings.meter_id, func.count().label('readings_count')).
+                                    filter(MeterReadings.ac_id == thisac.id).
+                                    filter(MeterReadings.reading_date == d.reading_date).
+                                    group_by(MeterReadings.meter_id).all())
+            for mrc in meter_reading_counts:
+                if mrc.readings_count > meter_counts:
+                    meter_to_use = mrc.meter_id
+                    meter_counts = mrc.readings_count
+            # step 3 - build a list of notes in the sequence of the actual reading
+            order_of_notes = (db.session.query(MeterReadings.note, MeterReadings.meter_reading).
+                              filter(MeterReadings.ac_id == thisac.id).
+                              filter(MeterReadings.meter_id == meter_to_use).
+                              filter(MeterReadings.reading_date == d.reading_date).
+                              order_by(MeterReadings.meter_reading).all())
+            for o in order_of_notes:
+                # step 4 - process the readings for that note
+                final_readings_entries = db.session.execute(select(MeterReadings).
+                                                            join(MeterReadings.std_meter_rec).
+                                                            filter(MeterReadings.ac_id == thisac.id).
+                                                            # filter(MeterReadings.meter_id == meter_to_use).
+                                                            filter(MeterReadings.reading_date == d.reading_date).
+                                                            filter(MeterReadings.note == o.note).
+                                                            order_by(MeterReadings.meter_id)).all()
+                # finally - we add the spreadsheet line.....
+                last_row_note = None
+                for fre in final_readings_entries:
+                    r = fre[0]
+                    if last_row_note is None or r.note != last_row_note:
+                        row += 1
+                        ws.write(row, 0, r.reading_date, date_format)
+                        last_row_note = r.note
+                    thisacmeter = (db.session.query(ACMeters).filter(ACMeters.ac_id == thisac.id).
+                                   filter(ACMeters.meter_id == r.meter_id).first())
+                    # find which column to add this record
+                    mcol = [c for c in metercol if c["meter_name"] == r.std_meter_rec.meter_name][0]
+                    if mcol is not None:
+                        if thisacmeter.entry_uom == 'Hours:Minutes':
+                            if p_hrs_mins_as_string:
+                                ws.write(row, mcol["col"], mins2hrsmins(r.meter_reading))
+                                ws.write(row, mcol["col"] + 1, mins2hrsmins(r.meter_delta))
+                            else:
+                                ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
+                                # in excel this has to be a decimal of one day.  There are 24*60 minutes
+                                # in a day
+                                ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
+                        elif thisacmeter.entry_uom == 'Decimal Hours':
+                            ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
+                            ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))
                         else:
-                            ws.write(row, mcol["col"], round(r.meter_reading / (24 * 60), 2), hrsmins_fmt)
-                            # in excel this has to be a decimal of one day.  There are 24*60 minutes
-                            # in a day
-                            ws.write(row, mcol["col"] + 1, r.meter_delta / (24 * 60), hrsmins_fmt)
-                    elif r.entry_uom == 'Decimal Hours':
-                        ws.write(row, mcol["col"], round(r.meter_reading / 60, 2))
-                        ws.write(row, mcol["col"] + 1, round(r.meter_delta / 60, 2))
-                    else:
-                        ws.write(row, mcol["col"], r.meter_reading)
-                        ws.write(row, mcol["col"] + 1, r.meter_delta)
-                # Now find the meter_based_tasks columns
-                for tbc in task_based_columns:
-                    delta,reading = get_readings(tbc,r.reading_date)
-                    ws.write(row, tbc["col"], reading)
-                    ws.write(row, tbc["col"] + 1, delta)
-                ws.write(row, notecol, r.note)
-            # col widths
-            ws.autofit()
-            # autfit overrides
-            # ws.set_column(0, 0, 12)
-            col = 1
-            for i in range(len(installed_meters)):
-                ws.set_column(col, col, 12)
-                ws.set_column(col + 1, col + 1, 12)
-                col += 2
-            # Put in the title last so that the autofit works nicely
-            row = 1
-            ws.merge_range("A1:H1", "Aircraft Meter Readings for " + thisac.regn, merge_format)
+                            ws.write(row, mcol["col"], r.meter_reading)
+                            ws.write(row, mcol["col"] + 1, r.meter_delta)
+                    # Now find the meter_based_tasks columns
+                    for tbc in task_based_columns:
+                        delta, reading = get_readings(tbc, r.reading_date)
+                        ws.write(row, tbc["col"], reading)
+                        ws.write(row, tbc["col"] + 1, delta)
+                    ws.write(row, notecol, r.note)
+        ws.autofit()
+        # autfit overrides
+        # ws.set_column(0, 0, 12)
+        col = 1
+        for i in range(len(installed_meters)):
+            ws.set_column(col, col, 12)
+            ws.set_column(col + 1, col + 1, 12)
+            col += 2
+        # Put in the title last so that the autofit works nicely
+        row = 1
+        ws.merge_range("A1:H1", "Aircraft Meter Readings for " + thisac.regn, merge_format)
         #
         # History
         #
@@ -1826,7 +2010,7 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         ws.set_footer('&L&A&CPage &P of &N')
         ws.fit_to_pages(1, 0)  # fit all columns on page
         ws.repeat_rows(3)
-        ws.set_paper(9) # A4
+        ws.set_paper(9)  # A4
         sql = sqltext("""
             select
             t0.history_date,
@@ -1881,21 +2065,22 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         ws.fit_to_pages(1, 0)  # fit all columns on page
         ws.repeat_rows(2)
         ws.set_paper(9)
-        maintobj  = ACMaint(thisac.id)
+        maintobj = ACMaint(thisac.id)
         row = 3
         ws.write(row, 0, "Due Date", border_fmt)
         ws.write(row, 1, "Task", border_fmt)
         ws.write(row, 2, "Recurrence", border_fmt)
         row += 1
         for t in maintobj.tasks:
-            ws.write(row,0,t.next_due_date,date_format)
-            ws.write(row,1,t.description,history_fmt)
-            ws.write(row,2,t.recurrence_description,history_fmt)
+            ws.write(row, 0, t.next_due_date, date_format)
+            ws.write(row, 1, t.description, history_fmt)
+            ws.write(row, 2, t.recurrence_description, history_fmt)
             row += 1
         ws.autofit()
         # Add Headings
         row = 1
         ws.merge_range("A1:C1", "Aircraft Upcoming Tasks " + thisac.regn, merge_format)
+
 
 
     except Exception as e:
@@ -1904,5 +2089,3 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         raise
     workbook.close()
     return filename
-
-
