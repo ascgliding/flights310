@@ -436,6 +436,16 @@ class ACResetReadings(FlaskForm):
     btnsubmit = SubmitField('done', id='donebtn')  # the name must match the CSS content clause for material icons
     cancel = SubmitField('cancel', id='cancelbtn')
 
+class ACMaintMeterReadingForm(FlaskForm):
+    name = "Maintain a Meter Reading"
+    id = IntegerField('Meter Reading ID', description='not displayed', render_kw={'disabled': True})
+    ac_id = IntegerField('Ac Id', description='not displayed', render_kw={'disabled': True})
+    meter_id = IntegerField('Meter Id', description='not displayed', render_kw={'disabled': True})
+    reading_date = DateField('Reading Date', description='The date of the reading', render_kw={'disabled': True})
+    meter_delta = IntegerField('Meter DELTA', description='The change in reading between this reading and the previouse')
+    btnsubmit = SubmitField('done', id='donebtn')
+    cancel = SubmitField('cancel', id='cancelbtn')
+
 
 def maintpagecheck(checkpagename=None):
     '''
@@ -1218,26 +1228,15 @@ def acaddnewreading():
         return redirect(url_for('plantmaint.index', pregn=thisac))
 
 
-@bp.route('/recalc_readings/<reading_id>', methods=['GET'])
-@login_required
 def recalc_readings(reading_id):
     # This code recalculates the closing meter_readings from the deltas.
     # It is a support function only available to ray....
-    try:
-        thisac = maintpagecheck()
-        if thisac is None:
-            return redirect(url_for('plantmaint.maintainedac'))
-    except Exception as e:
-        flash(str(e))
-        return redirect(url_for('plantmaint.maintainedac'))
-    if thisac is None:
-        flash("Sorry, You do not have access to this function", "error")
-        return render_template('plantmaint/index.html', ac=None)
-    # check that this row exists.
     thisreadingrow = db.session.query(MeterReadings).filter_by(id=reading_id).first()
     if thisreadingrow is None:
-        flash("Routine passed an invalid id", "error")
-        return render_template('plantmaint/index.html', ac=None)
+        raise(ValidationError, "Meter reading not found")
+    thisac = db.session.query(Aircraft).filter_by(id=thisreadingrow.ac_id).first()
+    if thisac is None:
+        raise(ValidationError,"Aircraft not found")
     # the set of readings to change includes the immediate prior reading (which is not changed)
     # because we need the starting point to re-calculate all subsequent readings.
     prior_row = db.session.query(MeterReadings).filter(MeterReadings.ac_id == thisac.id).filter(
@@ -1258,18 +1257,15 @@ def recalc_readings(reading_id):
                 else:
                     prevreading = prior_row.meter_reading
             thisreading = prevreading + rtc.meter_delta
-            print(f'Changed reading on row {rtc.id}, on {rtc.reading_date} changed from {mins2hrsdec(rtc.meter_reading)} to {mins2hrsdec(thisreading)}')
+            applog.info(f'Changed reading on row {rtc.id}, on {rtc.reading_date} changed from {mins2hrsdec(rtc.meter_reading)} to {mins2hrsdec(thisreading)}')
             # change the row and update the db here.....
             rtc.meter_reading = thisreading
             prevreading = thisreading
         db.session.commit()
-        flash('All rows successfully updated','info')
     except Exception as e:
         db.session.rollback()
-        flash('The following error occurred while trying to reset the meter_reading values','error')
-        flash(str(e), "error")
-    return redirect(url_for('plantmaint.acmeterreadinglist', meter_id = thisreadingrow.meter_id))
-
+        raise(RuntimeError, "An error happened while updating the database when recalculating all meter_reading values.")
+    return True
 
 
 @bp.route('/acmeterreadinglist/<meter_id>', methods=['GET', 'POST'])
@@ -1348,6 +1344,32 @@ def acmeterreadingremove(reading_id):
                 "error")
     flash("Meter Reading Removed")
     return redirect(url_for('plantmaint.acmeterlist'))
+
+@bp.route('/acmaintmeterreading/<id>', methods=['GET', 'POST'])
+@login_required
+def acmaintmeterreading(id):
+    thisrec = MeterReadings.query.get(id)
+    if thisrec is None:
+        flash('No such Reading')
+        return redirect(url_for('plantmaint.maintainedac'))
+    thisform = ACMaintMeterReadingForm(obj=thisrec)
+    if thisform.validate_on_submit():
+        if thisform.cancel.data:
+            return redirect(url_for('plantmaint.acmeterreadinglist', meter_id=thisrec.meter_id))
+        thisform.populate_obj(thisrec)
+        # code based validation
+        applog.info('UPDATE:' + repr(thisrec))
+        try:
+            recalc_readings(thisrec.id)
+            db.session.commit()
+        except Exception as e:
+            applog.error(str(e))
+            flash(
+                "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
+                "error")
+            flash(str(e))
+        return redirect(url_for('plantmaint.acmeterreadinglist', meter_id=thisrec.meter_id))
+    return render_template('plantmaint/acmaintmeterreading.html', form=thisform)
 
 
 @bp.route('/acmaintainhist', methods=['GET'])

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block header %}
+{% endblock %}
+{% block content %}
+<form method="Post">
+  {{ form.csrf_token }}
+    <br>
+    <span style="color:red">
+    Oh my word....  IF you are in here, you really need to know what you are doing.
+        <br><br>
+    The meter_delta value shown on this form is the raw data from the database.
+        It is EITHER a counter (like landings) or a number of MINUTES.
+        <br><br>
+        As soon as you commit a change the program is then going to wade through
+        all the readings between the one you change and the most recent reading and
+        recalculate the closing meter_reading.
+        </span>
+    <br>
+    <br>
+  <fieldset>
+    <legend>{{ form.name }}</legend>
+  <ul>
+    </br>
+    <li>{{ render_field(form.id) }}</li>
+    <li>{{ render_field(form.ac_id) }}</li>
+    <li>{{ render_field(form.meter_id) }}</li>
+    <li>{{ render_field(form.reading_date) }}</li>
+    <li>{{ render_field(form.meter_delta) }}</li>
+  </ul>
+    </fieldset>
+  {{ form.btnsubmit() }}
+  {{ form.cancel(formnovalidate=true) }}
+</form>
+{% endblock %}

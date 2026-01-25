@@ -22,7 +22,11 @@
     </div>
   {% for l in list %}
     <div class="row">
-      <div class="cell mobile_port_suppress" >{{ l['id'] }}</div>
+      {% if current_user.name == "rayb" %}
+         <a class="action cell mobile_port_suppress" title="Change this reading" href="{{ url_for('plantmaint.acmaintmeterreading', id=l['id']) }}">{{l['id']}}</a>
+      {% else %}
+          <div class="cell mobile_port_suppress" >{{ l['id'] }}</div>
+      {% endif %}
 <!--      <div class="cell" >{{ l['seq'] }}</div>-->
       <div class="cell" align="center">{{ l['reading_date'].strftime('%d-%m-%Y') }}</div>
       {% if l['entry_uom'] == 'Hours:Minutes' %}
@@ -41,10 +45,6 @@
       <div class="cell  mobile_port_suppress mobile_land_suppress " style="width:5%">
          <a class="action"  href="{{ url_for('plantmaint.acmeterreadingremove', reading_id=l['id']) }}">Remove</a>
       </div>
-      {% else %}
-        {% if current_user.name == "rayb" %}
-         <a class="action" title="Reset the READING value from this row fowards" href="{{ url_for('plantmaint.recalc_readings', reading_id=l['id']) }}">Recalc Reading</a>
-        {% endif %}
       {% endif %}
     </div>
   {% endfor %}
