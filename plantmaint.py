@@ -744,7 +744,6 @@ def stdusermaint(id):
 @bp.route('/actasklist', methods=['GET', 'POST'])
 @login_required
 def actasklist():
-    # TODO: sort in descending due date.
     try:
         thisac = maintpagecheck()
         if thisac is None:

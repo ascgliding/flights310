@@ -775,7 +775,7 @@ class ACMaint:
 
     @property
     def tasks(self):
-        return self.__tasks
+        return sorted(self.__tasks,key=lambda x: x.next_due_date)
 
     @property
     def meters(self):
