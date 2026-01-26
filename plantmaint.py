@@ -744,6 +744,7 @@ def stdusermaint(id):
 @bp.route('/actasklist', methods=['GET', 'POST'])
 @login_required
 def actasklist():
+    # TODO: sort in descending due date.
     try:
         thisac = maintpagecheck()
         if thisac is None:
@@ -1537,7 +1538,7 @@ def actaskhistorymaint(acmainthistory_id):
     thisform = ACTaskHistoryMaint(obj=thisrec)
     if request.method == 'POST':
         if thisform.cancel.data:
-            return redirect(url_for('plantmaint.achistorylist', task=0))
+            return redirect(url_for('plantmaint.achistorylist', task=thisrec.task_id))
         if thisform.delete.data:
             db.session.delete(thisrec)
             try:
@@ -1548,7 +1549,7 @@ def actaskhistorymaint(acmainthistory_id):
                 flash(
                     "An error cccurred while updating the database.  The details are in the system log.  Best to call the system administrator.",
                     "error")
-            return redirect(url_for('plantmaint.achistorylist', task=0))
+            return redirect(url_for('plantmaint.achistorylist', task=thisrec.task_id))
         # if we get to here then we are in update mode.
         thisform.populate_obj(thisrec)
         applog.info('UPDATE:' + repr(thisrec))

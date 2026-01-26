@@ -50,11 +50,14 @@ Some important notes:
         {% endif %}
     {% endfor %}
     </br>
-    {% if task.task_basis != 'Calendar' %}
+    {% if task.task_basis == 'Calendar' %}
         {% for f in form %}
             {% if f.name  == 'due_basis_date' %}
               <li>{{ render_field(form.due_basis_date) }} </li>
             {% endif %}
+        {% endfor %}
+    {% else %}
+        {% for f in form %}
             {% if f.name == 'due_basis_reading' %}
               <li>{{ render_field(form.due_basis_reading) }} </li>
             {% endif %}
