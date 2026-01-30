@@ -452,6 +452,7 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
             msg.add_body('<br>')
         msg.add_body('<br>')
         msg.add_recipient(instructor.email)
+        msg.add_recipient(tp.email)
         msg.add_recipient('ray@rayburns.nz')
         msg.add_body('</html>')
         msg.send()
