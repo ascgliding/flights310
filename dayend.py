@@ -288,7 +288,7 @@ def send_base_pass_reminders_to_members():
                 msg.add_body(f'Once renewed please login to the system and update the pass details')
                 msg.add_body(f' using the profile button from the menu.<br>')
                 # debug:
-                msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
+                # msg.add_body(f'Would have been sent to {m.fullname} at {m.email}<br>')
                 msg.add_body('</html>')
                 msg.add_recipient(m.email)
                 msg.add_recipient('ray@rayburns.nz')
