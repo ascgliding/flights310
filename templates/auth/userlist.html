@@ -20,7 +20,9 @@
       <div class="heading" align="right">User Name</div>
       <div class="heading" align="right">Full Name</div>
       <div class="heading" align="right">Role</div>
-      <div class="heading" align="right">Status</div>
+      <div class="heading mobile_port_suppress" align="right">Status</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress">Last Login</div>
+      <div class="heading mobile_port_suppress mobile_land_suppress">Days</div>
     </div>
   {% for user in users %}
     <div class="row">
@@ -28,8 +30,9 @@
       <div class="cell" align="left">{{ user['name'] }}</div>
       <div class="cell" align="left">{{ user['fullname'] }}</div>
       <div class="cell" align="left">{{ "Admin" if user['administrator'] == 1 else 'User' }}</div>
-      <div class="cell">{{"Approved" if user['approved'] == 1 else 'Not Approved' }}</div>
-
+      <div class="cell mobile_port_suppress">{{"Approved" if user['approved'] == 1 else 'Not Approved' }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress">{{ user['last_login'] if user['last_login'] is not none else 'Never' }}</div>
+      <div class="cell mobile_port_suppress mobile_land_suppress" style="text-align:right;">{{ (now() - user['last_login']|to_datetime).days }}</div>
     </div>
   {% endfor %}
   </div>

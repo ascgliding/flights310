@@ -15,7 +15,7 @@ from flask import Flask, render_template
 from flask_wtf import __version__ as flaskwtf_version
 from wtforms import __version__ as wft_version
 from sqlalchemy import __version__ as sqa_version
-
+import datetime
 # import asc.jingafilters
 
 
@@ -83,6 +83,15 @@ def create_app(test_config=None):
         # print("Create App with Windows instance path: {}".format(app.instance_path))
     else:
         app = Flask(__name__, instance_relative_config=True)
+
+    @app.context_processor
+    # The following bit of code makes "now" available to jinga templates.
+    # eg. {{ (now() - user['last_login']|to_datetime).days }}
+    def app_processor():
+        def date_now(format="%Y-%m-%d %H:%M:%S"):
+            return datetime.datetime.now()  #.strftime(format)
+        return dict(now=date_now)
+
 
     @app.before_request
     def global_before_request():
@@ -177,6 +186,7 @@ def create_filters(app):
     app.jinja_env.filters['currency'] = jingafilters.currency
     app.jinja_env.filters['displayfornone'] = jingafilters.displayfornone
     app.jinja_env.filters['nameinitials'] = jingafilters.nameinitials
+    app.jinja_env.filters['to_datetime'] = jingafilters.to_datetime
 
 
 def establish_logging(app):

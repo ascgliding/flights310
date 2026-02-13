@@ -273,3 +273,16 @@ def currency(pvalue):
         return "$0"
     applog.debug("{}, ${:,.2f}".format(pvalue,pvalue))
     return "${:,.2f}".format(pvalue)
+
+@app.template_filter()
+def to_datetime(pvalue):
+    """
+    Used in jinga templates to get a datetime object for calcualtion purposes.
+    see auth/userlist.html
+    :param pvalue: string
+    :return: datetime object
+    """
+    if pvalue is None:
+        return datetime.datetime.now()
+    else:
+        return makedatetime(pvalue)
