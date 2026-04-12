@@ -433,6 +433,8 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
     else:
         # msg.add_body('Should have been emailed to {}'.format(instructor.email))
         msg.add_body('<br>')
+        msg.add_body('Instructor is {}'.format(instructor.fullname))
+        msg.add_body('<br>')
         if tp:
             msg.add_body('Tow Pilot is {}'.format(tp.fullname))
             msg.add_body('<br>')
