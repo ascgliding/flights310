@@ -48,6 +48,24 @@ class TestTbl(db.Model):
     def convert_upper(self, key, value):
         return value.upper()
 
+class Mailer(MailerSmtp):
+
+    def __init__(self,subject=None):
+        # super(MailerSmtp, self).__init__(subject)
+        super().__init__(subject)
+        # now get the values from the database
+        smtpkeys = Slot.query.filter(Slot.slot_type == 'SMTP').all()
+        for s in smtpkeys:
+            print(f'{s.slot_key} / {s.slot_data}')
+            if s.slot_key == 'SMTP_SERVER':
+                self.smtp_server = s.slot_data
+            elif s.slot_key == 'SMTP_PORT':
+                self.smtp_port = int(s.slot_data)
+            elif s.slot_key == 'SMTP_MAIL_ADDRESS':
+                self.smtp_mail_address = s.slot_data
+            elif s.slot_key == 'SMTP_PASSWORD':
+                print(f'setting password to s.slot_data')
+                self.smtp_mail_password = s.slot_data
 
 class FSqlalchemyTst(unittest.TestCase):
 
@@ -2411,7 +2429,7 @@ class google_email(unittest.TestCase):
     def test003(self):
         """ Test the class"""
         try:
-            thismail = MailerSmtp('A test mail - test003')
+            thismail = Mailer('A test mail - test003')
             thismail.replyto = 'cfi@ascgliding.org'
             thismail.add_body("<h2> this is the body </h2>")
             thismail.add_recipient("ray@rayburns.nz")
@@ -2445,7 +2463,7 @@ if __name__ == '__main__':
     case12 = unittest.TestLoader().loadTestsFromTestCase(google_email)
     case13 = unittest.TestLoader().loadTestsFromTestCase(basepass)
     # thissuite = unittest.TestSuite([case1])
-    thissuite = unittest.TestSuite([case10])
+    thissuite = unittest.TestSuite([case12])
 
     # I don't know why but the following will work in debug mode but not if you just run it.
     # thissuite = unittest.TestLoader().loadTestsFromName('__main__.maintenance_test_ac_obj.test042')
