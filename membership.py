@@ -146,20 +146,6 @@ class TransactionForm(FlaskForm):
     delete = MatButtonField('delete', id='matdeletebtn', icon='delete',
                             help='Press to delete this record', render_kw={'onclick':'return ConfirmDelete()'})
 
-# class BasePassForm(FlaskForm):
-#     # id = IntegerField('ID', description='Primary Key', render_kw={'readonly': True, 'hidden':True})
-#     # memberid = IntegerField('Member', description='The id of the related member field', render_kw={'readonly': True, 'hidden':True})
-#     type = SelectField('Pass Type', description='The type of pass issued',
-#                             choices=[('none', 'None'),('CLUB', 'Club Pass'), ('MD58','Military (MD58)'), ('3389','Cadet')])
-#     reference = StringField('Reference', description='Reference eg. Pass No or Service No.')
-#     issuedate = DateField('Issue Date', description='The date the pass was issued')
-#     expirydate = DateField('Expiry Date', description='The date the pass will expire')
-#     btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Confirm all Changes")
-#     cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
-#                             help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
-#     delete = MatButtonField('delete', id='matdeletebtn', icon='delete',
-#                             help='Press to delete this record', render_kw={'onclick':'return ConfirmDelete()'})
-
 @bp.route('/memberlist/', defaults={'active':'ACTIVE'}, methods=['GET', 'POST'])
 @bp.route('/memberlist/<active>', methods=['GET', 'POST'])
 @login_required
@@ -168,11 +154,7 @@ def memberlist(active='ACTIVE'):
         if active=='ACTIVE':
             list = Pilot.query.filter(Pilot.member).filter(Pilot.active).order_by(Pilot.surname).all()
         else:
-            # list = Pilot.query.filter(Pilot.member).order_by(Pilot.fullname).all()
             list = Pilot.query.order_by(Pilot.fullname).all()
-        # for l in list:
-        #     if l.type is None or l.type not in ['FLYING', 'JUNIOR', 'SOCIAL', 'VFP BULK']:
-        #         l.type = 'FLYING'
     try:
         return render_template('membership/memberlist.html', list=list, active=active, today=datetime.date.today(),
                                    twomonths=datetime.date.today() - relativedelta(months=-2))
