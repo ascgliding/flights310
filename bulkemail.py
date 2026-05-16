@@ -198,12 +198,10 @@ def sendemail():
             else:
                 thismail.recipients = [item['email']]  # a list of one entry
                 thismail.body = markdown.markdown(item['firstname'] + ",\n" + thisform.email_text.data)
+                thismail.body += '\n' + 'From: ' + current_user.fullname
                 thismail.send()
             # time.sleep(1)
         flash(f'The email was sent to {len(session["emaillist"])} recipients.', category='success')
     except Exception as e:
         flash(str(e),"error")
     return redirect(url_for('bulkemail.index'))
-
-
-
