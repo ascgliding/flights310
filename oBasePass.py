@@ -10,6 +10,7 @@ from wtforms.fields import  DateField
 from asc.wtforms_ext import MatButtonField
 
 from flask import (flash, redirect, render_template, url_for, current_app as app)
+from wtforms.validators import DataRequired
 
 
 class BasePass:
@@ -132,6 +133,13 @@ class BasePass:
             app.logger.info('Base Pass Updated:' + str(self.__memberid) + "/" + thistrans.transnotes)
             db.session.commit()
 
+    def deletetrans(self):
+        thistrans = db.session.get(MemberTrans, self.__transid)
+        if thistrans is not None:
+            db.session.delete(thistrans)
+            app.logger.info('Base Pass Deleted' + str(self.__memberid) + "/" + thistrans.transnotes)
+            db.session.commit()
+
 
 class BasePassMnt():
 
@@ -162,14 +170,15 @@ class BasePassMnt():
         type = SelectField('Pass Type', description='The type of pass issued',
                            choices=[('none', 'None'), ('CLUB', 'Club Pass'), ('MD58', 'Military (MD58)'),
                                     ('3389', 'Cadet')])
-        reference = StringField('Reference', description='Reference eg. Pass No or Service No.')
+        reference = StringField('Reference', description='Reference eg. Pass No or Service No.',
+                                validators=[DataRequired(message='A Reference number or code must be provided')])
         issuedate = DateField('Issue Date', description='The date the pass was issued')
         expirydate = DateField('Expiry Date', description='The date the pass will expire')
         btnsubmit = MatButtonField('done', id='matdonebtn', icon='done', help="Confirm all Changes")
         cancel = MatButtonField('cancel', id='matcancelbtn', icon='cancel',
-                                help="Press to exit and make no changes")  # , render_kw={'formnovalidate':''})
+                                help="Press to exit and make no changes"   , render_kw={'formnovalidate':''})
         delete = MatButtonField('delete', id='matdeletebtn', icon='delete',
-                                help='Press to delete this record', render_kw={'onclick': 'return ConfirmDelete()'})
+                                help='Press to delete this record', render_kw={'formnovalidate':'','onclick': 'return ConfirmDelete()'})
 
     def __init__(self, memberid):
         self.__memberid = memberid
@@ -209,11 +218,15 @@ class BasePassMnt():
             if thisform.cancel.data:
                 return redirect(url_for(self.__prevpage, id=self.__memberid))
             if thisform.validate_on_submit():
-                # Provided the field names are the same, this function updates all the fields
-                # on the table.  If there are any that are different then each field needs to be
-                # assigned manually.
-                thisform.populate_obj(thisrec)
-                thisrec.updatetrans()
+                if thisform.delete.data:
+                    thisrec.deletetrans()
+                    flash('Last Base Pass Record Deleted')
+                else:
+                    # Provided the field names are the same, this function updates all the fields
+                    # on the table.  If there are any that are different then each field needs to be
+                    # assigned manually.
+                    thisform.populate_obj(thisrec)
+                    thisrec.updatetrans()
                 return redirect(url_for(self.__prevpage, id=self.__memberid))
             return render_template(self.__thispage_template, form=thisform)
         except Exception as e:
