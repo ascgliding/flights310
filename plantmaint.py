@@ -36,6 +36,8 @@ from asc.oMaint import ACMaint
 # from asc.mailer import ascmailer
 from asc.common import *
 import decimal
+import json
+import io
 
 app = current_app
 applog = app.logger
@@ -1650,6 +1652,48 @@ def acresetreadings(acmeters_id):
             return render_template('plantmaint/index.html', ac=thisac)
 
 
+@bp.route('/acjsonexport', methods=['GET', 'POST'])
+@login_required
+def acjsonexport():
+    try:
+        thisac = maintpagecheck()
+        if thisac is None:
+            return redirect(url_for('plantmaint.index'))
+    except Exception as e:
+        flash(str(e))
+        return redirect(url_for('plantmaint.index', ac=None))
+    # stmt = select(MeterReadings).where(MeterReadings.ac_id == thisac.id)
+    stmt = sqltext('''
+            select t1.regn,
+                t3.meter_name,
+                t0.reading_date,
+                t0.meter_reading,
+                t0.meter_delta,
+                t0.note
+            from meterreadings t0
+                join aircraft t1 on t1.id = t0.ac_id
+                join meters t3 on t3.id = t0.meter_id
+            where t1.regn = 'RDW'
+            order by reading_date, t0.id
+    ''')
+    print(stmt)
+    rows = db.session.execute(stmt)
+    asdict = [dict(row) for row in rows.mappings()]
+    json_string = json.dumps(asdict, indent=4, default=str)
+    json_bytes = json_string.encode('utf-8')
+
+    # 3. Wrap the bytes in an in-memory binary stream
+    file_stream = io.BytesIO(json_bytes)
+
+    # 4. Trigger the browser download using send_file
+    return send_file(
+        file_stream,
+        mimetype='application/json',
+        as_attachment=True,
+        download_name=f'MeterReadings_{thisac.regn}.json'
+    )
+
+
 @bp.route('/acmaintlogbook', methods=['GET', 'POST'])
 @login_required
 def acmaintlogbook():
@@ -2111,3 +2155,4 @@ def createmntlogbookxlsx(thisac, pstart, pend, p_hrs_mins_as_string=False):
         raise
     workbook.close()
     return filename
+
