@@ -450,7 +450,7 @@ def send_instr_email(thisdate, dayevents, instructor, tp, dp):
                 msg.add_body('<br>')
             msg.add_body('<br>')
             msg.add_body('Please check the club calendar for extra details including contact numbers.')
-            msg.add_body('You will need to contact effected individuals or groups if flying is cancelled for any reason.')
+            msg.add_body('You will need to contact affected individuals or groups if flying is cancelled for any reason.')
             msg.add_body('<br>')
         msg.add_body('<br>')
         msg.add_recipient(instructor.email)
