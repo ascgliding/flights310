@@ -16,7 +16,9 @@
     <p><a href="{{ url_for('plantmaint.acmaintlogbook') }}">Log Book</a></p>
     <p><a href="{{ url_for('plantmaint.changeac') }}">Change Aircraft</a></p>
     <p><a href="{{ url_for('plantmaint.acjsonexport') }}">Export Readings for this a/c to json</a></p>
-    <p><a href="{{ url_for('plantmaint.importacreadings') }}">Import Readings for this a/c from CSV</a></p>
+    {% if current_user.name == 'rayb'  and regn == 'RDW' %}
+        <p><a href="{{ url_for('plantmaint.importacreadings') }}">Import Readings for this a/c from CSV</a></p>
+    {% endif %}
     {#
     <p><a href="{{ url_for('plantmaint.testform') }}">testform</a></p>
     #}

@@ -18,7 +18,9 @@
   {{ form.cancel(formnovalidate=true) }}
   {{ form.importreading() }}
   {{ form.resetreading() }}
-  {{ form.deleteallreadings() }}
+  {% if current_user.name == 'rayb' %}
+      {{ form.deleteallreadings() }}
+  {% endif %}
   {{ form.delete() }}
 </form>
 {% endblock %}
