@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%" >
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Import Readings for A/c{% endblock %}</h1>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+  <form method="POST" action="" enctype="multipart/form-data">
+        <!-- Render the hidden CSRF token generated automatically by Flask-WTF -->
+        {{ form.csrf_token }}
+
+        <div>
+            <h5>Don't forget to remove all the readings before you import any more.
+            That function is available on each meter maintenance.</h5>
+            {{ form.csv_file }}
+
+            <!-- Render field validation errors (e.g. wrong file extension) -->
+            {% if form.csv_file.errors %}
+                {% for error in form.csv_file.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <br>
+        <div>
+            {{ form.btnsubmit }}
+            <a id="cancelbtn" href="{{ url_for('plantmaint.index') }}"></a>
+
+        </div>
+    </form>
+{% endblock %}

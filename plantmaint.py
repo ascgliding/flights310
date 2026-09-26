@@ -13,19 +13,20 @@ from werkzeug.utils import secure_filename
 import os
 import csv
 
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, fresh_login_required
 from asc import db, create_app
 from asc.schema import *  # Aircraft, Tasks, Meters, ACMeters, MaintSchedule, MeterReadings, SqliteDecimal
 from sqlalchemy import text as sqltext, delete, select
 
 # WTforms
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import Form, StringField, PasswordField, validators, SubmitField, SelectField, BooleanField, RadioField, \
-    TextAreaField, DecimalField, Field, FieldList, ValidationError
+    TextAreaField, DecimalField, Field, FieldList, ValidationError, HiddenField
 from wtforms.fields import EmailField, IntegerField, DateField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Length, optional, Regexp
 from asc.wtforms_ext import MatButtonField, TextButtonField
+
 
 # xlsx
 import xlsxwriter
@@ -310,6 +311,11 @@ class ACMeterMaintForm(FlaskForm):
                                    id="reset",
                                    text='Reset Readings',
                                    help="Recalculate readings based on an entered final reading.")
+    deleteallreadings = TextButtonField('Deletereadings',
+                                        id="deleteallreadings",
+                                        text="Delete All Readings",
+                                        help="Remove all readings for this meter for this aircraft.",
+                                        render_kw={"onClick": "return confirm('This will delete all readings for this aircraft.  Are you sure?')"})
 
     delete = SubmitField('delete', id='deletebtn', render_kw={"OnClick": "return ConfirmDelete()"})
 
@@ -447,6 +453,13 @@ class ACMaintMeterReadingForm(FlaskForm):
     meter_delta = IntegerField('Meter DELTA', description='The change in reading between this reading and the previouse')
     btnsubmit = SubmitField('done', id='donebtn')
     cancel = SubmitField('cancel', id='cancelbtn')
+
+class ImportReadingsForm(FlaskForm):
+    id = HiddenField()
+    csv_file = FileField('Select File',
+                        validators=[FileRequired(), FileAllowed(['csv'], 'Only CSV files are allowed')],
+                         render_kw={"accept": ".csv"})
+    btnsubmit = SubmitField('done', id='donebtn')
 
 
 def maintpagecheck(checkpagename=None):
@@ -967,6 +980,24 @@ def acmetermaint(id):
     if request.method == 'POST':
         if thisform.cancel.data:
             return redirect(url_for('plantmaint.acmeterlist'))
+        if thisform.deleteallreadings.data:
+            # using "with db.session.begin()" will automatically run a commit if the with block raises no errors
+            # therefore any error trapping must also issue a "raise"
+            try:
+                # We probably don't need the where clause on the acid because the meterid is unique to the ac
+                # ... but this is so scary I want to be sure ...
+                print(f'meter {thisrec} id {thisrec.id}')
+                stmt = delete(MeterReadings).where(MeterReadings.meter_id == thisrec.meter_id, MeterReadings.ac_id == thisac.id)
+                print(stmt)
+                result = db.session.execute(stmt)
+                flash(f"Rows deleted: {result.rowcount}")
+                db.session.commit()
+                return redirect(url_for('plantmaint.acmeterlist'))
+            except Exception as e:
+                flash(str(e))
+                return redirect(url_for('plantmaint.acmeterlist'))
+
+
         if thisform.importreading.data:
             return redirect(url_for('plantmaint.acimportreading', acmeters_id=id))
         if thisform.resetreading.data:
@@ -1692,6 +1723,202 @@ def acjsonexport():
         as_attachment=True,
         download_name=f'MeterReadings_{thisac.regn}.json'
     )
+
+@bp.route('/importacreadings', methods=['GET', 'POST'])
+#@fresh_login_required
+@login_required
+def importacreadings():
+    try:
+        thisac = maintpagecheck()
+    except:
+        return redirect(url_for('plantmaint.index'))
+    if thisac is None:
+        flash("Sorry, You do not have access to this function", "error")
+        return render_template('plantmaint/index.html', ac=None)
+    form = ImportReadingsForm()
+    if form.validate_on_submit():
+        uploaded_file = form.csv_file.data
+        contents = uploaded_file.stream.read().decode('utf-8')
+        textstream = io.StringIO(contents)
+
+        print(f'Uploaded {uploaded_file.stream}')
+        # with open(uploaded_file.stream, 'rb') as csvfile:
+        reader = csv.DictReader(textstream, delimiter='|')
+        headers = reader.fieldnames
+        for fld in [ "Date", "Total A/F Hours", "Tacho", "Total Landings"]:
+            if fld not in headers:
+                flash(f'Field {fld} is missing from the column headers', 'error')
+                return redirect(url_for('plantmaint.index'))
+        print(f'Headers: {headers}')
+        #
+        # In following loop we read through the csv file and validate all the data items.
+        # We do not process unless we have a valid set.
+        # To save reading theough the file twice and making sure we implement all the same rules
+        # we create a list of dicts to process in the next phase if there were no errors.
+        #
+        # it is critical that the dictionary NAMES match the meter.meter_name because there is
+        # a GENERIC procedure that steps through the cleansed_data list looking for fields
+        # that match meter names.
+        #
+        rownumber = 0
+        cleansed_data = []
+        lastdate = None
+        lastafmins = None
+        lasttacho = None
+        lastlandings = None
+        for row in reader:
+            rownumber += 1
+            thisdatarow = {'note':row['Tow Pilot']}
+            # print(row)
+            # print(f'Date: {row["Date"]}, AF : {row["Total A/F Hours"]}, Tacho: {row["Tacho"]}, Landings: {row["Total Landings"]}')
+            # validate date
+            try:
+                thisdate = datetime.datetime.strptime(row["Date"], "%Y-%m-%d")
+                if thisdate.date() < datetime.date(2013,1,1):
+                    continue
+                if lastdate is not None:
+                    if lastdate > thisdate:
+                        flash(f'There is a date in the sequence which is less that the previous dates. ( row: {rownumber})')
+                lastdate = thisdate
+                # we put a check here to control the earliest date....
+                # On rows with a date will be added to the output.
+                thisdatarow["reading_date"] = thisdate.date()
+            except Exception as e:
+                if row["Date"] != '':
+                    flash(f'Invalid Date ({row["Date"]}): {str(e)}, row: {rownumber} ','error')
+
+            # validate af hrs
+
+            try:
+                if row["Total A/F Hours"] != '':
+
+                    thisafmins = int(float(row["Total A/F Hours"]) * 60)
+                    if lastafmins is not None:
+                        if lastafmins > thisafmins:
+                            flash(f'There is a total a/f hrs reading less than the previous reading. row :{rownumber}')
+                    thisdatarow["AirFrame"] = thisafmins
+                    # thisdatarow["AirFrame"] = thisafmins - (lastafmins or 0)
+                    lastafmins = thisafmins
+            except Exception as e:
+                if row["Total A/F Hours"] != '':
+                    flash(f'Invalid a/F Hrs ({row["Total A/F Hours"]}): {str(e)}, row: {rownumber} ','error')
+
+            # validdate tacho
+
+            try:
+                thistacho = None
+                if row["Tacho"] != '':
+                    try:
+                        # This could be in the format of hh:mm or hh
+                        hours, minutes, _ = row['Tacho'].split(':')
+                        # Convert strings to integers and calculate total minutes
+                        thistacho = (int(hours) * 60) + int(minutes)
+                    except Exception as e:
+                        try:
+                            thistacho = int(row['Tacho'])
+                        except Exception as e:
+                            flash(f'Could not convert tacho ({row["Tacho"]}): {str(e)}, row: {rownumber}', 'error')
+                    if thistacho is not None:
+                        if lasttacho is not None:
+                            if lasttacho > thistacho:
+                                flash(f'There is a tacho reading less than the previous tacho. row: {rownumber}')
+                    thisdatarow["Tachometer"] = thistacho
+                    # thisdatarow["Tachometer"] = thistacho - (lasttacho or 0)
+                    lasttacho = thistacho
+            except Exception as e:
+                if row["Tacho"] != '':
+                     flash(f'Invalid Tacho ({row["Tacho"]}): {str(e)}, row: {rownumber} ','error')
+
+            # validate landings
+
+            try:
+                if row["Total Landings"] != '':
+                    thislandings = int(row["Total Landings"])
+                    if lastlandings is not None:
+                        if lastlandings > thislandings:
+                            flash(f'There is a landing reading greater than the previous landings. row: {rownumber}')
+                    thisdatarow["Landings"] = thislandings
+                    # thisdatarow["Landings"] = thislandings - (lastlandings or 0)
+                    lastlandings = thislandings
+            except Exception as e:
+                if row["Total Landings"] != '':
+                    flash(f'Invalid Landings ({row["Landings"]}): {str(e)}, row: {rownumber} ','error')
+            # There must a reading_date and a note....
+            if "reading_date" in thisdatarow and "note" in thisdatarow:
+                cleansed_data.append(thisdatarow)
+        if len(session.get('_flashes', [])) > 0:
+            flash('Unable to proceed due to previous errors.')
+            return render_template('plantmaint/index.html', ac=thisac)
+        else:
+            if addreadings(thisac,cleansed_data):
+                flash('Successfully imported.')
+            return render_template('plantmaint/index.html', ac=thisac)
+
+    # TODO: security required
+    # display the upload screen
+    return render_template('plantmaint/importacreadings.html', form=form)
+
+def addreadings(aircraft,listofreadings):
+    '''
+    This iss a generic routine that processses a list of readings and adds them to the meter
+    readings table.
+    :param aircraft: The Aircraft id.
+    :param listofreadings: A validated list of readings. Each list item is a dictionary that
+        contains "reading_date" and "note" plus a dictionary item that has a name that matches
+        the meter name (meter_name).
+        The list must have been verified such that each readings is a value greateer than
+        the previous reading and each date is greater than or equal to the previous date.
+    :return:
+    '''
+    meters_to_recalc = []
+    listoferrors = []
+    addedreadingcount = 0
+    error_occurred = False
+    for reading in listofreadings:
+        # for cd in listofreadings:
+        #     print(cd)
+            # TODO:  write the readings and reset the deltas.
+        for fld,value in reading.items():
+            if fld not in ['reading_date','note']:
+                for m in aircraft.meters:
+                    if m.meter_name == fld:
+                        if fld not in meters_to_recalc:
+                            meters_to_recalc.append(fld)
+                        # print(m)
+                        newreading = MeterReadings()
+                        newreading.ac_id = aircraft.id
+                        newreading.meter_id = m.meter_id
+                        newreading.reading_date = reading['reading_date']
+                        newreading.meter_reading = value
+                        newreading.meter_delta = 0  # must not be none
+                        newreading.note = reading['note']
+                        try:
+                            db.session.add(newreading)
+                            print(f'date {newreading.reading_date} {type(newreading.reading_date)}')
+                            db.session.flush()
+
+                            # applog.info('ADD:' + repr(newreading))
+                            addedreadingcount += 1
+                        except Exception as e:
+
+                            listoferrors.append(e)
+                            error_occurred = True
+    if not error_occurred:
+        db.session.commit()
+        for m in meters_to_recalc:
+            for acm in aircraft.meters:
+                if m == acm.meter_name:
+                    # change_count = acm.reset_readings()
+                    change_count = acm.reset_delta()
+                    flash(f'Changed deltas count for meter: {m} to {change_count}')
+        return True
+    else:
+        db.session.rollback()
+        flash('The following errors occurred')
+        for e in listoferrors:
+            flash(e,'error')
+
+
 
 
 @bp.route('/acmaintlogbook', methods=['GET', 'POST'])

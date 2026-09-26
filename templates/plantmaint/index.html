@@ -15,6 +15,8 @@
     <p><a href="{{ url_for('plantmaint.achistorylist', task=0) }}">Maintenance History</a></p>
     <p><a href="{{ url_for('plantmaint.acmaintlogbook') }}">Log Book</a></p>
     <p><a href="{{ url_for('plantmaint.changeac') }}">Change Aircraft</a></p>
+    <p><a href="{{ url_for('plantmaint.acjsonexport') }}">Export Readings for this a/c to json</a></p>
+    <p><a href="{{ url_for('plantmaint.importacreadings') }}">Import Readings for this a/c from CSV</a></p>
     {#
     <p><a href="{{ url_for('plantmaint.testform') }}">testform</a></p>
     #}
@@ -26,7 +28,6 @@
     <p><a href="{{ url_for('plantmaint.stdtasklist') }}">Maintain Standard Tasks</a></p>
     <p><a href="{{ url_for('plantmaint.stdmeterlist') }}">Maintain Standard Meters</a></p>
     <p><a href="{{ url_for('plantmaint.stduserlist') }}">Maintain User Access</a></p>
-    <p><a href="{{ url_for('plantmaint.acjsonexport') }}">Export Readings for this a/c to json</a></p>
   </div>
 </div>
 {% endblock %}

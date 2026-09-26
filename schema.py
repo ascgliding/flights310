@@ -1358,7 +1358,8 @@ def meterreadings_before_insert(mapper,connection,obj):
             else:
                 last_date = (db.session.query(func.max(MeterReadings.reading_date))
                              .filter(MeterReadings.ac_id == obj.ac_id)
-                             .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or 0
+                             .filter(MeterReadings.meter_id == obj.meter_id)).scalar() or datetime.date(1900,1,1)
+                print(f' In listener date {obj.reading_date} {type(obj.reading_date)}  {last_date}  {type(last_date)}')
                 if obj.reading_date < last_date:
                     raise ValueError(f'There is already a reading for a later date for {thismeter.std_meter_rec.meter_name}')
 
