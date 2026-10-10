@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<div style="display: table; width:100%">
+  <div style="display:table-row">
+    <div style="display:table-cell">
+      <h1>{% block title %}Utilisation{% endblock %}</h1>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block content %}
+    <p>The following graph shows the fleet utilisation in minutes and fligths.
+        It is grouped in 4 weekly periods (this ensures spikes due to holidays are kept roughly in the same period to allow comparisons).
+        3 Years are shown.  Year "3" is the most recent 13 periods.</p>
+<form method="Post">
+  {{ form.csrf_token }}
+  <fieldset>
+    <svg id="chart0" class="c3chart"></svg>
+      {{ form.measure }}
+      {{ form.regn }}
+  </fieldset>
+  </form>
+
+<script>
+    var chart0 = c3.generate({
+        bindto: '#chart0',
+        {{ chart0data|safe }}
+        });
+    chart.resize()
+</script>
+{% endblock %}

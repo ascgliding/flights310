@@ -1,11 +1,11 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app,session
+    Blueprint, flash, g, redirect, render_template, request, url_for, Flask, send_from_directory, current_app,session, jsonify
 )
 from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
 from asc.schema import Flight, SchemaError, Aircraft, Pilot, Slot
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, bindparam
 import datetime
 from sqlalchemy import text as sqltext
 from sqlalchemy.sql import func, select
@@ -21,6 +21,8 @@ from asc.wtforms_ext import MatButtonField, TextButtonField
 from decimal import *
 from asc.common import *
 from asc.oPaginateRawSql import PaginateRawSql
+from asc.ochart import Chart
+
 
 try:
     # app = Flask(__name__)
@@ -175,6 +177,10 @@ class NoteForm(FlaskForm):
                             render_kw={'onclick': 'return ConfirmDelete()'})
 
 
+class utilisationForm(FlaskForm):
+    measure = SelectField('Measure', description="Select Measure", choices=['Flights', 'Minutes'], render_kw={"onchange": 'this.form.submit()'})
+    regn = SelectField('Measure', description='Measure', render_kw={"onchange": 'this.form.submit()'})
+    btnrefresh = TextButtonField('Refresh', id="refrshbtn", text='Refresh', help="Refresh data from the metservice")
 
 # TODO: Test Error Handling in Production environment.
 
@@ -750,3 +756,103 @@ def calc_charges(id):
         return False
     return True
 
+@bp.route('/utilisation', methods=['GET', 'POST'])
+@login_required
+def utilisation():
+
+    thisform=utilisationForm()
+    thisform.regn.choices = ['All']  #  , 'GNF', 'GMP', 'GVF']
+    regns = db.session.query(Aircraft.regn).filter(Aircraft.owner == 'ASC').filter(Aircraft.launch == False).all()
+    for r in regns:
+        thisform.regn.choices.append(r.regn)
+
+
+    raw_sql = sqltext(
+        """
+    WITH RECURSIVE calendar(calendar_date) AS (
+        SELECT date('now', '-1092 days')
+        UNION ALL
+        SELECT date(calendar_date, '+1 day') 
+        FROM calendar
+        WHERE calendar_date < date('now')
+    ),
+    extended_calendar AS (
+        SELECT 
+            calendar_date,
+            CAST(strftime('%Y', calendar_date) AS INT) AS year_num,
+            CAST(strftime('%m', calendar_date) AS INT) AS month_num,
+            CASE CAST(strftime('%w', calendar_date) AS INT)
+                WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday'
+                WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday'
+                WHEN 6 THEN 'Saturday'
+            END AS day_name,
+            CASE 
+                WHEN (julianday('now') - julianday(calendar_date)) / 28.0 >= 39 THEN 1
+                ELSE 39 - CAST((julianday('now') - julianday(calendar_date)) / 28.0 AS INT)
+            END AS four_week_block
+        FROM calendar
+    ),
+    fltsumm as (
+        select flt_date,
+        sum(ROUND((julianday(landed) - julianday(takeoff)) * 1440.0)) AS mins,
+        count(*) as flights
+        from flights t0
+        join aircraft t1 on t0.ac_regn = t1.regn
+        where linetype = 'FL'
+        and t1.regn in :selected_regns
+        group by 1
+        order by 1
+    )
+    select 
+        (four_week_block - 1) / 13 + 1 as year, 
+        ((four_week_block - 1) % 13) + 1 as block_per_year, 
+        sum(flights) as flights, 
+        sum(mins) as mins 
+    from extended_calendar t0
+    left outer join fltsumm t1 on t1.flt_date = t0.calendar_date
+    group by 1, 2
+    order by 1, 2
+    """
+    ).bindparams(bindparam('selected_regns', expanding=True))
+
+    selection = []
+
+    if thisform.regn.data != 'All' and thisform.regn.data is not None:
+        selection.append([thisform.regn.data])
+    else:
+        for r in regns:
+            selection.append(r.regn)
+
+    # 2. Execute directly via Flask-SQLAlchemy's scoped session context
+    result = db.session.execute(raw_sql, {'selected_regns': selection})
+
+    # 3. Process the dictionary mappings natively
+    data = [dict(row) for row in result.mappings()]
+
+
+    # The result look like this:
+    # [
+    #     {"block_per_year": 1,"flights": 71,"mins": 2274.0,"year": 1},
+    #     {"block_per_year": 2,"flights": 10,"mins": 217.0,"year": 1},
+    #
+    #     {"block_per_year": 12,"flights": 18,"mins": 854.0,"year": 3},
+    #     {"block_per_year": 13,"flights": 13,"mins": 649.0,"year": 3}
+    # ]
+    thischart = Chart(f'Club Utilisation')
+    thischart.SetAxisLabel("x","Period")
+    thischart.SetSeriesChartType("1","spline")
+    thischart.SetSeriesChartType("2","spline")
+    thischart.SetSeriesChartType("3","spline")
+    # for i, v in enumerate(data.CurrentValues[selected_measure]):
+    for d in data:
+        if thisform.measure.data == 'Minutes':
+            thischart.Title = 'Minutes'
+            thischart.SetAxisLabel("y", "Minutes")
+            thischart.AddDataPoint(str(d['year']), d['block_per_year'], d['mins'] or 0)
+        else:
+            thischart.Title = 'Flights'
+            thischart.SetAxisLabel("y", "Flights")
+            thischart.AddDataPoint(str(d['year']), d['block_per_year'], d['flights'] or 0)
+        thischart.SetCategoryValue(d['block_per_year'], str(d['block_per_year']))
+
+    return render_template('flights/utilisation.html',form=thisform,chart0data=thischart.ChartJson)
