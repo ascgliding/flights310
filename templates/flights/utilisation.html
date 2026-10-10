@@ -12,9 +12,9 @@
 
 
 {% block content %}
-    <p>The following graph shows the fleet utilisation in minutes and fligths.
+    <p>The following graph shows the fleet utilisation in minutes and flights.<span class="mobile_port_suppress mobile_land_suppres">
         It is grouped in 4 weekly periods (this ensures spikes due to holidays are kept roughly in the same period to allow comparisons).
-        3 Years are shown.  Year "3" is the most recent 13 periods.</p>
+        3 Years are shown.  </span> Year "3" is the most recent 13 periods.</p>
 <form method="Post">
   {{ form.csrf_token }}
   <fieldset>

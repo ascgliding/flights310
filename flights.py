@@ -761,7 +761,7 @@ def calc_charges(id):
 def utilisation():
 
     thisform=utilisationForm()
-    thisform.regn.choices = ['All']  #  , 'GNF', 'GMP', 'GVF']
+    thisform.regn.choices = ['All Club Gliders']  #  , 'GNF', 'GMP', 'GVF']
     regns = db.session.query(Aircraft.regn).filter(Aircraft.owner == 'ASC').filter(Aircraft.launch == False).all()
     for r in regns:
         thisform.regn.choices.append(r.regn)
@@ -838,19 +838,23 @@ def utilisation():
     #     {"block_per_year": 12,"flights": 18,"mins": 854.0,"year": 3},
     #     {"block_per_year": 13,"flights": 13,"mins": 649.0,"year": 3}
     # ]
-    thischart = Chart(f'Club Utilisation')
+    thischart = Chart(f'Club Utilisation as at {datetime.date.today()}')
+    thischart.PointRadius = 5
     thischart.SetAxisLabel("x","Period")
     thischart.SetSeriesChartType("1","spline")
+    thischart.SetSeriesColour("1",'#83ccfa')
     thischart.SetSeriesChartType("2","spline")
+    thischart.SetSeriesColour("2",'#83fab3')
     thischart.SetSeriesChartType("3","spline")
+    thischart.SetSeriesColour("3",'#FF0000')
     # for i, v in enumerate(data.CurrentValues[selected_measure]):
     for d in data:
         if thisform.measure.data == 'Minutes':
-            thischart.Title = 'Minutes'
+            thischart.Title = f'Minutes as at {datetime.date.today()}'
             thischart.SetAxisLabel("y", "Minutes")
             thischart.AddDataPoint(str(d['year']), d['block_per_year'], d['mins'] or 0)
         else:
-            thischart.Title = 'Flights'
+            thischart.Title = f'Flights as at {datetime.date.today()}'
             thischart.SetAxisLabel("y", "Flights")
             thischart.AddDataPoint(str(d['year']), d['block_per_year'], d['flights'] or 0)
         thischart.SetCategoryValue(d['block_per_year'], str(d['block_per_year']))
