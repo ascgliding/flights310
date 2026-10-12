@@ -178,7 +178,13 @@ class NoteForm(FlaskForm):
 
 
 class utilisationForm(FlaskForm):
-    measure = SelectField('Measure', description="Select Measure", choices=['Flights', 'Minutes'], render_kw={"onchange": 'this.form.submit()'})
+    asatdate = DateField('Date',
+                         description='Last Date for Graph',
+                         default=datetime.date.today(),
+                         render_kw={"onchange": 'this.form.submit()'}
+    )
+    gtype = SelectField('Type', description="Select Type", choices=[('YC', 'Compare Years'), ('RC', 'Compare Regns')], default='YC', render_kw={"onchange": 'this.form.submit()'})
+    measure = SelectField('Measure', description="Select Measure", choices=['Flights', 'Hours'], render_kw={"onchange": 'this.form.submit()'})
     regn = SelectField('Measure', description='Measure', render_kw={"onchange": 'this.form.submit()'})
     btnrefresh = TextButtonField('Refresh', id="refrshbtn", text='Refresh', help="Refresh data from the metservice")
 
@@ -766,15 +772,82 @@ def utilisation():
     for r in regns:
         thisform.regn.choices.append(r.regn)
 
+    selection = []
 
-    raw_sql = sqltext(
+    if thisform.regn.data != 'All Club Gliders' and thisform.regn.data is not None:
+        selection.append([thisform.regn.data])
+    else:
+        for r in regns:
+            selection.append(r.regn)
+
+    print(f'passed type {thisform.gtype.data}')
+    # data = getComparisonGraphData(selection,thisform.asatdate.data, thisform.gtype.data)
+    data = getComparisonGraphData(selection,thisform.asatdate.data)
+    # return jsonify(data)
+
+    thischart = Chart(f'Club Utilisation as at {datetime.date.today()}')
+    thischart.PointRadius = 5
+    thischart.SetAxisLabel("x","Period")
+    thischart.SetSeriesChartType("1","spline")
+    thischart.SetSeriesColour("1",'#83ccfa')
+    thischart.SetSeriesChartType("2","spline")
+    thischart.SetSeriesColour("2",'#83fab3')
+    thischart.SetSeriesChartType("3","spline")
+    thischart.SetSeriesColour("3",'#FF0000')
+    # for i, v in enumerate(data.CurrentValues[selected_measure]):
+    for d in data:
+        if thisform.measure.data == 'Hours':
+            thischart.Title = f'Hours as at {datetime.date.today()}'
+            thischart.SetAxisLabel("y", "Hours")
+            if thisform.gtype.data == 'YC':
+                thischart.AddDataPoint(str(d['year']), d['block_per_year'] - 1, (d['mins'] / 60) if d['mins'] is not None else 0)
+            else:
+                thischart.AddDataPoint(str(d['ac_regn']), d['block_per_year'] - 1, (d['mins'] / 60) if d['mins'] is not None else 0)
+        else:
+            thischart.Title = f'Flights as at {datetime.date.today()}'
+            thischart.SetAxisLabel("y", "Flights")
+            if thisform.gtype.data == 'YC':
+                thischart.AddDataPoint(str(d['year']), d['block_per_year'] - 1, d['flights'] or 0)
+            else:
+                thischart.AddDataPoint(str(d['ac_regn']), d['block_per_year'] - 1, d['flights'] or 0)
+        thischart.SetCategoryValue(d['block_per_year'], str(d['block_per_year']))
+
+    return render_template('flights/utilisation.html',form=thisform,chart0data=thischart.ChartJson)
+
+def getComparisonGraphData( p_aircraft, p_asatdate=datetime.date.today(), p_graphtype ='YC'):
+    '''
+
+    :param p_aircraft: A list of aircraft registrations
+    :param p_asatdate: The date to start at
+    :param p_graphtype: The type of graph to use.
+        YC - year comparison - three lines shown - on for each year
+        RC - regn compairson - only one year ever shown, but a separate line for each a/c regn
+    :return:  A list of dictionaries as follows:
+        [
+            {"block_per_year": 1,"flights": 71,"mins": 2274.0,"year": 1},
+            {"block_per_year": 2,"flights": 10,"mins": 217.0,"year": 1},
+            ...
+            {"block_per_year": 12,"flights": 18,"mins": 854.0,"year": 3},
+            {"block_per_year": 13,"flights": 13,"mins": 649.0,"year": 3}
+        ]
+    '''
+    if not isinstance(p_asatdate, datetime.date):
+        raise TypeError('p_asatdate must be of type datetime.date')
+    if not isinstance(p_aircraft, list):
+        raise TypeError('p_aircraft must be of type list')
+    if not isinstance(p_graphtype, str):
+        raise TypeError('pgraphtype must be of type str')
+    if p_graphtype not in ['YC', 'RC']:
+        raise ValueError('pgraphtype must be either YC for year comparison or RC for Regn Comparison')
+
+    by_year = sqltext(
         """
     WITH RECURSIVE calendar(calendar_date) AS (
-        SELECT date('now', '-1092 days')
+        SELECT date(:asat, '-1092 days')
         UNION ALL
         SELECT date(calendar_date, '+1 day') 
         FROM calendar
-        WHERE calendar_date < date('now')
+        WHERE calendar_date < date(:asat)
     ),
     extended_calendar AS (
         SELECT 
@@ -787,8 +860,8 @@ def utilisation():
                 WHEN 6 THEN 'Saturday'
             END AS day_name,
             CASE 
-                WHEN (julianday('now') - julianday(calendar_date)) / 28.0 >= 39 THEN 1
-                ELSE 39 - CAST((julianday('now') - julianday(calendar_date)) / 28.0 AS INT)
+                WHEN (julianday(:asat) - julianday(calendar_date)) / 28.0 >= 39 THEN 1
+                ELSE 39 - CAST((julianday(:asat) - julianday(calendar_date)) / 28.0 AS INT)
             END AS four_week_block
         FROM calendar
     ),
@@ -813,50 +886,70 @@ def utilisation():
     group by 1, 2
     order by 1, 2
     """
-    ).bindparams(bindparam('selected_regns', expanding=True))
+    ).bindparams(bindparam('selected_regns', expanding=True), bindparam('asat'))
 
-    selection = []
 
-    if thisform.regn.data != 'All' and thisform.regn.data is not None:
-        selection.append([thisform.regn.data])
-    else:
-        for r in regns:
-            selection.append(r.regn)
+    by_regn = sqltext(
+        """
+        WITH RECURSIVE calendar(calendar_date) AS (
+            SELECT date(:asat, '-364 days')  -- 7 days * 13 periods * 4 weeks per period * 3 years
+            UNION ALL
+            SELECT date(calendar_date, '+1 day')
+            FROM calendar
+            WHERE calendar_date < date(:asat)
+        ),
+        -- Expand the timeline to include year, month, and day names
+        extended_calendar AS (
+            SELECT
+                calendar_date,
+                -- Extract numeric Year (as an integer)
+                CAST(strftime('%Y', calendar_date) AS INT) AS year_num,
+                -- Extract numeric Month (1 to 12 as an integer)
+                CAST(strftime('%m', calendar_date) AS INT) AS month_num,
+                -- Map SQLite's 0-6 day index (0 = Sunday) to English names
+                CASE CAST(strftime('%w', calendar_date) AS INT)
+                    WHEN 0 THEN 'Sunday'
+                    WHEN 1 THEN 'Monday'
+                    WHEN 2 THEN 'Tuesday'
+                    WHEN 3 THEN 'Wednesday'
+                    WHEN 4 THEN 'Thursday'
+                    WHEN 5 THEN 'Friday'
+                    WHEN 6 THEN 'Saturday'
+                END AS day_name,
+                -- Keep your 4-week block mapping intact
+                CASE
+                    WHEN (julianday(:asat) - julianday(calendar_date)) / 28.0 >= 39 THEN 1
+                    ELSE 39 - CAST((julianday(:asat) - julianday(calendar_date)) / 28.0 AS INT)
+                END AS four_week_block
+            FROM calendar
+        ),
+        fltsumm as (
+            select flt_date, ac_regn,
+            sum(ROUND((julianday(landed) - julianday(takeoff)) * 1440.0)) AS mins,
+            count(*) as flights
+            from flights t0
+            join aircraft t1 on t0.ac_regn = t1.regn
+            where linetype = 'FL'
+            and t1.regn in :selected_regns
+            group by 1,2
+            order by 1,2
+        )
+        select ac_regn, ((four_week_block -1) % 13) + 1 block_per_year, sum(flights) flights, sum(mins) mins
+        from extended_calendar t0
+        left outer join fltsumm t1 on t1.flt_date = t0.calendar_date
+        where ac_regn is not null
+        group by 1,2
+        order by 1,2
+        """
+    ).bindparams(bindparam('selected_regns', expanding=True),bindparam('asat'))
+
 
     # 2. Execute directly via Flask-SQLAlchemy's scoped session context
-    result = db.session.execute(raw_sql, {'selected_regns': selection})
+    if p_graphtype == "YC":
+        result = db.session.execute(by_year, {'selected_regns': p_aircraft, 'asat' : p_asatdate.strftime('%Y-%m-%d')})
+    else:
+        result = db.session.execute(by_regn, {'selected_regns': p_aircraft, 'asat': p_asatdate.strftime('%Y-%m-%d')})
 
     # 3. Process the dictionary mappings natively
     data = [dict(row) for row in result.mappings()]
-
-
-    # The result look like this:
-    # [
-    #     {"block_per_year": 1,"flights": 71,"mins": 2274.0,"year": 1},
-    #     {"block_per_year": 2,"flights": 10,"mins": 217.0,"year": 1},
-    #
-    #     {"block_per_year": 12,"flights": 18,"mins": 854.0,"year": 3},
-    #     {"block_per_year": 13,"flights": 13,"mins": 649.0,"year": 3}
-    # ]
-    thischart = Chart(f'Club Utilisation as at {datetime.date.today()}')
-    thischart.PointRadius = 5
-    thischart.SetAxisLabel("x","Period")
-    thischart.SetSeriesChartType("1","spline")
-    thischart.SetSeriesColour("1",'#83ccfa')
-    thischart.SetSeriesChartType("2","spline")
-    thischart.SetSeriesColour("2",'#83fab3')
-    thischart.SetSeriesChartType("3","spline")
-    thischart.SetSeriesColour("3",'#FF0000')
-    # for i, v in enumerate(data.CurrentValues[selected_measure]):
-    for d in data:
-        if thisform.measure.data == 'Minutes':
-            thischart.Title = f'Minutes as at {datetime.date.today()}'
-            thischart.SetAxisLabel("y", "Minutes")
-            thischart.AddDataPoint(str(d['year']), d['block_per_year'], d['mins'] or 0)
-        else:
-            thischart.Title = f'Flights as at {datetime.date.today()}'
-            thischart.SetAxisLabel("y", "Flights")
-            thischart.AddDataPoint(str(d['year']), d['block_per_year'], d['flights'] or 0)
-        thischart.SetCategoryValue(d['block_per_year'], str(d['block_per_year']))
-
-    return render_template('flights/utilisation.html',form=thisform,chart0data=thischart.ChartJson)
+    return data
