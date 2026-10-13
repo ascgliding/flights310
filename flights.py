@@ -4,6 +4,8 @@ from flask import (
 from werkzeug.exceptions import abort
 
 from flask_login import login_required, current_user
+
+from asc.mastmaint import aircraftlist
 from asc.schema import Flight, SchemaError, Aircraft, Pilot, Slot
 from sqlalchemy import func, or_, and_, bindparam
 import datetime
@@ -181,7 +183,7 @@ class utilisationForm(FlaskForm):
     asatdate = DateField('Date',
                          description='Last Date for Graph',
                          default=datetime.date.today(),
-                         render_kw={"onchange": 'this.form.submit()'}
+                         render_kw={"onblur": 'this.form.submit()'}
     )
     gtype = SelectField('Type', description="Select Type", choices=[('YC', 'Compare Years'), ('RC', 'Compare Regns')], default='YC', render_kw={"onchange": 'this.form.submit()'})
     measure = SelectField('Measure', description="Select Measure", choices=['Flights', 'Hours'], render_kw={"onchange": 'this.form.submit()'})
@@ -781,36 +783,50 @@ def utilisation():
             selection.append(r.regn)
 
     print(f'passed type {thisform.gtype.data}')
-    # data = getComparisonGraphData(selection,thisform.asatdate.data, thisform.gtype.data)
-    data = getComparisonGraphData(selection,thisform.asatdate.data)
+    data = getComparisonGraphData(selection,thisform.asatdate.data, thisform.gtype.data)
+    # data = getComparisonGraphData(selection,thisform.asatdate.data)
     # return jsonify(data)
 
     thischart = Chart(f'Club Utilisation as at {datetime.date.today()}')
     thischart.PointRadius = 5
     thischart.SetAxisLabel("x","Period")
-    thischart.SetSeriesChartType("1","spline")
-    thischart.SetSeriesColour("1",'#83ccfa')
-    thischart.SetSeriesChartType("2","spline")
-    thischart.SetSeriesColour("2",'#83fab3')
-    thischart.SetSeriesChartType("3","spline")
-    thischart.SetSeriesColour("3",'#FF0000')
-    # for i, v in enumerate(data.CurrentValues[selected_measure]):
-    for d in data:
-        if thisform.measure.data == 'Hours':
-            thischart.Title = f'Hours as at {datetime.date.today()}'
-            thischart.SetAxisLabel("y", "Hours")
-            if thisform.gtype.data == 'YC':
+    if thisform.gtype.data in [ None, 'YC']:
+        thischart.SetSeriesChartType("1", "spline")
+        thischart.SetSeriesColour("1", '#83ccfa')
+        thischart.SetSeriesChartType("2", "spline")
+        thischart.SetSeriesColour("2", '#83fab3')
+        thischart.SetSeriesChartType("3", "spline")
+        thischart.SetSeriesColour("3", '#FF0000')
+        for d in data:
+            if thisform.measure.data == 'Hours':
+                thischart.Title = f'Hours as at {datetime.date.today()}'
+                thischart.SetAxisLabel("y", "Hours")
                 thischart.AddDataPoint(str(d['year']), d['block_per_year'] - 1, (d['mins'] / 60) if d['mins'] is not None else 0)
             else:
-                thischart.AddDataPoint(str(d['ac_regn']), d['block_per_year'] - 1, (d['mins'] / 60) if d['mins'] is not None else 0)
-        else:
-            thischart.Title = f'Flights as at {datetime.date.today()}'
-            thischart.SetAxisLabel("y", "Flights")
-            if thisform.gtype.data == 'YC':
+                thischart.Title = f'Flights as at {datetime.date.today()}'
+                thischart.SetAxisLabel("y", "Flights")
                 thischart.AddDataPoint(str(d['year']), d['block_per_year'] - 1, d['flights'] or 0)
-            else:
-                thischart.AddDataPoint(str(d['ac_regn']), d['block_per_year'] - 1, d['flights'] or 0)
-        thischart.SetCategoryValue(d['block_per_year'], str(d['block_per_year']))
+            thischart.SetCategoryValue(d['block_per_year'], str(d['block_per_year']))
+    else:
+        # return jsonify(data)
+        for a in selection:
+            thischart.SetSeriesChartType(a, "spline")
+        for i in range(1,14):
+            print(i)
+            for a in selection:
+                thislist = [d for d in data if d.get("ac_regn") == a and d.get("block_per_year") == i ]
+                print(a, i, thislist)
+                if len(thislist) == 0: #  No row exists
+                    thischart.AddDataPoint(a, i - 1 , 0)
+                else:
+                    if thisform.measure.data == 'Hours':
+                        thischart.SetAxisLabel("y", "Hours")
+                        thischart.AddDataPoint(a, i - 1   , (thislist[0]['mins'] / 60) )
+                    else:
+                        thischart.SetAxisLabel("y", "Flights")
+                        thischart.AddDataPoint(a, i -1 , thislist[0]['flights'])
+                    thischart.SetCategoryValue(i, str(i))
+            thischart.Title = f'Flights as {datetime.date.today()}'
 
     return render_template('flights/utilisation.html',form=thisform,chart0data=thischart.ChartJson)
 
@@ -939,7 +955,7 @@ def getComparisonGraphData( p_aircraft, p_asatdate=datetime.date.today(), p_grap
         left outer join fltsumm t1 on t1.flt_date = t0.calendar_date
         where ac_regn is not null
         group by 1,2
-        order by 1,2
+        order by 2,1
         """
     ).bindparams(bindparam('selected_regns', expanding=True),bindparam('asat'))
 
